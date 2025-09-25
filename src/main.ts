@@ -46,15 +46,14 @@ async function bootstrap() {
     }),
   );
 
-  const port = process.env.APP_PORT || 8000;
   const host = process.env.APP_HOST || 'localhost';
+  const port = process.env.APP_PORT || 8000;
+  const appUrl = process.env.APP_URL || `http://${host}:${port}`;
 
-  await app.listen(port);
+  await app.listen(port, host);
 
-  console.log(`🚀 Server running at http://${host}:${port}/api/v1`);
-  console.log(
-    `📖 Swagger docs available at http://${host}:${port}/api/v1/docs`,
-  );
+  console.log(`🚀 Server running at ${appUrl}/api/v1`);
+  console.log(`📖 Swagger docs available at ${appUrl}/api/v1/docs`);
 }
 
 bootstrap();
