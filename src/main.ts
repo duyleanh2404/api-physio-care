@@ -47,10 +47,13 @@ async function bootstrap() {
   );
 
   const port = process.env.APP_PORT || 8000;
+  const host = process.env.APP_HOST || 'localhost';
+
   await app.listen(port);
-  console.log(`🚀 Server running at http://localhost:${port}/api/v1`);
+
+  console.log(`🚀 Server running at http://${host}:${port}/api/v1`);
   console.log(
-    `📖 Swagger docs available at http://localhost:${port}/api/v1/docs`,
+    `📖 Swagger docs available at http://${host}:${port}/api/v1/docs`,
   );
 }
 
