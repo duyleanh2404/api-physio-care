@@ -6,6 +6,7 @@ import {
   ApiLogout,
   ApiRefresh,
   ApiRegister,
+  ApiResendOtp,
   ApiResetPassword,
   ApiVerifyAccount,
   ApiForgotPassword,
@@ -15,6 +16,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { ResendOtpDto } from './dto/resend-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -60,6 +62,12 @@ export class AuthController {
   @ApiResetPassword()
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto.email, dto.otp, dto.newPassword);
+  }
+
+  @Post('resend-otp')
+  @ApiResendOtp()
+  async resendOtp(@Body() dto: ResendOtpDto) {
+    return this.authService.resendOtp(dto.email);
   }
 
   @Post('logout')

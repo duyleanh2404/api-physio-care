@@ -3,6 +3,7 @@ import { ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 
 import { LoginDto } from 'src/core/auth/dto/login.dto';
 import { RegisterDto } from 'src/core/auth/dto/register.dto';
+import { ResendOtpDto } from 'src/core/auth/dto/resend-otp.dto';
 import { VerifyOtpDto } from 'src/core/auth/dto/verify-otp.dto';
 import { RefreshTokenDto } from 'src/core/auth/dto/refresh-token.dto';
 import { ResetPasswordDto } from 'src/core/auth/dto/reset-password.dto';
@@ -174,6 +175,33 @@ export const ApiResetPassword = () =>
         type: 'object',
         properties: {
           message: { type: 'string', example: 'Invalid or expired OTP' },
+        },
+      },
+    }),
+  );
+
+export const ApiResendOtp = () =>
+  applyDecorators(
+    ApiOperation({ summary: 'Resend OTP to user email' }),
+    ApiBody({ type: ResendOtpDto }),
+    ApiResponse({
+      status: 200,
+      description: 'OTP resent successfully',
+      schema: {
+        type: 'object',
+        properties: {
+          message: { type: 'string', example: 'OTP resent successfully' },
+          email: { type: 'string', example: 'user@example.com' },
+        },
+      },
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'User not found',
+      schema: {
+        type: 'object',
+        properties: {
+          message: { type: 'string', example: 'User not found' },
         },
       },
     }),
