@@ -10,6 +10,7 @@ import { UserModule } from 'src/modules/user/user.module';
 import { OtpRepository } from './repository/otp.repository';
 import { TokenRepository } from './repository/token.repository';
 import { EmailRepository } from './repository/email.repository';
+import { GoogleStrategy } from './strategies/google.strategy';
 
 @Module({
   imports: [JwtModule.register({}), UserModule],
@@ -18,6 +19,7 @@ import { EmailRepository } from './repository/email.repository';
     RolesGuard,
     AuthService,
     JwtStrategy,
+    GoogleStrategy,
     OtpRepository,
     EmailRepository,
     TokenRepository,

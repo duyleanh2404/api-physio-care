@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 
 import { RegisterDto } from './dto/register.dto';
-import { UserStatus } from 'src/enums/user.enums';
+import { UserProvider, UserStatus } from 'src/enums/user.enums';
 import { UserService } from 'src/modules/user/user.service';
 
 import { OtpRepository } from './repository/otp.repository';
@@ -48,7 +48,7 @@ export class AuthService {
   async login(email: string, password: string) {
     const user = await this.userService.findByEmail(email);
 
-    if (!user || !(await argon2.verify(user.password, password))) {
+    if (!user || !(await argon2.verify(user.password!, password))) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
@@ -118,6 +118,29 @@ export class AuthService {
     await this.otpRepo.resendOtp(user.id, email);
 
     return { message: 'OTP resent successfully', email };
+  }
+
+  async validateGoogleUser(user: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    picture: string;
+    accessToken: string;
+  }) {
+    let existingUser = await this.userService.findByEmail(user.email);
+
+    if (!existingUser) {
+      existingUser = await this.userService.create({
+        email: user.email,
+        fullName: `${user.firstName} ${user.lastName}`,
+        avatarUrl: user.picture,
+        role: 'user',
+        status: 'active',
+        provider: UserProvider.GOOGLE,
+      });
+    }
+
+    return this.tokenRepo.generateTokens(existingUser);
   }
 
   async logout(userId: string) {

@@ -1,6 +1,6 @@
-import { ConfigService } from '@nestjs/config';
+import { registerAs } from '@nestjs/config';
 
-export const getOtpConfig = (config: ConfigService) => ({
-  resendApiKey: config.get<string>('RESEND_API_KEY'),
-  otpFromEmail: config.get<string>('OTP_FROM_EMAIL'),
-});
+export default registerAs('otp', () => ({
+  resendApiKey: process.env.RESEND_API_KEY,
+  otpFromEmail: process.env.OTP_FROM_EMAIL,
+}));

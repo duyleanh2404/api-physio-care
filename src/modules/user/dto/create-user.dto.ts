@@ -1,12 +1,14 @@
 import {
+  IsUrl,
   IsEmail,
   Matches,
   IsString,
   MinLength,
   MaxLength,
   IsNotEmpty,
+  IsOptional,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -19,22 +21,22 @@ export class CreateUserDto {
   @MaxLength(50, { message: 'Email must not exceed 50 characters' })
   email: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'Abcd1234!',
     description:
       'Password must be at least 8 characters long and contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character',
     minLength: 8,
     maxLength: 50,
   })
+  @IsOptional()
   @IsString({ message: 'Password must be a string' })
-  @IsNotEmpty({ message: 'Please enter your password' })
   @MinLength(8, { message: 'Password must be at least 8 characters' })
   @MaxLength(50, { message: 'Password must not exceed 50 characters' })
   @Matches(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[\W_]).*$/, {
     message:
       'Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character',
   })
-  password: string;
+  password?: string;
 
   @ApiProperty({
     example: 'John Doe',
@@ -55,4 +57,16 @@ export class CreateUserDto {
   @IsString({ message: 'Role must be a string' })
   @IsNotEmpty({ message: 'Please select a role' })
   role: string;
+
+  @IsOptional()
+  @IsUrl({}, { message: 'avatarUrl must be a valid URL' })
+  avatarUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  provider?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
 }

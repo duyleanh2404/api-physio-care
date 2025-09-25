@@ -1,8 +1,8 @@
-import { ConfigService } from '@nestjs/config';
+import { registerAs } from '@nestjs/config';
 
-export const getJwtConfig = (config: ConfigService) => ({
-  accessTokenSecret: config.get<string>('JWT_ACCESS_SECRET'),
-  refreshTokenSecret: config.get<string>('JWT_REFRESH_SECRET'),
-  accessTokenExpiresIn: config.get<string>('JWT_ACCESS_EXPIRES_IN'),
-  refreshTokenExpiresIn: config.get<string>('JWT_REFRESH_EXPIRES_IN'),
-});
+export default registerAs('jwt', () => ({
+  accessTokenSecret: process.env.JWT_ACCESS_SECRET,
+  refreshTokenSecret: process.env.JWT_REFRESH_SECRET,
+  accessTokenExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN,
+  refreshTokenExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
+}));

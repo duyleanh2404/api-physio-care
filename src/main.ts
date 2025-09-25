@@ -41,14 +41,14 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      forbidNonWhitelisted: true,
       transform: true,
+      forbidNonWhitelisted: true,
     }),
   );
 
   const host = process.env.APP_HOST || 'localhost';
   const port = process.env.APP_PORT || 8000;
-  const appUrl = process.env.APP_URL || `http://${host}:${port}`;
+  const appUrl = process.env.BACKEND_URL || `http://${host}:${port}`;
 
   await app.listen(port, host);
 

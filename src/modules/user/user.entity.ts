@@ -16,11 +16,14 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column()
-  password: string;
+  @Column({ nullable: true })
+  password?: string;
 
   @Column()
   fullName: string;
+
+  @Column({ nullable: true })
+  avatarUrl?: string;
 
   @Column({ default: 'user' })
   role: string;
@@ -35,10 +38,10 @@ export class User {
   provider: string;
 
   @Column({ type: 'varchar2', length: 255, nullable: true })
-  verificationOtp: string | null;
+  verificationOtp: string;
 
   @Column({ type: 'timestamp', nullable: true })
-  otpExpiresAt: Date | null;
+  otpExpiresAt: Date;
 
   @CreateDateColumn()
   createdAt: Date;
