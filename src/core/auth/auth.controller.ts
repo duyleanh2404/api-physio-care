@@ -1,5 +1,14 @@
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import {
+  Get,
+  Post,
+  Body,
+  Request,
+  Response,
+  UseGuards,
+  Controller,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { ApiBearerAuth, ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
 
 import {
   ApiLogin,
@@ -12,7 +21,9 @@ import {
   ApiForgotPassword,
 } from 'src/docs/swagger/auth.swagger';
 import { AuthService } from './auth.service';
+
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
 
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -25,7 +36,10 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post('login')
   @ApiLogin()
@@ -68,6 +82,23 @@ export class AuthController {
   @ApiResendOtp()
   async resendOtp(@Body() dto: ResendOtpDto) {
     return this.authService.resendOtp(dto.email);
+  }
+
+  @Get('google')
+  @ApiExcludeEndpoint()
+  @UseGuards(GoogleAuthGuard)
+  async googleAuth() {}
+
+  @Get('google/callback')
+  @ApiExcludeEndpoint()
+  @UseGuards(GoogleAuthGuard)
+  async googleCallback(@Request() req, @Response() res) {
+    const { accessToken, refreshToken } = req.user;
+    const appUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
+
+    return res.redirect(
+      `${appUrl}?accessToken=${accessToken}&refreshToken=${refreshToken}`,
+    );
   }
 
   @Post('logout')

@@ -97,12 +97,7 @@ export class UserService {
       throw new ConflictException(`Email ${dto.email} already exists`);
     }
 
-    const user = this.userRepo.create({
-      email: dto.email,
-      password: dto.password,
-      fullName: dto.fullName,
-      role: dto.role,
-    });
+    const user = this.userRepo.create(dto);
 
     const savedUser = await this.userRepo.save(user);
 

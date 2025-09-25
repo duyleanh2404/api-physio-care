@@ -3,20 +3,22 @@ import * as path from 'path';
 import * as Handlebars from 'handlebars';
 
 import { Resend } from 'resend';
-import { ConfigService } from '@nestjs/config';
+import { ConfigService, ConfigType } from '@nestjs/config';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
-import { getOtpConfig } from '../config/otp.config';
+import otpConfig from '../config/otp.config';
 
 @Injectable()
 export class EmailRepository {
-  private resend: Resend;
-  private otpFromEmail: string;
+  private readonly resend: Resend;
+  private readonly otpFromEmail: string;
 
   constructor(private readonly configService: ConfigService) {
-    const otpConfig = getOtpConfig(this.configService);
-    this.resend = new Resend(otpConfig.resendApiKey);
-    this.otpFromEmail = otpConfig.otpFromEmail!;
+    const otpCfg =
+      this.configService.getOrThrow<ConfigType<typeof otpConfig>>('otp');
+
+    this.resend = new Resend(otpCfg.resendApiKey);
+    this.otpFromEmail = otpCfg.otpFromEmail!;
   }
 
   private compileTemplate(templateName: string, context: any): string {
@@ -33,7 +35,7 @@ export class EmailRepository {
   }
 
   async sendOtp(email: string, otp: string, subject: string) {
-    const logoUrl = `${process.env.APP_URL}/logo.svg`;
+    const logoUrl = `${process.env.BACKEND_URL}/logo.svg`;
 
     const html = this.compileTemplate('confirmation', {
       otp,

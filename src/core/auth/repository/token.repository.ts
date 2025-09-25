@@ -1,27 +1,27 @@
 import * as argon2 from 'argon2';
-
 import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
+import { ConfigService, ConfigType } from '@nestjs/config';
 
-import { getJwtConfig } from '../config/jwt.config';
+import jwtConfig from '../config/jwt.config';
 import { UserService } from 'src/modules/user/user.service';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 
 @Injectable()
 export class TokenRepository {
-  private readonly jwtConfig: ReturnType<typeof getJwtConfig>;
+  private readonly jwtConfig: ConfigType<typeof jwtConfig>;
 
   constructor(
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
     private readonly configService: ConfigService,
   ) {
-    this.jwtConfig = getJwtConfig(this.configService);
+    this.jwtConfig =
+      this.configService.get<ConfigType<typeof jwtConfig>>('jwt')!;
   }
 
   async generateTokens(user: any) {
@@ -54,7 +54,7 @@ export class TokenRepository {
   async validateRefreshToken(userId: string, token: string) {
     const user = await this.userService.findByIdWithRefreshToken(userId);
     if (!user || !user.refreshToken) return false;
-    return await argon2.verify(user.refreshToken, token);
+    return argon2.verify(user.refreshToken, token);
   }
 
   async removeRefreshToken(userId: string) {
