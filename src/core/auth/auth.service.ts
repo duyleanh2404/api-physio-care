@@ -3,6 +3,7 @@ import * as argon2 from 'argon2';
 import {
   Injectable,
   ConflictException,
+  NotFoundException,
   ForbiddenException,
   BadRequestException,
   UnauthorizedException,
@@ -88,7 +89,7 @@ export class AuthService {
 
   async forgotPassword(email: string) {
     const user = await this.userService.findByEmail(email);
-    if (!user) throw new BadRequestException('User not found');
+    if (!user) throw new NotFoundException('User not found');
 
     await this.otpRepo.sendOtpForPasswordReset(user.id, email);
 
@@ -97,7 +98,7 @@ export class AuthService {
 
   async resetPassword(email: string, otp: string, newPassword: string) {
     const user = await this.userService.findByEmail(email);
-    if (!user) throw new BadRequestException('User not found');
+    if (!user) throw new NotFoundException('User not found');
 
     const isValid = await this.otpRepo.validateOtp(user.id, otp);
     if (!isValid) throw new BadRequestException('Invalid or expired OTP');
@@ -110,9 +111,18 @@ export class AuthService {
     return { message: 'Password reset successfully' };
   }
 
+  async resendOtp(email: string) {
+    const user = await this.userService.findByEmail(email);
+    if (!user) throw new NotFoundException('User not found');
+
+    await this.otpRepo.resendOtp(user.id, email);
+
+    return { message: 'OTP resent successfully', email };
+  }
+
   async logout(userId: string) {
     const user = await this.userService.findById(userId);
-    if (!user) throw new BadRequestException('User not found');
+    if (!user) throw new NotFoundException('User not found');
 
     await this.tokenRepo.removeRefreshToken(userId);
 
