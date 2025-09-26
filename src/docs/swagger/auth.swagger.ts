@@ -5,11 +5,34 @@ import { LoginDto } from 'src/core/auth/dto/login.dto';
 import { RegisterDto } from 'src/core/auth/dto/register.dto';
 import { ResendOtpDto } from 'src/core/auth/dto/resend-otp.dto';
 import { VerifyOtpDto } from 'src/core/auth/dto/verify-otp.dto';
+import { RegisterAdminDto } from 'src/core/auth/dto/register-admin.dto';
 import { RefreshTokenDto } from 'src/core/auth/dto/refresh-token.dto';
 import { ResetPasswordDto } from 'src/core/auth/dto/reset-password.dto';
 import { UserResponseDto } from 'src/modules/user/dto/user-response.dto';
 import { ForgotPasswordDto } from 'src/core/auth/dto/forgot-password.dto';
+import { AuthLoginResponse } from 'src/core/auth/dto/auth-login-response.dto';
 import { AuthTokensResponse } from 'src/core/auth/dto/auth-tokens-response.dto';
+
+export const ApiRegisterAdmin = () =>
+  applyDecorators(
+    ApiOperation({ summary: 'Create admin account' }),
+    ApiBody({ type: RegisterAdminDto }),
+    ApiResponse({
+      status: 201,
+      description: 'Admin account created successfully',
+      type: UserResponseDto,
+    }),
+    ApiResponse({
+      status: 409,
+      description: 'Email already exists',
+      schema: {
+        type: 'object',
+        properties: {
+          message: { type: 'string', example: 'Email already exists' },
+        },
+      },
+    }),
+  );
 
 export const ApiLogin = () =>
   applyDecorators(
@@ -18,7 +41,7 @@ export const ApiLogin = () =>
     ApiResponse({
       status: 200,
       description: 'Login successful',
-      type: AuthTokensResponse,
+      type: AuthLoginResponse,
     }),
     ApiResponse({
       status: 401,

@@ -74,17 +74,31 @@ export class UserService {
     };
   }
 
+  async findOne(id: string) {
+    const user = await this.userRepo.findOne({
+      where: { id },
+      select: [
+        'id',
+        'role',
+        'email',
+        'status',
+        'fullName',
+        'provider',
+        'avatarUrl',
+        'createdAt',
+        'updatedAt',
+      ],
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    return user;
+  }
+
   async findById(id: string) {
     const user = await this.userRepo.findOne({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
 
-    const { password, refreshToken, ...rest } = user;
-    return rest;
-  }
-
-  async findByIdWithRefreshToken(id: string): Promise<User> {
-    const user = await this.userRepo.findOne({ where: { id } });
-    if (!user) throw new NotFoundException('User not found');
     return user;
   }
 

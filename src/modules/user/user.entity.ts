@@ -6,7 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { UserStatus, UserProvider } from 'src/enums/user.enums';
+import { UserStatus, UserProvider, UserRole } from 'src/enums/user.enums';
 
 @Entity('users')
 export class User {
@@ -25,8 +25,12 @@ export class User {
   @Column({ nullable: true })
   avatarUrl?: string;
 
-  @Column({ default: 'user' })
-  role: string;
+  @Column({
+    type: 'varchar2',
+    length: 20,
+    default: UserRole.USER,
+  })
+  role: UserRole;
 
   @Column({ type: 'varchar2', length: 500, nullable: true })
   refreshToken?: string;
