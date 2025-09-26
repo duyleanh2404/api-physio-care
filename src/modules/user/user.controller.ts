@@ -6,6 +6,7 @@ import {
   Param,
   Query,
   Delete,
+  Request,
   UseGuards,
   Controller,
 } from '@nestjs/common';
@@ -15,6 +16,7 @@ import {
   ApiCreateUser,
   ApiUpdateUser,
   ApiDeleteUser,
+  ApiFindMeUser,
   ApiFindOneUser,
   ApiFindAllUsers,
 } from 'src/docs/swagger/user.swagger';
@@ -34,6 +36,13 @@ import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @Get('me')
+  @ApiFindMeUser()
+  async getMe(@Request() req) {
+    const user = req.user as { id: string };
+    return this.userService.findById(user.id);
+  }
 
   @Get()
   @Roles('admin')
