@@ -10,3 +10,8 @@ export enum UserProvider {
   FACEBOOK = 'facebook',
   GITHUB = 'github',
 }
+
+export enum UserRole {
+  USER = 'user',
+  ADMIN = 'admin',
+}

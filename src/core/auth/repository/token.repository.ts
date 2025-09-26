@@ -1,4 +1,5 @@
 import * as argon2 from 'argon2';
+
 import {
   Injectable,
   NotFoundException,
@@ -52,7 +53,7 @@ export class TokenRepository {
   }
 
   async validateRefreshToken(userId: string, token: string) {
-    const user = await this.userService.findByIdWithRefreshToken(userId);
+    const user = await this.userService.findById(userId);
     if (!user || !user.refreshToken) return false;
     return argon2.verify(user.refreshToken, token);
   }

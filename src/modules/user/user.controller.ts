@@ -40,8 +40,8 @@ export class UserController {
   @Get('me')
   @ApiFindMeUser()
   async getMe(@Request() req) {
-    const user = req.user as { id: string };
-    return this.userService.findById(user.id);
+    const user = req.user as { sub: string };
+    return this.userService.findOne(user.sub);
   }
 
   @Get()
@@ -55,7 +55,7 @@ export class UserController {
   @Roles('admin')
   @ApiFindOneUser()
   async findOne(@Param('id') id: string) {
-    return this.userService.findById(id);
+    return this.userService.findOne(id);
   }
 
   @Post()

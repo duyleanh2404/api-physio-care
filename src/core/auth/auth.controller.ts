@@ -16,6 +16,7 @@ import {
   ApiRefresh,
   ApiRegister,
   ApiResendOtp,
+  ApiRegisterAdmin,
   ApiResetPassword,
   ApiVerifyAccount,
   ApiForgotPassword,
@@ -31,6 +32,7 @@ import { ResendOtpDto } from './dto/resend-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { RegisterAdminDto } from './dto/register-admin.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 
 @ApiTags('Auth')
@@ -51,6 +53,12 @@ export class AuthController {
   @ApiRegister()
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
+  }
+
+  @Post('register/admin')
+  @ApiRegisterAdmin()
+  async registerAdmin(@Body() dto: RegisterAdminDto) {
+    return this.authService.registerAdmin(dto);
   }
 
   @Post('refresh')
