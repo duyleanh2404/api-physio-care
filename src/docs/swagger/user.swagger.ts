@@ -3,6 +3,23 @@ import { ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 
 import { UserResponseDto } from 'src/modules/user/dto/user-response.dto';
 
+export const ApiFindMeUser = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get current logged-in user',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'Current user details',
+      type: UserResponseDto,
+    }),
+    ApiResponse({
+      status: 401,
+      description: 'Unauthorized - Missing or invalid token',
+      schema: { example: { message: 'Unauthorized' } },
+    }),
+  );
+
 export const ApiFindAllUsers = () =>
   applyDecorators(
     ApiOperation({
