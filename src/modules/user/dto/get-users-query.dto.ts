@@ -1,6 +1,13 @@
+import {
+  Min,
+  IsIn,
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsDateString,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsNumber, Min, IsIn } from 'class-validator';
 
 export class GetUsersQueryDto {
   @ApiPropertyOptional({
@@ -55,4 +62,32 @@ export class GetUsersQueryDto {
   @IsOptional()
   @IsString({ message: 'fields must be a string' })
   fields?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by status (e.g. active, inactive, banned)',
+  })
+  @IsOptional()
+  @IsString({ message: 'status must be a string' })
+  status?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by role (e.g. user, doctor)',
+  })
+  @IsOptional()
+  @IsString({ message: 'role must be a string' })
+  role?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter users created from this date (ISO format)',
+  })
+  @IsOptional()
+  @IsDateString({}, { message: 'dateFrom must be a valid ISO date string' })
+  dateFrom?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter users created until this date (ISO format)',
+  })
+  @IsOptional()
+  @IsDateString({}, { message: 'dateTo must be a valid ISO date string' })
+  dateTo?: string;
 }

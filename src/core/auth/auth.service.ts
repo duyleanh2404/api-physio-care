@@ -199,12 +199,13 @@ export class AuthService {
 
     if (!existingUser) {
       existingUser = await this.userService.create({
+        password: '',
         email: user.email,
-        fullName: `${user.firstName} ${user.lastName}`,
-        avatarUrl: user.picture,
         role: UserRole.USER,
+        avatarUrl: user.picture,
         status: UserStatus.ACTIVE,
         provider: UserProvider.GOOGLE,
+        fullName: `${user.firstName} ${user.lastName}`,
       });
     }
 

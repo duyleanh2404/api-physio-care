@@ -5,18 +5,21 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { dbConfig } from './core/database/db.config';
 import { AuthModule } from './core/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
+import { CloudinaryModule } from './core/cloudinary/cloudinary.module';
 
 import jwtConfig from './core/auth/config/jwt.config';
 import otpConfig from './core/auth/config/otp.config';
 import googleConfig from './core/auth/config/google.config';
+import cloudinaryConfig from './core/cloudinary/cloudinary.config';
 
 @Module({
   imports: [
     UserModule,
     AuthModule,
+    CloudinaryModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [googleConfig, jwtConfig, otpConfig],
+      load: [googleConfig, jwtConfig, otpConfig, cloudinaryConfig],
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
