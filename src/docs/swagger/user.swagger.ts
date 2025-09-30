@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { ApiParam, ApiResponse, ApiOperation, ApiQuery } from '@nestjs/swagger';
 
 import { UserResponseDto } from 'src/modules/user/dto/user-response.dto';
 
@@ -25,6 +25,12 @@ export const ApiFindAllUsers = () =>
     ApiOperation({
       summary: 'Get all users (Admin only)',
     }),
+
+    ApiQuery({ name: 'status', required: false, type: String }),
+    ApiQuery({ name: 'role', required: false, type: String }),
+    ApiQuery({ name: 'dateFrom', required: false, type: String }),
+    ApiQuery({ name: 'dateTo', required: false, type: String }),
+
     ApiResponse({
       status: 200,
       description: 'Paginated list of users',
@@ -40,6 +46,7 @@ export const ApiFindAllUsers = () =>
               email: 'user@example.com',
               fullName: 'John Doe',
               role: 'user',
+              status: 'active',
               createdAt: '2025-09-23T12:00:00.000Z',
               updatedAt: '2025-09-23T12:10:00.000Z',
             },
@@ -121,6 +128,66 @@ export const ApiUpdateUser = () =>
       status: 403,
       description: 'Permission denied',
       schema: { example: { message: 'Permission denied' } },
+    }),
+  );
+
+export const ApiBanUser = () =>
+  applyDecorators(
+    ApiOperation({ summary: 'Ban a user account (Admin only)' }),
+    ApiParam({
+      name: 'id',
+      description: 'ID of the user to be banned',
+      example: 'acee4e04-3925-4505-83d6-7a2e0b614f7e',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'User account successfully banned',
+      type: UserResponseDto,
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'User not found',
+      schema: { example: { message: 'User not found' } },
+    }),
+    ApiResponse({
+      status: 403,
+      description: 'Permission denied',
+      schema: { example: { message: 'Permission denied' } },
+    }),
+    ApiResponse({
+      status: 400,
+      description: 'User is already banned',
+      schema: { example: { message: 'User is already banned' } },
+    }),
+  );
+
+export const ApiUnbanUser = () =>
+  applyDecorators(
+    ApiOperation({ summary: 'Unban a user account (Admin only)' }),
+    ApiParam({
+      name: 'id',
+      description: 'ID of the user to be unbanned',
+      example: 'acee4e04-3925-4505-83d6-7a2e0b614f7e',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'User account successfully unbanned',
+      type: UserResponseDto,
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'User not found',
+      schema: { example: { message: 'User not found' } },
+    }),
+    ApiResponse({
+      status: 403,
+      description: 'Permission denied',
+      schema: { example: { message: 'Permission denied' } },
+    }),
+    ApiResponse({
+      status: 400,
+      description: 'User is already active',
+      schema: { example: { message: 'User is already active' } },
     }),
   );
 

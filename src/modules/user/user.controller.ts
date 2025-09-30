@@ -9,10 +9,15 @@ import {
   Request,
   UseGuards,
   Controller,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 
 import {
+  ApiBanUser,
+  ApiUnbanUser,
   ApiCreateUser,
   ApiUpdateUser,
   ApiDeleteUser,
@@ -61,15 +66,40 @@ export class UserController {
   @Post()
   @Roles('admin')
   @ApiCreateUser()
-  async create(@Body() dto: CreateUserDto) {
-    return this.userService.create(dto);
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('avatar'))
+  async create(
+    @Body() dto: CreateUserDto,
+    @UploadedFile() avatar?: Express.Multer.File,
+  ) {
+    return this.userService.create(dto, avatar);
   }
 
   @Put(':id')
   @Roles('admin')
   @ApiUpdateUser()
-  async update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
-    return this.userService.update(id, dto);
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('avatar'))
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserDto,
+    @UploadedFile() avatar: Express.Multer.File,
+  ) {
+    return this.userService.update(id, dto, avatar);
+  }
+
+  @Put('ban/:id')
+  @Roles('admin')
+  @ApiBanUser()
+  async ban(@Param('id') id: string) {
+    return this.userService.ban(id);
+  }
+
+  @Put('unban/:id')
+  @Roles('admin')
+  @ApiUnbanUser()
+  async unban(@Param('id') id: string) {
+    return this.userService.unban(id);
   }
 
   @Delete(':id')

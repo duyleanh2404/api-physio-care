@@ -24,14 +24,14 @@ export class CreateUserDto {
   @MaxLength(50, { message: 'Email must not exceed 50 characters' })
   email: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     example: 'Abcd1234!',
     description:
       'Password must be at least 8 characters long and contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character',
     minLength: 8,
     maxLength: 50,
   })
-  @IsOptional()
+  @IsNotEmpty({ message: 'Password must not be empty' })
   @IsString({ message: 'Password must be a string' })
   @MinLength(8, { message: 'Password must be at least 8 characters' })
   @MaxLength(50, { message: 'Password must not exceed 50 characters' })
@@ -39,7 +39,7 @@ export class CreateUserDto {
     message:
       'Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character',
   })
-  password?: string;
+  password: string;
 
   @ApiProperty({
     example: 'John Doe',
@@ -61,8 +61,12 @@ export class CreateUserDto {
   @IsEnum(UserRole, { message: 'Invalid role' })
   role: UserRole;
 
+  @ApiPropertyOptional({
+    example: 'https://res.cloudinary.com/demo/image/upload/sample.jpg',
+    description: 'URL of the avatar image',
+  })
   @IsOptional()
-  @IsUrl({}, { message: 'avatarUrl must be a valid URL' })
+  @IsUrl({}, { message: 'Avatar URL must be a valid URL' })
   avatarUrl?: string;
 
   @IsOptional()

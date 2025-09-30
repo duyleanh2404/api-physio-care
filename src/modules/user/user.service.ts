@@ -1,64 +1,99 @@
+import * as argon2 from 'argon2';
+
 import {
   Injectable,
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-
-import { User } from './user.entity';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { GetUsersQueryDto } from './dto/get-users-query.dto';
+
+import { User } from './user.entity';
+import { UserStatus } from 'src/enums/user.enums';
+import { CloudinaryService } from 'src/core/cloudinary/cloudinary.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   async findAll(query: GetUsersQueryDto) {
     const {
+      role,
       search,
+      status,
+      dateTo,
+      dateFrom,
       page = 1,
       limit = 10,
       sortBy = 'id',
       sortOrder = 'ASC',
-      fields,
     } = query;
 
     const qb = this.userRepo.createQueryBuilder('user');
 
     if (search) {
-      qb.where('user.email LIKE :search OR user.fullName LIKE :search', {
-        search: `%${search}%`,
+      const keyword = `%${search.toLowerCase()}%`;
+      qb.andWhere(
+        new Brackets((qb) => {
+          qb.where('LOWER(TRIM(user.fullName)) LIKE :keyword').orWhere(
+            'LOWER(TRIM(user.email)) LIKE :keyword',
+          );
+        }),
+        { keyword },
+      );
+    }
+
+    if (role) {
+      qb.andWhere('user.role = :role', { role });
+    }
+
+    if (status) {
+      qb.andWhere('user.status = :status', { status });
+    }
+
+    if (dateFrom && dateTo) {
+      qb.andWhere('user.createdAt BETWEEN :dateFrom AND :dateTo', {
+        dateFrom: new Date(dateFrom).toISOString(),
+        dateTo: new Date(dateTo).toISOString(),
+      });
+    } else if (dateFrom) {
+      qb.andWhere('user.createdAt >= :dateFrom', {
+        dateFrom: new Date(dateFrom).toISOString(),
+      });
+    } else if (dateTo) {
+      qb.andWhere('user.createdAt <= :dateTo', {
+        dateTo: new Date(dateTo).toISOString(),
       });
     }
 
-    const total = await qb.getCount();
+    qb.andWhere('user.role != :roleExclude', { roleExclude: 'admin' });
 
-    if (fields) {
-      const allowedFields = [
-        'id',
-        'email',
-        'fullName',
-        'role',
-        'createdAt',
-        'updatedAt',
-      ];
-      const selectedFields = fields
-        .split(',')
-        .map((f) => f.trim())
-        .filter((f) => allowedFields.includes(f))
-        .map((f) => `user.${f}`);
-      qb.select(selectedFields);
-    }
+    const total = await qb.clone().getCount();
 
-    qb.orderBy(`user.${sortBy}`, sortOrder)
-      .skip((page - 1) * limit)
-      .take(limit);
+    const allowedFields = [
+      'id',
+      'role',
+      'email',
+      'status',
+      'fullName',
+      'provider',
+      'avatarUrl',
+      'createdAt',
+      'updatedAt',
+    ];
+    qb.select(allowedFields.map((f) => `user.${f}`));
+
+    qb.orderBy(`user.${sortBy}`, sortOrder.toUpperCase() as 'ASC' | 'DESC');
+
+    qb.skip((page - 1) * limit).take(limit);
 
     const users = await qb.getMany();
 
@@ -67,10 +102,7 @@ export class UserService {
       limit,
       total,
       totalPages: Math.ceil(total / limit),
-      data: users.map((u) => {
-        const { password, refreshToken, ...rest } = u;
-        return rest;
-      }),
+      data: users,
     };
   }
 
@@ -106,27 +138,84 @@ export class UserService {
     return this.userRepo.findOne({ where: { email } });
   }
 
-  async create(dto: CreateUserDto) {
+  async create(dto: CreateUserDto, avatar?: Express.Multer.File) {
     if (await this.findByEmail(dto.email)) {
       throw new ConflictException(`Email ${dto.email} already exists`);
     }
 
-    const user = this.userRepo.create(dto);
+    if (avatar) {
+      const uploaded = await this.cloudinaryService.uploadImage(
+        avatar,
+        'avatar',
+      );
+      dto.avatarUrl = uploaded.secure_url;
+    }
 
+    if (!dto.status) {
+      dto.status = UserStatus.ACTIVE;
+    }
+
+    const user = this.userRepo.create(dto);
     const savedUser = await this.userRepo.save(user);
 
     const { password, refreshToken, ...rest } = savedUser;
     return rest;
   }
 
-  async update(id: string, dto: UpdateUserDto) {
+  async update(id: string, dto: UpdateUserDto, avatar?: Express.Multer.File) {
     const user = await this.userRepo.findOne({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
+
+    if (dto.password) {
+      dto.password = await argon2.hash(dto.password);
+    }
+
+    if (avatar) {
+      const uploaded = await this.cloudinaryService.uploadImage(
+        avatar,
+        'avatar',
+      );
+
+      dto.avatarUrl = uploaded.secure_url;
+    }
 
     Object.assign(user, dto);
     const savedUser = await this.userRepo.save(user);
 
-    const { password, refreshToken, ...rest } = savedUser;
+    const { password, refreshToken, verificationOtp, otpExpiresAt, ...rest } =
+      savedUser;
+    return rest;
+  }
+
+  async ban(id: string) {
+    const user = await this.userRepo.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
+
+    if (user.status === UserStatus.BANNED) {
+      throw new ConflictException('User is already banned');
+    }
+
+    user.status = UserStatus.BANNED;
+    const savedUser = await this.userRepo.save(user);
+
+    const { password, refreshToken, verificationOtp, otpExpiresAt, ...rest } =
+      savedUser;
+    return rest;
+  }
+
+  async unban(id: string) {
+    const user = await this.userRepo.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
+
+    if (user.status === UserStatus.ACTIVE) {
+      throw new ConflictException('User is already active');
+    }
+
+    user.status = UserStatus.ACTIVE;
+    const savedUser = await this.userRepo.save(user);
+
+    const { password, refreshToken, verificationOtp, otpExpiresAt, ...rest } =
+      savedUser;
     return rest;
   }
 
