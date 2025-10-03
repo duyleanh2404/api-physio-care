@@ -69,6 +69,8 @@ export class RecordService {
       dateFrom,
       doctorId,
       page = 1,
+      frequency,
+      intensity,
       limit = 10,
       patientsId,
       treatmentType,
@@ -83,21 +85,42 @@ export class RecordService {
 
     if (search) {
       qb.andWhere(
-        '(record.history LIKE :search OR record.goals LIKE :search OR record.progress LIKE :search)',
+        '(record.history LIKE :search OR record.goals LIKE :search OR record.progress LIKE :search OR record.recordCode LIKE :search)',
         { search: `%${search}%` },
       );
     }
 
-    if (patientsId)
+    if (status) {
+      qb.andWhere('record.status = :status', { status });
+    }
+
+    if (dateTo) {
+      qb.andWhere('record.createdAt <= :dateTo', { dateTo });
+    }
+
+    if (doctorId) {
+      qb.andWhere('record.doctorId = :doctorId', { doctorId });
+    }
+
+    if (dateFrom) {
+      qb.andWhere('record.createdAt >= :dateFrom', { dateFrom });
+    }
+
+    if (frequency) {
+      qb.andWhere('record.frequency = :frequency', { frequency });
+    }
+
+    if (intensity) {
+      qb.andWhere('record.intensity = :intensity', { intensity });
+    }
+
+    if (patientsId) {
       qb.andWhere('record.patientsId = :patientsId', { patientsId });
+    }
 
-    if (treatmentType)
+    if (treatmentType) {
       qb.andWhere('record.treatmentType = :treatmentType', { treatmentType });
-
-    if (status) qb.andWhere('record.status = :status', { status });
-    if (dateTo) qb.andWhere('record.createdAt <= :dateTo', { dateTo });
-    if (doctorId) qb.andWhere('record.doctorId = :doctorId', { doctorId });
-    if (dateFrom) qb.andWhere('record.createdAt >= :dateFrom', { dateFrom });
+    }
 
     qb.orderBy(`record.${sortBy}`, sortOrder as 'ASC' | 'DESC');
 
