@@ -15,7 +15,7 @@ import { UserRole } from 'src/enums/user.enums';
 
 export class CreateUserDto {
   @ApiProperty({
-    example: 'user@example.com',
+    example: '',
     description: 'User email address',
     maxLength: 50,
   })
@@ -25,7 +25,7 @@ export class CreateUserDto {
   email: string;
 
   @ApiProperty({
-    example: 'Abcd1234!',
+    example: '',
     description:
       'Password must be at least 8 characters long and contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character',
     minLength: 8,
@@ -42,7 +42,7 @@ export class CreateUserDto {
   password: string;
 
   @ApiProperty({
-    example: 'John Doe',
+    example: '',
     description: 'Full name of the user',
     minLength: 2,
     maxLength: 50,
@@ -61,13 +61,17 @@ export class CreateUserDto {
   @IsEnum(UserRole, { message: 'Invalid role' })
   role: UserRole;
 
-  @ApiPropertyOptional({
-    example: 'https://res.cloudinary.com/demo/image/upload/sample.jpg',
-    description: 'URL of the avatar image',
-  })
   @IsOptional()
   @IsUrl({}, { message: 'Avatar URL must be a valid URL' })
   avatarUrl?: string;
+
+  @ApiPropertyOptional({
+    type: 'string',
+    format: 'binary',
+    description: 'Upload a new avatar file (optional)',
+  })
+  @IsOptional()
+  avatar?: any;
 
   @IsOptional()
   @IsString()

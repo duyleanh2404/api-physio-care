@@ -9,11 +9,11 @@ import {
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
-import { UserRole } from 'src/enums/user.enums';
+import { UserRole, UserStatus } from 'src/enums/user.enums';
 
 export class UpdateUserDto {
   @ApiPropertyOptional({
-    example: 'John Doe',
+    example: '',
     description: 'Full name of the user',
   })
   @IsOptional()
@@ -21,7 +21,7 @@ export class UpdateUserDto {
   fullName?: string;
 
   @ApiPropertyOptional({
-    example: 'Abcd1234!',
+    example: '',
     description:
       'Password must be at least 8 characters, contain uppercase, lowercase, number, and special character',
     minLength: 8,
@@ -46,17 +46,26 @@ export class UpdateUserDto {
   @IsEnum(UserRole, { message: 'Invalid role' })
   role?: UserRole;
 
-  @ApiPropertyOptional({
-    example: 'https://res.cloudinary.com/demo/image/upload/sample.jpg',
-    description: 'URL of the avatar image',
-  })
   @IsOptional()
   @IsUrl({}, { message: 'Avatar URL must be a valid URL' })
   avatarUrl?: string;
 
+  @ApiPropertyOptional({
+    type: 'string',
+    format: 'binary',
+    description: 'Upload a new avatar file (optional)',
+  })
   @IsOptional()
-  @IsString({ message: 'Status must be a string' })
-  status?: string;
+  avatar?: any;
+
+  @ApiPropertyOptional({
+    example: UserStatus.ACTIVE,
+    description: 'Status of the user',
+    enum: UserStatus,
+  })
+  @IsOptional()
+  @IsEnum(UserStatus, { message: 'Invalid status' })
+  status?: UserStatus;
 
   @IsOptional()
   @IsString()

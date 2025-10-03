@@ -155,6 +155,10 @@ export class UserService {
       dto.status = UserStatus.ACTIVE;
     }
 
+    if (dto.password) {
+      dto.password = await argon2.hash(dto.password);
+    }
+
     const user = this.userRepo.create(dto);
     const savedUser = await this.userRepo.save(user);
 
@@ -179,7 +183,14 @@ export class UserService {
       dto.avatarUrl = uploaded.secure_url;
     }
 
-    Object.assign(user, dto);
+    const updatedFields = Object.fromEntries(
+      Object.entries(dto).filter(
+        ([_, value]) => value !== undefined && value !== null && value !== '',
+      ),
+    );
+
+    Object.assign(user, updatedFields);
+
     const savedUser = await this.userRepo.save(user);
 
     const { password, refreshToken, verificationOtp, otpExpiresAt, ...rest } =
