@@ -72,11 +72,8 @@ export class AuthService {
     const existingUser = await this.userService.findByEmail(registerDto.email);
     if (existingUser) throw new ConflictException('Email already exists');
 
-    const hashedPassword = await argon2.hash(registerDto.password);
-
     const user = await this.userService.create({
       ...registerDto,
-      password: hashedPassword,
       role: UserRole.USER,
     });
 
@@ -94,13 +91,11 @@ export class AuthService {
       throw new ConflictException('Email already exists');
     }
 
-    const hashedPassword = await argon2.hash(dto.password);
-
     const user = await this.userService.create({
       email: dto.email,
-      password: hashedPassword,
-      fullName: dto.fullName,
       role: UserRole.ADMIN,
+      password: dto.password,
+      fullName: dto.fullName,
       status: UserStatus.ACTIVE,
       provider: UserProvider.LOCAL,
     });
@@ -171,9 +166,10 @@ export class AuthService {
     const isValid = await this.otpRepo.validateOtp(user.id, otp);
     if (!isValid) throw new BadRequestException('Invalid or expired OTP');
 
-    user.password = await argon2.hash(newPassword);
+    await this.userService.update(user.id, {
+      password: await argon2.hash(newPassword),
+    });
 
-    await this.userService.update(user.id, user);
     await this.otpRepo.removeOtp(user.id);
 
     return { message: 'Password reset successfully' };

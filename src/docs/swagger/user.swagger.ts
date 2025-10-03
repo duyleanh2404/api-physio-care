@@ -112,7 +112,6 @@ export const ApiUpdateUser = () =>
     ApiParam({
       name: 'id',
       description: 'User ID',
-      example: 'acee4e04-3925-4505-83d6-7a2e0b614f7e',
     }),
     ApiResponse({
       status: 200,

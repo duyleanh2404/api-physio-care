@@ -35,12 +35,9 @@ export class EmailRepository {
   }
 
   async sendOtp(email: string, otp: string, subject: string) {
-    const logoUrl = `${process.env.BACKEND_URL}/logo.svg`;
-
     const html = this.compileTemplate('confirmation', {
       otp,
       email,
-      logoUrl,
       subject,
       companyName: 'PhysioCare',
       ttlMinutes: 5,
