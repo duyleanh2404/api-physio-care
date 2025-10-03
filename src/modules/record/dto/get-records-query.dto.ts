@@ -109,6 +109,20 @@ export class GetRecordsQueryDto {
   treatmentType?: string;
 
   @ApiPropertyOptional({
+    description: 'Filter by treatment frequency',
+  })
+  @IsOptional()
+  @IsString({ message: 'frequency must be a string' })
+  frequency?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by treatment intensity',
+  })
+  @IsOptional()
+  @IsString({ message: 'intensity must be a string' })
+  intensity?: string;
+
+  @ApiPropertyOptional({
     description: 'Filter records created from this date (ISO format)',
   })
   @IsOptional()
