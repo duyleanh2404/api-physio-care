@@ -1,6 +1,6 @@
 # PhysioCare
 
-This is a Next.js (version 15) project bootstrapped with create-next-app for the PhysioCare application. It utilizes Tailwind CSS for styling, shadcn/ui for UI components, React Query for data fetching, React Hook Form for form management, and Zustand for state management.
+The backend of the PhysioCare application is built with NestJS, using TypeORM with Oracle Database, Passport.js for authentication, Cloudinary for file storage, and Resend for email delivery.
 
 ## 🛠 Getting Started
 
