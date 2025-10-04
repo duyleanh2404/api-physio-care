@@ -9,6 +9,7 @@ import { applyDecorators } from '@nestjs/common';
 
 import { UpdateRecordDto } from 'src/modules/record/dto/update-record.dto';
 import { CreateRecordDto } from 'src/modules/record/dto/create-record.dto';
+import { PaginatedResponseDto } from 'src/common/dto/paginated-response.dto';
 import { RecordResponseDto } from 'src/modules/record/dto/record-response.dto';
 
 export const ApiCreateRecord = () =>
@@ -53,20 +54,8 @@ export const ApiFindAllRecords = () =>
     ApiOperation({ summary: 'Get all medical records' }),
     ApiResponse({
       status: 200,
-      description: 'List of medical records',
-      schema: {
-        example: {
-          data: [
-            {
-              id: 'acee4e04-3925-4505-83d6-7a2e0b614f7e',
-              patientId: 'patient-uuid',
-              description: 'Patient checkup result',
-              attachments: ['uploads/records/file1.pdf'],
-              createdAt: '2025-10-02T10:00:00Z',
-            },
-          ],
-        },
-      },
+      description: 'Paginated list of medical records',
+      type: PaginatedResponseDto(RecordResponseDto),
     }),
   );
 

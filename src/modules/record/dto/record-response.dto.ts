@@ -1,5 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+import { UserResponseDto } from '../../user/dto/user-response.dto';
+
+export class BufferDto {
+  @ApiPropertyOptional({ example: 'Buffer' })
+  type: string;
+
+  @ApiPropertyOptional({ example: [80, 75, 3, 4, 20, 0, 6, 0, 8, 0] })
+  data: number[];
+}
+
 export class RecordResponseDto {
   @ApiProperty({
     example: 'acee4e04-3925-4505-83d6-7a2e0b614f7e',
@@ -8,10 +18,22 @@ export class RecordResponseDto {
   id: string;
 
   @ApiProperty({
+    example: 'REC-20251002-001',
+    description: 'Unique code of the medical record',
+  })
+  recordCode: string;
+
+  @ApiProperty({
     example: 'acee4e04-3925-4505-83d6-7a2e0b614f7e',
     description: 'ID of the patient this record belongs to',
   })
   patientsId: string;
+
+  @ApiPropertyOptional({
+    description: 'Patient information (if eager loaded)',
+    type: () => UserResponseDto,
+  })
+  patient?: UserResponseDto;
 
   @ApiProperty({
     example: 'acee4e04-3925-4505-83d6-7a2e0b614f7e',
@@ -19,18 +41,18 @@ export class RecordResponseDto {
   })
   doctorId: string;
 
+  @ApiPropertyOptional({
+    description: 'Doctor information (if eager loaded)',
+    type: () => UserResponseDto,
+  })
+  doctor?: UserResponseDto;
+
   @ApiProperty({
     example: 'active',
     description: 'Status of the record',
     enum: ['active', 'completed', 'pending'],
   })
   status: string;
-
-  @ApiProperty({
-    example: '2025-10-02T10:00:00.000Z',
-    description: 'The date of the medical record',
-  })
-  recordDate: Date;
 
   @ApiPropertyOptional({
     example: 'Patient had mild headache for 3 days',
@@ -69,10 +91,22 @@ export class RecordResponseDto {
   progress?: string;
 
   @ApiPropertyOptional({
-    example: 'https://res.cloudinary.com/demo/raw/upload/records/sample.pdf',
-    description: 'Attachment file URL (single file, e.g., PDF, Word, etc.)',
+    description: 'BLOB data of the attachment as a Buffer-like object',
+    type: BufferDto,
   })
-  attachment?: string;
+  attachmentData?: string;
+
+  @ApiPropertyOptional({
+    example: 'record_notes.pdf',
+    description: 'Original name of the uploaded file',
+  })
+  attachmentName?: string;
+
+  @ApiPropertyOptional({
+    example: 'application/pdf',
+    description: 'MIME type of the uploaded file',
+  })
+  attachmentMime?: string;
 
   @ApiProperty({
     example: '2025-10-02T12:00:00.000Z',

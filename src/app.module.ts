@@ -12,12 +12,14 @@ import { AuthModule } from './core/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { RecordModule } from './modules/record/record.module';
 import { CloudinaryModule } from './core/cloudinary/cloudinary.module';
+import { SpecialtyModule } from './modules/specialty/specialty.module';
 
 @Module({
   imports: [
     UserModule,
     AuthModule,
     RecordModule,
+    SpecialtyModule,
     CloudinaryModule,
     ConfigModule.forRoot({
       isGlobal: true,

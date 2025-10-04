@@ -1,11 +1,5 @@
-import {
-  IsEnum,
-  IsString,
-  IsNotEmpty,
-  IsOptional,
-  IsDateString,
-} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEnum, IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateRecordDto {
   @ApiProperty()
