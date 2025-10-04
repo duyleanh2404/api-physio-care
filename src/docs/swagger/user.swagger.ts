@@ -2,6 +2,7 @@ import { applyDecorators } from '@nestjs/common';
 import { ApiParam, ApiResponse, ApiOperation, ApiQuery } from '@nestjs/swagger';
 
 import { UserResponseDto } from 'src/modules/user/dto/user-response.dto';
+import { PaginatedResponseDto } from 'src/common/dto/paginated-response.dto';
 
 export const ApiFindMeUser = () =>
   applyDecorators(
@@ -25,34 +26,14 @@ export const ApiFindAllUsers = () =>
     ApiOperation({
       summary: 'Get all users (Admin only)',
     }),
-
     ApiQuery({ name: 'status', required: false, type: String }),
     ApiQuery({ name: 'role', required: false, type: String }),
     ApiQuery({ name: 'dateFrom', required: false, type: String }),
     ApiQuery({ name: 'dateTo', required: false, type: String }),
-
     ApiResponse({
       status: 200,
       description: 'Paginated list of users',
-      schema: {
-        example: {
-          page: 1,
-          limit: 10,
-          totalPages: 5,
-          total: 50,
-          data: [
-            {
-              id: 'acee4e04-3925-4505-83d6-7a2e0b614f7e',
-              email: 'user@example.com',
-              fullName: 'John Doe',
-              role: 'user',
-              status: 'active',
-              createdAt: '2025-09-23T12:00:00.000Z',
-              updatedAt: '2025-09-23T12:10:00.000Z',
-            },
-          ],
-        },
-      },
+      type: PaginatedResponseDto(UserResponseDto),
     }),
     ApiResponse({
       status: 403,
