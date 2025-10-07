@@ -162,7 +162,7 @@ export class UserService {
     const user = this.userRepo.create(dto);
     const savedUser = await this.userRepo.save(user);
 
-    const { password, refreshToken, ...rest } = savedUser;
+    const { password, ...rest } = savedUser;
     return rest;
   }
 
@@ -193,8 +193,7 @@ export class UserService {
 
     const savedUser = await this.userRepo.save(user);
 
-    const { password, refreshToken, verificationOtp, otpExpiresAt, ...rest } =
-      savedUser;
+    const { password, verificationOtp, otpExpiresAt, ...rest } = savedUser;
     return rest;
   }
 
@@ -209,8 +208,7 @@ export class UserService {
     user.status = UserStatus.BANNED;
     const savedUser = await this.userRepo.save(user);
 
-    const { password, refreshToken, verificationOtp, otpExpiresAt, ...rest } =
-      savedUser;
+    const { password, verificationOtp, otpExpiresAt, ...rest } = savedUser;
     return rest;
   }
 
@@ -225,8 +223,7 @@ export class UserService {
     user.status = UserStatus.ACTIVE;
     const savedUser = await this.userRepo.save(user);
 
-    const { password, refreshToken, verificationOtp, otpExpiresAt, ...rest } =
-      savedUser;
+    const { password, verificationOtp, otpExpiresAt, ...rest } = savedUser;
     return rest;
   }
 

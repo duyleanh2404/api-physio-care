@@ -1,7 +1,9 @@
-import { DataSourceOptions } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
+import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
-export const dbConfig = (configService: ConfigService): DataSourceOptions => {
+export const dbConfig = (
+  configService: ConfigService,
+): TypeOrmModuleOptions => {
   const host = configService.get<string>('DB_HOST');
   const port = configService.get<string>('DB_PORT');
   const dbName = configService.get<string>('DB_NAME');
@@ -15,7 +17,7 @@ export const dbConfig = (configService: ConfigService): DataSourceOptions => {
     type: 'oracle',
     synchronize: true,
     serviceName: dbName,
+    autoLoadEntities: true,
     port: parseInt(port!, 10),
-    entities: [__dirname + '/../../modules/**/*.entity{.ts,.js}'],
   };
 };

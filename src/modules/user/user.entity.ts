@@ -32,9 +32,6 @@ export class User {
   })
   role: UserRole;
 
-  @Column({ type: 'varchar2', length: 500, nullable: true })
-  refreshToken?: string;
-
   @Column({ type: 'varchar2', length: 20, default: UserStatus.INACTIVE })
   status: string;
 
