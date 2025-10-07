@@ -16,6 +16,7 @@ import {
   ApiRefresh,
   ApiRegister,
   ApiResendOtp,
+  ApiVerifyToken,
   ApiRegisterAdmin,
   ApiResetPassword,
   ApiVerifyAccount,
@@ -30,6 +31,7 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResendOtpDto } from './dto/resend-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { VerifyTokenDto } from './dto/verify-token.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { RegisterAdminDto } from './dto/register-admin.dto';
@@ -45,8 +47,20 @@ export class AuthController {
 
   @Post('login')
   @ApiLogin()
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto.email, dto.password);
+  login(@Request() req, @Body() dto: LoginDto) {
+    const ipAddress =
+      req.headers['x-forwarded-for']?.split(',')[0] ||
+      req.connection.remoteAddress ||
+      'Unknown IP';
+
+    const deviceInfo = req.headers['user-agent'] || 'Unknown device';
+
+    return this.authService.login(
+      dto.email,
+      dto.password,
+      deviceInfo,
+      ipAddress,
+    );
   }
 
   @Post('register')
@@ -107,6 +121,13 @@ export class AuthController {
     return res.redirect(
       `${appUrl}?accessToken=${accessToken}&refreshToken=${refreshToken}`,
     );
+  }
+
+  @Post('verify-token')
+  @ApiTags('Auth')
+  @ApiVerifyToken()
+  async verifyToken(@Body() dto: VerifyTokenDto) {
+    return this.authService.verifyToken(dto.token);
   }
 
   @Post('logout')

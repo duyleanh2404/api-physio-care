@@ -27,7 +27,12 @@ export class AuthService {
     private readonly tokenRepo: TokenRepository,
   ) {}
 
-  async login(email: string, password: string) {
+  async login(
+    email: string,
+    password: string,
+    deviceInfo?: any,
+    ipAddress?: string,
+  ) {
     const user = await this.userService.findByEmail(email);
 
     if (!user || !(await argon2.verify(user.password!, password))) {
@@ -41,7 +46,11 @@ export class AuthService {
       );
     }
 
-    const tokens = await this.tokenRepo.generateTokens(user);
+    const tokens = await this.tokenRepo.generateTokens(
+      user,
+      deviceInfo,
+      ipAddress,
+    );
 
     const safeUser = (({
       id,
@@ -208,12 +217,26 @@ export class AuthService {
     return this.tokenRepo.generateTokens(existingUser);
   }
 
+  async verifyToken(token: string) {
+    const payload = await this.tokenRepo.verifyAccessToken(token);
+    const user = await this.userService.findById(payload.sub);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return {
+      valid: true,
+      user: {
+        id: user.id,
+        role: user.role,
+        email: user.email,
+      },
+    };
+  }
+
   async logout(userId: string) {
-    const user = await this.userService.findById(userId);
-    if (!user) throw new NotFoundException('User not found');
-
-    await this.tokenRepo.removeRefreshToken(userId);
-
+    await this.tokenRepo.revokeAllTokens(userId);
     return { message: 'Logged out successfully' };
   }
 }

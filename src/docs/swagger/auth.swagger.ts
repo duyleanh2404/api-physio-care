@@ -5,9 +5,10 @@ import { LoginDto } from 'src/core/auth/dto/login.dto';
 import { RegisterDto } from 'src/core/auth/dto/register.dto';
 import { ResendOtpDto } from 'src/core/auth/dto/resend-otp.dto';
 import { VerifyOtpDto } from 'src/core/auth/dto/verify-otp.dto';
-import { RegisterAdminDto } from 'src/core/auth/dto/register-admin.dto';
+import { VerifyTokenDto } from 'src/core/auth/dto/verify-token.dto';
 import { RefreshTokenDto } from 'src/core/auth/dto/refresh-token.dto';
 import { ResetPasswordDto } from 'src/core/auth/dto/reset-password.dto';
+import { RegisterAdminDto } from 'src/core/auth/dto/register-admin.dto';
 import { UserResponseDto } from 'src/modules/user/dto/user-response.dto';
 import { ForgotPasswordDto } from 'src/core/auth/dto/forgot-password.dto';
 import { AuthLoginResponse } from 'src/core/auth/dto/auth-login-response.dto';
@@ -198,6 +199,43 @@ export const ApiResetPassword = () =>
         type: 'object',
         properties: {
           message: { type: 'string', example: 'Invalid or expired OTP' },
+        },
+      },
+    }),
+  );
+
+export const ApiVerifyToken = () =>
+  applyDecorators(
+    ApiOperation({ summary: 'Verify JWT access token' }),
+    ApiBody({ type: VerifyTokenDto }),
+    ApiResponse({
+      status: 200,
+      description: 'Token verified successfully',
+      schema: {
+        type: 'object',
+        properties: {
+          valid: { type: 'boolean', example: true },
+          user: {
+            type: 'object',
+            properties: {
+              id: {
+                type: 'string',
+                example: '123e4567-e89b-12d3-a456-426614174000',
+              },
+              email: { type: 'string', example: 'user@example.com' },
+              role: { type: 'string', example: 'USER' },
+            },
+          },
+        },
+      },
+    }),
+    ApiResponse({
+      status: 401,
+      description: 'Invalid or expired token',
+      schema: {
+        type: 'object',
+        properties: {
+          message: { type: 'string', example: 'Invalid or expired token' },
         },
       },
     }),

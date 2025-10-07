@@ -25,5 +25,9 @@ export const PaginatedResponseDto = <TModel extends Type<any>>(
     declare data: TModel[];
   }
 
+  Object.defineProperty(PaginatedResponseDtoClass, 'name', {
+    value: `Paginated${model.name}ResponseDto`,
+  });
+
   return PaginatedResponseDtoClass;
 };
