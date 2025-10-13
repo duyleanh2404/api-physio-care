@@ -52,9 +52,7 @@ export class AuthController {
       req.headers['x-forwarded-for']?.split(',')[0] ||
       req.connection.remoteAddress ||
       'Unknown IP';
-
     const deviceInfo = req.headers['user-agent'] || 'Unknown device';
-
     return this.authService.login(
       dto.email,
       dto.password,
@@ -75,6 +73,18 @@ export class AuthController {
     return this.authService.registerAdmin(dto);
   }
 
+  @Post('verify')
+  @ApiVerifyAccount()
+  verify(@Body() dto: VerifyOtpDto) {
+    return this.authService.verifyUser(dto.email, dto.otp);
+  }
+
+  @Post('resend-otp')
+  @ApiResendOtp()
+  async resendOtp(@Body() dto: ResendOtpDto) {
+    return this.authService.resendOtp(dto.email);
+  }
+
   @Post('refresh')
   @ApiRefresh()
   async refresh(@Body() dto: RefreshTokenDto) {
@@ -82,10 +92,10 @@ export class AuthController {
     return this.authService.refreshTokens(payload.sub, dto.refreshToken);
   }
 
-  @Post('verify')
-  @ApiVerifyAccount()
-  verify(@Body() dto: VerifyOtpDto) {
-    return this.authService.verifyUser(dto.email, dto.otp);
+  @Post('verify-token')
+  @ApiVerifyToken()
+  async verifyToken(@Body() dto: VerifyTokenDto) {
+    return this.authService.verifyToken(dto.token);
   }
 
   @Post('forgot-password')
@@ -100,12 +110,6 @@ export class AuthController {
     return this.authService.resetPassword(dto.email, dto.otp, dto.newPassword);
   }
 
-  @Post('resend-otp')
-  @ApiResendOtp()
-  async resendOtp(@Body() dto: ResendOtpDto) {
-    return this.authService.resendOtp(dto.email);
-  }
-
   @Get('google')
   @ApiExcludeEndpoint()
   @UseGuards(GoogleAuthGuard)
@@ -117,17 +121,9 @@ export class AuthController {
   async googleCallback(@Request() req, @Response() res) {
     const { accessToken, refreshToken } = req.user;
     const appUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
-
     return res.redirect(
       `${appUrl}?accessToken=${accessToken}&refreshToken=${refreshToken}`,
     );
-  }
-
-  @Post('verify-token')
-  @ApiTags('Auth')
-  @ApiVerifyToken()
-  async verifyToken(@Body() dto: VerifyTokenDto) {
-    return this.authService.verifyToken(dto.token);
   }
 
   @Post('logout')

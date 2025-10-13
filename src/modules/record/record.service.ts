@@ -90,46 +90,59 @@ export class RecordService {
       );
     }
 
-    if (status) {
-      qb.andWhere('record.status = :status', { status });
-    }
+    const parseArray = (val: any) =>
+      Array.isArray(val)
+        ? val
+        : typeof val === 'string'
+          ? val
+              .split(',')
+              .map((v) => v.trim())
+              .filter(Boolean)
+          : [];
 
-    if (dateTo) {
-      qb.andWhere('record.createdAt <= :dateTo', { dateTo });
-    }
+    const statusList = parseArray(status);
+    if (statusList.length)
+      qb.andWhere('record.status IN (:...statusList)', { statusList });
 
-    if (doctorId) {
-      qb.andWhere('record.doctorId = :doctorId', { doctorId });
-    }
+    const doctorList = parseArray(doctorId);
+    if (doctorList.length)
+      qb.andWhere('record.doctorId IN (:...doctorList)', { doctorList });
 
-    if (dateFrom) {
-      qb.andWhere('record.createdAt >= :dateFrom', { dateFrom });
-    }
+    const patientList = parseArray(patientsId);
+    if (patientList.length)
+      qb.andWhere('record.patientsId IN (:...patientList)', { patientList });
 
-    if (frequency) {
-      qb.andWhere('record.frequency = :frequency', { frequency });
-    }
+    const frequencyList = parseArray(frequency);
+    if (frequencyList.length)
+      qb.andWhere('record.frequency IN (:...frequencyList)', { frequencyList });
 
-    if (intensity) {
-      qb.andWhere('record.intensity = :intensity', { intensity });
-    }
+    const intensityList = parseArray(intensity);
+    if (intensityList.length)
+      qb.andWhere('record.intensity IN (:...intensityList)', { intensityList });
 
-    if (patientsId) {
-      qb.andWhere('record.patientsId = :patientsId', { patientsId });
-    }
+    const treatmentList = parseArray(treatmentType);
+    if (treatmentList.length)
+      qb.andWhere('record.treatmentType IN (:...treatmentList)', {
+        treatmentList,
+      });
 
-    if (treatmentType) {
-      qb.andWhere('record.treatmentType = :treatmentType', { treatmentType });
-    }
+    if (dateFrom) qb.andWhere('record.createdAt >= :dateFrom', { dateFrom });
+    if (dateTo) qb.andWhere('record.createdAt <= :dateTo', { dateTo });
 
     qb.orderBy(`record.${sortBy}`, sortOrder as 'ASC' | 'DESC');
-
     const skip = (page - 1) * limit;
     qb.skip(skip).take(limit);
 
     const [records, total] = await qb.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
 
-    return { data: records, total, page, limit };
+    return {
+      page,
+      limit,
+      total,
+      totalPages,
+      data: records,
+    };
   }
 
   async findOne(id: string): Promise<Record> {

@@ -46,7 +46,6 @@ export class RecordController {
   @UseInterceptors(
     FileInterceptor('attachment', {
       storage: memoryStorage(),
-      limits: { fileSize: 5 * 1024 * 1024 },
     }),
   )
   async create(
@@ -54,6 +53,20 @@ export class RecordController {
     @UploadedFile() file?: Express.Multer.File,
   ) {
     return this.recordService.create(dto, file);
+  }
+
+  @Get()
+  @Roles('admin', 'doctor')
+  @ApiFindAllRecords()
+  async findAll(@Query() query: GetRecordsQueryDto) {
+    return this.recordService.findAll(query);
+  }
+
+  @Get(':id')
+  @Roles('admin', 'doctor')
+  @ApiFindOneRecord()
+  async findOne(@Param('id') id: string) {
+    return this.recordService.findOne(id);
   }
 
   @Put(':id')
@@ -73,24 +86,10 @@ export class RecordController {
     return this.recordService.update(id, dto, file);
   }
 
-  @Get()
-  @Roles('admin', 'doctor')
-  @ApiFindAllRecords()
-  async findAll(@Query() query: GetRecordsQueryDto) {
-    return this.recordService.findAll(query);
-  }
-
-  @Get(':id')
-  @Roles('admin', 'doctor')
-  @ApiFindOneRecord()
-  findOne(@Param('id') id: string) {
-    return this.recordService.findOne(id);
-  }
-
   @Delete(':id')
   @Roles('admin', 'doctor')
   @ApiDeleteRecord()
-  remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string) {
     return this.recordService.remove(id);
   }
 }
