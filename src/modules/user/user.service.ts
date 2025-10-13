@@ -1,12 +1,13 @@
 import * as argon2 from 'argon2';
 
 import {
+  Inject,
   Injectable,
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { Brackets, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Brackets, Repository } from 'typeorm';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -21,6 +22,7 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
@@ -51,13 +53,23 @@ export class UserService {
       );
     }
 
-    if (role) {
-      qb.andWhere('user.role = :role', { role });
-    }
+    const parseArray = (val: any) =>
+      Array.isArray(val)
+        ? val
+        : typeof val === 'string'
+          ? val
+              .split(',')
+              .map((v) => v.trim())
+              .filter(Boolean)
+          : [];
 
-    if (status) {
-      qb.andWhere('user.status = :status', { status });
-    }
+    const roleList = parseArray(role);
+    if (roleList.length)
+      qb.andWhere('user.role IN (:...roleList)', { roleList });
+
+    const statusList = parseArray(status);
+    if (statusList.length)
+      qb.andWhere('user.status IN (:...statusList)', { statusList });
 
     if (dateFrom && dateTo) {
       qb.andWhere('user.createdAt BETWEEN :dateFrom AND :dateTo', {
@@ -92,7 +104,6 @@ export class UserService {
     qb.select(allowedFields.map((f) => `user.${f}`));
 
     qb.orderBy(`user.${sortBy}`, sortOrder.toUpperCase() as 'ASC' | 'DESC');
-
     qb.skip((page - 1) * limit).take(limit);
 
     const users = await qb.getMany();
@@ -184,9 +195,15 @@ export class UserService {
     }
 
     const updatedFields = Object.fromEntries(
-      Object.entries(dto).filter(
-        ([_, value]) => value !== undefined && value !== null && value !== '',
-      ),
+      Object.entries(dto).filter(([key, value]) => {
+        if (value === undefined || value === '') return false;
+        if (
+          value === null &&
+          !['verificationOtp', 'otpExpiresAt'].includes(key)
+        )
+          return false;
+        return true;
+      }),
     );
 
     Object.assign(user, updatedFields);
@@ -232,6 +249,7 @@ export class UserService {
     if (!user) throw new NotFoundException('User not found');
 
     await this.userRepo.delete(user.id);
+
     return { message: 'User deleted successfully' };
   }
 }

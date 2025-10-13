@@ -16,8 +16,6 @@ import { OtpRepository } from './repository/otp.repository';
 import { TokenRepository } from './repository/token.repository';
 import { EmailRepository } from './repository/email.repository';
 
-import { ManagerDataSourceProvider } from '../database/provider/manager-data-source.provider';
-
 @Module({
   imports: [
     UserModule,
@@ -29,11 +27,10 @@ import { ManagerDataSourceProvider } from '../database/provider/manager-data-sou
     RolesGuard,
     AuthService,
     JwtStrategy,
-    GoogleStrategy,
     OtpRepository,
+    GoogleStrategy,
     EmailRepository,
     TokenRepository,
-    ManagerDataSourceProvider,
   ],
   exports: [AuthService],
 })

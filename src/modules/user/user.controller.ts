@@ -42,27 +42,6 @@ import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get('me')
-  @ApiFindMeUser()
-  async getMe(@Request() req) {
-    const user = req.user as { sub: string };
-    return this.userService.findOne(user.sub);
-  }
-
-  @Get()
-  @Roles('admin')
-  @ApiFindAllUsers()
-  async findAll(@Query() query: GetUsersQueryDto) {
-    return this.userService.findAll(query);
-  }
-
-  @Get(':id')
-  @Roles('admin')
-  @ApiFindOneUser()
-  async findOne(@Param('id') id: string) {
-    return this.userService.findOne(id);
-  }
-
   @Post()
   @Roles('admin')
   @ApiCreateUser()
@@ -83,7 +62,7 @@ export class UserController {
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateUserDto,
-    @UploadedFile() avatar: Express.Multer.File,
+    @UploadedFile() avatar?: Express.Multer.File,
   ) {
     return this.userService.update(id, dto, avatar);
   }
@@ -107,5 +86,26 @@ export class UserController {
   @ApiDeleteUser()
   async remove(@Param('id') id: string) {
     return this.userService.remove(id);
+  }
+
+  @Get()
+  @Roles('admin')
+  @ApiFindAllUsers()
+  async findAll(@Query() query: GetUsersQueryDto) {
+    return this.userService.findAll(query);
+  }
+
+  @Get('me')
+  @ApiFindMeUser()
+  async findMe(@Request() req) {
+    const user = req.user as { sub: string };
+    return this.userService.findOne(user.sub);
+  }
+
+  @Get(':id')
+  @Roles('admin')
+  @ApiFindOneUser()
+  async findOne(@Param('id') id: string) {
+    return this.userService.findOne(id);
   }
 }

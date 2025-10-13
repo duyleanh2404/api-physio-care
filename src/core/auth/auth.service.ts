@@ -1,7 +1,6 @@
 import * as argon2 from 'argon2';
 
 import {
-  Inject,
   Injectable,
   ConflictException,
   NotFoundException,
@@ -9,7 +8,6 @@ import {
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { DataSource } from 'typeorm';
 
 import { RegisterDto } from './dto/register.dto';
 import { RegisterAdminDto } from './dto/register-admin.dto';
@@ -27,9 +25,6 @@ export class AuthService {
 
     private readonly otpRepo: OtpRepository,
     private readonly tokenRepo: TokenRepository,
-
-    @Inject('MANAGER_DATASOURCE')
-    private readonly managerDataSource: DataSource,
   ) {}
 
   async login(
@@ -85,25 +80,6 @@ export class AuthService {
   async register(registerDto: RegisterDto) {
     const existingUser = await this.userService.findByEmail(registerDto.email);
     if (existingUser) throw new ConflictException('Email already exists');
-
-    const rawName = registerDto.email.split('@')[0];
-    const dbUsername = rawName
-      .replace(/[^a-zA-Z0-9]/g, '_')
-      .toUpperCase()
-      .slice(0, 30);
-
-    const dbPassword = registerDto.password;
-
-    await this.managerDataSource.query(`
-    CREATE USER "${dbUsername}" IDENTIFIED BY "${dbPassword}"
-    DEFAULT TABLESPACE USERS
-    TEMPORARY TABLESPACE TEMP
-    QUOTA UNLIMITED ON USERS
-  `);
-
-    await this.managerDataSource.query(`
-    GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE, CREATE VIEW, CREATE PROCEDURE TO "${dbUsername}"
-  `);
 
     const user = await this.userService.create({
       ...registerDto,
@@ -178,8 +154,11 @@ export class AuthService {
     const isValid = await this.otpRepo.validateOtp(user.id, otp);
     if (!isValid) throw new BadRequestException('Invalid or expired OTP');
 
-    await this.userService.update(user.id, { status: UserStatus.ACTIVE });
-    await this.otpRepo.removeOtp(user.id);
+    await this.userService.update(user.id, {
+      status: UserStatus.ACTIVE,
+      verificationOtp: null,
+      otpExpiresAt: null,
+    });
 
     return { message: 'Account successfully verified' };
   }

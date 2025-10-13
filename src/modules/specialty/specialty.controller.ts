@@ -38,18 +38,6 @@ import { GetSpecialtiesQueryDto } from './dto/get-specialties-query.dto';
 export class SpecialtyController {
   constructor(private readonly specialtyService: SpecialtyService) {}
 
-  @Get()
-  @ApiFindAllSpecialties()
-  async findAll(@Query() query: GetSpecialtiesQueryDto) {
-    return this.specialtyService.findAll(query);
-  }
-
-  @Get(':id')
-  @ApiFindOneSpecialty()
-  async findOne(@Param('id') id: string) {
-    return this.specialtyService.findOne(id);
-  }
-
   @Post()
   @Roles('admin')
   @ApiCreateSpecialty()
@@ -60,6 +48,18 @@ export class SpecialtyController {
     @UploadedFile() image?: Express.Multer.File,
   ) {
     return this.specialtyService.create(dto, image);
+  }
+
+  @Get()
+  @ApiFindAllSpecialties()
+  async findAll(@Query() query: GetSpecialtiesQueryDto) {
+    return this.specialtyService.findAll(query);
+  }
+
+  @Get(':id')
+  @ApiFindOneSpecialty()
+  async findOne(@Param('id') id: string) {
+    return this.specialtyService.findOne(id);
   }
 
   @Put(':id')
