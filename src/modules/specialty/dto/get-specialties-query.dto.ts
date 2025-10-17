@@ -11,7 +11,6 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 export class GetSpecialtiesQueryDto {
   @ApiPropertyOptional({
     description: 'Search specialties by name or description',
-    example: 'Physiotherapy',
   })
   @IsOptional()
   @IsString()
@@ -20,7 +19,6 @@ export class GetSpecialtiesQueryDto {
   @ApiPropertyOptional({
     description:
       'Comma-separated list of fields to include in the response (e.g. "id,name,description,imageUrl")',
-    example: 'id,name,description,imageUrl',
   })
   @IsOptional()
   @IsString()
@@ -29,7 +27,6 @@ export class GetSpecialtiesQueryDto {
   @ApiPropertyOptional({
     description: 'Field to sort by',
     enum: ['id', 'name', 'createdAt', 'updatedAt'],
-    example: 'name',
     default: 'createdAt',
   })
   @IsOptional()
@@ -41,7 +38,6 @@ export class GetSpecialtiesQueryDto {
   @ApiPropertyOptional({
     description: 'Sort order direction',
     enum: ['ASC', 'DESC'],
-    example: 'DESC',
     default: 'DESC',
   })
   @IsOptional()
@@ -67,7 +63,6 @@ export class GetSpecialtiesQueryDto {
 
   @ApiPropertyOptional({
     description: 'Filter specialties created from this date (ISO format)',
-    example: '2025-10-01',
   })
   @IsOptional()
   @IsDateString({}, { message: 'dateFrom must be a valid ISO date string' })
@@ -75,7 +70,6 @@ export class GetSpecialtiesQueryDto {
 
   @ApiPropertyOptional({
     description: 'Filter specialties created until this date (ISO format)',
-    example: '2025-10-10',
   })
   @IsOptional()
   @IsDateString({}, { message: 'dateTo must be a valid ISO date string' })

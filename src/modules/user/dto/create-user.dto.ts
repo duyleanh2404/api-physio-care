@@ -53,25 +53,13 @@ export class CreateUserDto {
   @MaxLength(50, { message: 'Full name must not exceed 50 characters' })
   fullName: string;
 
-  @ApiProperty({
-    example: UserRole.USER,
-    description: 'Role of the user',
-    enum: UserRole,
-  })
+  @IsOptional()
   @IsEnum(UserRole, { message: 'Invalid role' })
-  role: UserRole;
+  role?: UserRole;
 
   @IsOptional()
   @IsUrl({}, { message: 'Avatar URL must be a valid URL' })
   avatarUrl?: string;
-
-  @ApiPropertyOptional({
-    type: 'string',
-    format: 'binary',
-    description: 'Upload a new avatar file (optional)',
-  })
-  @IsOptional()
-  avatar?: any;
 
   @IsOptional()
   @IsString()

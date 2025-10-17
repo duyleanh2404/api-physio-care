@@ -37,15 +37,6 @@ export class UpdateUserDto {
   })
   password?: string;
 
-  @ApiPropertyOptional({
-    example: UserRole.USER,
-    description: 'Role of the user',
-    enum: UserRole,
-  })
-  @IsOptional()
-  @IsEnum(UserRole, { message: 'Invalid role' })
-  role?: UserRole;
-
   @IsOptional()
   @IsUrl({}, { message: 'Avatar URL must be a valid URL' })
   avatarUrl?: string;
