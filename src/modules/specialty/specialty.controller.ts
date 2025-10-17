@@ -32,13 +32,13 @@ import { UpdateSpecialtyDto } from './dto/update-specialty.dto';
 import { GetSpecialtiesQueryDto } from './dto/get-specialties-query.dto';
 
 @ApiTags('Specialties')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('specialties')
 export class SpecialtyController {
   constructor(private readonly specialtyService: SpecialtyService) {}
 
   @Post()
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @ApiCreateSpecialty()
   @ApiConsumes('multipart/form-data')
@@ -63,6 +63,8 @@ export class SpecialtyController {
   }
 
   @Put(':id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @ApiUpdateSpecialty()
   @ApiConsumes('multipart/form-data')
@@ -76,6 +78,8 @@ export class SpecialtyController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @ApiDeleteSpecialty()
   async remove(@Param('id') id: string) {

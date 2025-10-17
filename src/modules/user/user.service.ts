@@ -89,6 +89,7 @@ export class UserService {
     qb.andWhere('user.role != :roleExclude', { roleExclude: 'admin' });
 
     const total = await qb.clone().getCount();
+    const totalPages = Math.ceil(total / limit);
 
     const allowedFields = [
       'id',
@@ -112,7 +113,7 @@ export class UserService {
       page,
       limit,
       total,
-      totalPages: Math.ceil(total / limit),
+      totalPages,
       data: users,
     };
   }

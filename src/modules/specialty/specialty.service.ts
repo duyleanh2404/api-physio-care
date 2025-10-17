@@ -56,6 +56,7 @@ export class SpecialtyService {
     }
 
     const total = await qb.clone().getCount();
+    const totalPages = Math.ceil(total / limit);
 
     const validSortFields = ['id', 'name', 'createdAt', 'updatedAt'];
     const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
@@ -67,11 +68,11 @@ export class SpecialtyService {
     const data = await qb.getMany();
 
     return {
-      data,
       page,
       limit,
       total,
-      totalPages: Math.ceil(total / limit),
+      totalPages,
+      data,
     };
   }
 
