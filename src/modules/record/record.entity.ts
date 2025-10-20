@@ -56,11 +56,20 @@ export class Record {
   @Column({ type: 'blob', nullable: true })
   attachmentData?: Buffer;
 
+  @Column({ type: 'raw', length: 12, nullable: true })
+  attachmentIv?: Buffer;
+
+  @Column({ type: 'raw', length: 16, nullable: true })
+  attachmentTag?: Buffer;
+
   @Column({ type: 'varchar2', length: 255, nullable: true })
   attachmentName?: string;
 
   @Column({ type: 'varchar2', length: 100, nullable: true })
   attachmentMime?: string;
+
+  @Column({ type: 'clob', nullable: true })
+  attachmentSignature?: string;
 
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
