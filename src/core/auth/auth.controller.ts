@@ -121,6 +121,7 @@ export class AuthController {
   async googleCallback(@Request() req, @Response() res) {
     const { accessToken, refreshToken } = req.user;
     const appUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
+
     return res.redirect(
       `${appUrl}?accessToken=${accessToken}&refreshToken=${refreshToken}`,
     );

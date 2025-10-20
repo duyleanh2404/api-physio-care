@@ -7,6 +7,7 @@ import { RolesGuard } from './guards/roles.guard';
 import { AuthController } from './auth.controller';
 import { UserModule } from 'src/modules/user/user.module';
 
+import { AuthGateway } from './auth.gateway';
 import { UserToken } from './entity/user-tokens.entity';
 
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -27,6 +28,7 @@ import { EmailRepository } from './repository/email.repository';
     RolesGuard,
     AuthService,
     JwtStrategy,
+    AuthGateway,
     OtpRepository,
     GoogleStrategy,
     EmailRepository,
