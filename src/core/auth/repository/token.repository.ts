@@ -12,6 +12,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService, ConfigType } from '@nestjs/config';
 
 import jwtConfig from '../config/jwt.config';
+import { AuthGateway } from '../auth.gateway';
 import { UserToken } from '../entity/user-tokens.entity';
 import { UserService } from 'src/modules/user/user.service';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
@@ -23,6 +24,8 @@ export class TokenRepository {
   constructor(
     @InjectRepository(UserToken)
     private readonly userTokenRepo: Repository<UserToken>,
+
+    private readonly authGateway: AuthGateway,
 
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
@@ -206,5 +209,7 @@ export class TokenRepository {
       { user: { id: userId }, revoked: false },
       { revoked: true, revokedAt: new Date() },
     );
+
+    this.authGateway.logoutAll(userId);
   }
 }
