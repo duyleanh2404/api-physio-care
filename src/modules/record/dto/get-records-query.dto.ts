@@ -36,31 +36,14 @@ export class GetRecordsQueryDto {
 
   @ApiPropertyOptional({
     description: 'Field to sort by',
-    example: 'recordDate',
-    enum: [
-      'id',
-      'recordDate',
-      'status',
-      'doctorId',
-      'patientsId',
-      'createdAt',
-      'updatedAt',
-    ],
+    example: 'createdAt',
+    enum: ['id', 'status', 'doctorId', 'patientsId', 'createdAt', 'updatedAt'],
   })
   @IsOptional()
   @IsString({ message: 'sortBy must be a string' })
-  @IsIn(
-    [
-      'id',
-      'recordDate',
-      'status',
-      'doctorId',
-      'patientsId',
-      'createdAt',
-      'updatedAt',
-    ],
-    { message: 'sortBy must be one of the allowed fields' },
-  )
+  @IsIn(['id', 'status', 'doctorId', 'patientsId', 'createdAt', 'updatedAt'], {
+    message: 'sortBy must be one of the allowed fields',
+  })
   sortBy?: string = 'id';
 
   @ApiPropertyOptional({

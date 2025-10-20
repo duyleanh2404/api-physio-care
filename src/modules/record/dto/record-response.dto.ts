@@ -1,15 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-import { UserResponseDto } from '../../user/dto/user-response.dto';
-
-export class BufferDto {
-  @ApiPropertyOptional({ example: 'Buffer' })
-  type: string;
-
-  @ApiPropertyOptional({ example: [80, 75, 3, 4, 20, 0, 6, 0, 8, 0] })
-  data: number[];
-}
-
 export class RecordResponseDto {
   @ApiProperty({
     example: 'acee4e04-3925-4505-83d6-7a2e0b614f7e',
@@ -29,23 +19,11 @@ export class RecordResponseDto {
   })
   patientsId: string;
 
-  @ApiPropertyOptional({
-    description: 'Patient information (if eager loaded)',
-    type: () => UserResponseDto,
-  })
-  patient?: UserResponseDto;
-
   @ApiProperty({
     example: 'acee4e04-3925-4505-83d6-7a2e0b614f7e',
     description: 'ID of the doctor associated with this record',
   })
   doctorId: string;
-
-  @ApiPropertyOptional({
-    description: 'Doctor information (if eager loaded)',
-    type: () => UserResponseDto,
-  })
-  doctor?: UserResponseDto;
 
   @ApiProperty({
     example: 'active',
@@ -89,12 +67,6 @@ export class RecordResponseDto {
     description: 'Progress notes',
   })
   progress?: string;
-
-  @ApiPropertyOptional({
-    description: 'BLOB data of the attachment as a Buffer-like object',
-    type: BufferDto,
-  })
-  attachmentData?: string;
 
   @ApiPropertyOptional({
     example: 'record_notes.pdf',

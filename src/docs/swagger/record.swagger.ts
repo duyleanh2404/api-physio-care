@@ -3,6 +3,7 @@ import {
   ApiParam,
   ApiConsumes,
   ApiResponse,
+  ApiProduces,
   ApiOperation,
 } from '@nestjs/swagger';
 import { applyDecorators } from '@nestjs/common';
@@ -75,6 +76,38 @@ export const ApiFindOneRecord = () =>
     ApiResponse({
       status: 404,
       description: 'Record not found',
+      schema: { example: { message: 'Record not found' } },
+    }),
+  );
+
+export const ApiDownloadRecord = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Download the attached encrypted file of a record',
+      description:
+        'Decrypts and verifies the digital signature before sending the original file back to the client.',
+    }),
+    ApiParam({
+      name: 'id',
+      description: 'Record ID',
+    }),
+    ApiProduces('application/octet-stream'),
+    ApiResponse({
+      status: 200,
+      description: 'Encrypted file decrypted and returned successfully',
+      schema: {
+        type: 'string',
+        format: 'binary',
+      },
+    }),
+    ApiResponse({
+      status: 400,
+      description: 'Invalid or missing digital signature',
+      schema: { example: { message: 'File signature is invalid or tampered' } },
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Record or file not found',
       schema: { example: { message: 'Record not found' } },
     }),
   );

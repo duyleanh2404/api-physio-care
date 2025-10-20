@@ -6,6 +6,7 @@ import {
   Query,
   Param,
   Delete,
+  Response,
   UseGuards,
   Controller,
   UploadedFile,
@@ -15,15 +16,15 @@ import { memoryStorage } from 'multer';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 
-import { RecordService } from './record.service';
-
 import {
   ApiCreateRecord,
   ApiDeleteRecord,
   ApiUpdateRecord,
   ApiFindOneRecord,
   ApiFindAllRecords,
+  ApiDownloadRecord,
 } from 'src/docs/swagger/record.swagger';
+import { RecordService } from './record.service';
 import { Roles } from 'src/core/auth/decorators/roles.decorator';
 
 import { CreateRecordDto } from './dto/create-record.dto';
@@ -67,6 +68,12 @@ export class RecordController {
   @ApiFindOneRecord()
   async findOne(@Param('id') id: string) {
     return this.recordService.findOne(id);
+  }
+
+  @Get('download/:id')
+  @ApiDownloadRecord()
+  async downloadFile(@Param('id') id: string, @Response() res) {
+    return this.recordService.downloadFile(id, res);
   }
 
   @Put(':id')
