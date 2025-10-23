@@ -2,7 +2,7 @@ import { applyDecorators } from '@nestjs/common';
 import { ApiParam, ApiResponse, ApiOperation, ApiQuery } from '@nestjs/swagger';
 
 import { PaginatedResponseDto } from 'src/common/dto/paginated-response.dto';
-import { SpecialtyResponseDto } from 'src/modules/specialty/dto/specialty-response.dto';
+import { SpecialtyResponseDto } from 'src/modules/specialties/dto/specialty-response.dto';
 
 export const ApiFindAllSpecialties = () =>
   applyDecorators(

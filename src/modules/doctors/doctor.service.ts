@@ -8,14 +8,14 @@ import { Brackets, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Doctor } from './doctor.entity';
-import { Clinic } from '../clinic/clinic.entity';
-import { Specialty } from 'src/modules/specialty/specialty.entity';
+import { Clinic } from '../clinics/clinic.entity';
+import { Specialty } from '../specialties/specialty.entity';
 
 import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { UpdateDoctorDto } from './dto/update-doctor.dto';
 import { GetDoctorsQueryDto } from './dto/get-doctors-query.dto';
 
-import { UserService } from '../user/user.service';
+import { UserService } from '../users/user.service';
 import { UserRole, UserStatus } from 'src/enums/user.enums';
 import { CloudinaryService } from 'src/core/cloudinary/cloudinary.service';
 

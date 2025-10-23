@@ -1,7 +1,7 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiParam, ApiResponse, ApiOperation, ApiQuery } from '@nestjs/swagger';
 
-import { UserResponseDto } from 'src/modules/user/dto/user-response.dto';
+import { UserResponseDto } from 'src/modules/users/dto/user-response.dto';
 import { PaginatedResponseDto } from 'src/common/dto/paginated-response.dto';
 
 export const ApiFindMeUser = () =>

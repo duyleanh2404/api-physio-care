@@ -1,0 +1,122 @@
+import { applyDecorators } from '@nestjs/common';
+import { ApiBody, ApiParam, ApiResponse, ApiOperation } from '@nestjs/swagger';
+
+import { PaginatedResponseDto } from 'src/common/dto/paginated-response.dto';
+import { CreateScheduleDto } from 'src/modules/schedules/dto/create-schedule.dto';
+import { UpdateScheduleDto } from 'src/modules/schedules/dto/update-schedule.dto';
+import { ScheduleResponseDto } from 'src/modules/schedules/dto/schedule-response.dto';
+
+export const ApiFindAllSchedules = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get all schedules',
+      description:
+        'Retrieve a paginated list of doctor schedules with optional filters and sorting.',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'List of schedules retrieved successfully',
+      type: PaginatedResponseDto(ScheduleResponseDto),
+    }),
+  );
+
+export const ApiFindOneSchedule = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get schedule by ID',
+      description: 'Retrieve details of a specific doctor schedule by its ID.',
+    }),
+    ApiParam({
+      name: 'id',
+      description: 'Schedule ID',
+      example: 'b7f9b78e-2c2b-42cf-95d0-9b85d2ce9f3e',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'Schedule details retrieved successfully',
+      type: ScheduleResponseDto,
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Schedule not found',
+      schema: { example: { message: 'Schedule not found' } },
+    }),
+  );
+
+export const ApiCreateSchedule = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Create a new schedule (Admin/Doctor only)',
+      description:
+        'Allows an admin or doctor to create a new work schedule. Automatically checks for overlapping time slots for the same doctor.',
+    }),
+    ApiBody({ type: CreateScheduleDto }),
+    ApiResponse({
+      status: 201,
+      description: 'Schedule created successfully',
+      type: ScheduleResponseDto,
+    }),
+    ApiResponse({
+      status: 400,
+      description: 'Invalid input data',
+      schema: { example: { message: 'Validation failed' } },
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Doctor not found',
+      schema: { example: { message: 'Doctor not found' } },
+    }),
+    ApiResponse({
+      status: 409,
+      description: 'Schedule time conflict',
+      schema: { example: { message: 'Schedule time conflict' } },
+    }),
+  );
+
+export const ApiUpdateSchedule = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Update a schedule (Admin/Doctor only)',
+      description:
+        'Update schedule details such as date, start/end time, status, or notes.',
+    }),
+    ApiParam({
+      name: 'id',
+      description: 'Schedule ID',
+      example: 'f8b6b57e-45d3-4de7-9a14-b2c34b5e5a44',
+    }),
+    ApiBody({ type: UpdateScheduleDto }),
+    ApiResponse({
+      status: 200,
+      description: 'Schedule updated successfully',
+      type: ScheduleResponseDto,
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Schedule not found',
+      schema: { example: { message: 'Schedule not found' } },
+    }),
+  );
+
+export const ApiDeleteSchedule = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Delete a schedule (Admin only)',
+      description: 'Remove a schedule record from the system permanently.',
+    }),
+    ApiParam({
+      name: 'id',
+      description: 'Schedule ID',
+      example: '7e3cdb8e-0c2a-4f13-9c5c-fd5b0a62ad23',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'Schedule deleted successfully',
+      schema: { example: { message: 'Schedule deleted successfully' } },
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Schedule not found',
+      schema: { example: { message: 'Schedule not found' } },
+    }),
+  );

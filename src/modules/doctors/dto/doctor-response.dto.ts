@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { UserResponseDto } from 'src/modules/user/dto/user-response.dto';
-import { SpecialtyResponseDto } from 'src/modules/specialty/dto/specialty-response.dto';
+import { UserResponseDto } from 'src/modules/users/dto/user-response.dto';
+import { SpecialtyResponseDto } from 'src/modules/specialties/dto/specialty-response.dto';
 
 export class DoctorResponseDto {
   @ApiProperty({

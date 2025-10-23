@@ -8,10 +8,10 @@ import {
 } from '@nestjs/swagger';
 import { applyDecorators } from '@nestjs/common';
 
-import { UpdateRecordDto } from 'src/modules/record/dto/update-record.dto';
-import { CreateRecordDto } from 'src/modules/record/dto/create-record.dto';
+import { UpdateRecordDto } from 'src/modules/records/dto/update-record.dto';
+import { CreateRecordDto } from 'src/modules/records/dto/create-record.dto';
 import { PaginatedResponseDto } from 'src/common/dto/paginated-response.dto';
-import { RecordResponseDto } from 'src/modules/record/dto/record-response.dto';
+import { RecordResponseDto } from 'src/modules/records/dto/record-response.dto';
 
 export const ApiCreateRecord = () =>
   applyDecorators(

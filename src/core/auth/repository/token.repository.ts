@@ -14,7 +14,7 @@ import { ConfigService, ConfigType } from '@nestjs/config';
 import jwtConfig from '../config/jwt.config';
 import { AuthGateway } from '../auth.gateway';
 import { UserToken } from '../entity/user-tokens.entity';
-import { UserService } from 'src/modules/user/user.service';
+import { UserService } from 'src/modules/users/user.service';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 
 @Injectable()

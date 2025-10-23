@@ -9,9 +9,9 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { Clinic } from '../clinic/clinic.entity';
-import { User } from 'src/modules/user/user.entity';
-import { Specialty } from 'src/modules/specialty/specialty.entity';
+import { User } from '../users/user.entity';
+import { Clinic } from '../clinics/clinic.entity';
+import { Specialty } from '../specialties/specialty.entity';
 
 @Entity('doctors')
 export class Doctor {

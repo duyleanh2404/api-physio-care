@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { User } from 'src/modules/user/user.entity';
+import { User } from 'src/modules/users/user.entity';
 
 @Entity('user_tokens')
 export class UserToken {

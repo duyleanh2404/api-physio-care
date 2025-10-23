@@ -7,10 +7,10 @@ import {
 } from '@nestjs/swagger';
 import { applyDecorators } from '@nestjs/common';
 
-import { CreateDoctorDto } from 'src/modules/doctor/dto/create-doctor.dto';
-import { UpdateDoctorDto } from 'src/modules/doctor/dto/update-doctor.dto';
+import { CreateDoctorDto } from 'src/modules/doctors/dto/create-doctor.dto';
+import { UpdateDoctorDto } from 'src/modules/doctors/dto/update-doctor.dto';
 import { PaginatedResponseDto } from 'src/common/dto/paginated-response.dto';
-import { DoctorResponseDto } from 'src/modules/doctor/dto/doctor-response.dto';
+import { DoctorResponseDto } from 'src/modules/doctors/dto/doctor-response.dto';
 
 export const ApiFindAllDoctors = () =>
   applyDecorators(

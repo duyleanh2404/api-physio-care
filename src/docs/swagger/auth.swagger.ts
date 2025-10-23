@@ -9,7 +9,7 @@ import { VerifyTokenDto } from 'src/core/auth/dto/verify-token.dto';
 import { RefreshTokenDto } from 'src/core/auth/dto/refresh-token.dto';
 import { ResetPasswordDto } from 'src/core/auth/dto/reset-password.dto';
 import { RegisterAdminDto } from 'src/core/auth/dto/register-admin.dto';
-import { UserResponseDto } from 'src/modules/user/dto/user-response.dto';
+import { UserResponseDto } from 'src/modules/users/dto/user-response.dto';
 import { ForgotPasswordDto } from 'src/core/auth/dto/forgot-password.dto';
 import { AuthLoginResponse } from 'src/core/auth/dto/auth-login-response.dto';
 import { AuthTokensResponse } from 'src/core/auth/dto/auth-tokens-response.dto';

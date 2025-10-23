@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { Doctor } from 'src/modules/doctor/doctor.entity';
+import { Doctor } from '../doctors/doctor.entity';
 
 @Entity('clinics')
 export class Clinic {
