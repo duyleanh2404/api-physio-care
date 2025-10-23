@@ -8,6 +8,7 @@ import otpConfig from './core/auth/config/otp.config';
 import googleConfig from './core/auth/config/google.config';
 import cloudinaryConfig from './core/cloudinary/cloudinary.config';
 
+import { QrModule } from './core/qr/qr.module';
 import { AuthModule } from './core/auth/auth.module';
 import { UserModule } from './modules/users/user.module';
 import { RecordModule } from './modules/records/record.module';
@@ -19,6 +20,7 @@ import { SpecialtyModule } from './modules/specialties/specialty.module';
 
 @Module({
   imports: [
+    QrModule,
     UserModule,
     AuthModule,
     DoctorModule,
