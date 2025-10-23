@@ -34,6 +34,6 @@ import { EmailRepository } from './repository/email.repository';
     EmailRepository,
     TokenRepository,
   ],
-  exports: [AuthService],
+  exports: [AuthService, TokenRepository],
 })
 export class AuthModule {}
