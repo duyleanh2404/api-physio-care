@@ -4,25 +4,25 @@ import { IsOptional, IsString, IsInt, Min, IsIn } from 'class-validator';
 
 export class GetClinicsQueryDto {
   @ApiPropertyOptional({
-    description: 'Search by clinic name or address',
+    description: 'Search keyword by clinic name or address',
   })
   @IsOptional()
   @IsString()
   search?: string;
 
   @ApiPropertyOptional({
-    description: 'Filter clinics created after this date',
+    description: 'Filter clinics created after this date (format: YYYY-MM-DD)',
   })
   @IsOptional()
-  @Type(() => Date)
-  dateFrom?: Date;
+  @IsString()
+  dateFrom?: string;
 
   @ApiPropertyOptional({
-    description: 'Filter clinics created before this date',
+    description: 'Filter clinics created before this date (format: YYYY-MM-DD)',
   })
   @IsOptional()
-  @Type(() => Date)
-  dateTo?: Date;
+  @IsString()
+  dateTo?: string;
 
   @ApiPropertyOptional({
     description: 'Filter by province code',
@@ -45,32 +45,46 @@ export class GetClinicsQueryDto {
   @IsString()
   wardCode?: string;
 
-  @ApiPropertyOptional({ example: 1 })
+  @ApiPropertyOptional({
+    description: 'Page number for pagination',
+    example: 1,
+    default: 1,
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page?: number = 1;
-
-  @ApiPropertyOptional({ example: 10 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  limit?: number = 10;
+  page: number = 1;
 
   @ApiPropertyOptional({
-    description: 'Field to sort by',
+    description: 'Number of items per page',
+    example: 10,
+    default: 10,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  limit: number = 10;
+
+  @ApiPropertyOptional({
+    description: 'Field name to sort by',
+    enum: ['createdAt', 'name', 'provinceCode', 'districtCode'],
+    example: 'createdAt',
+    default: 'createdAt',
   })
   @IsOptional()
   @IsString()
-  sortBy?: string = 'createdAt';
+  @IsIn(['createdAt', 'name', 'provinceCode', 'districtCode'])
+  sortBy: string = 'createdAt';
 
   @ApiPropertyOptional({
     enum: ['ASC', 'DESC'],
-    description: 'Sort order',
+    description: 'Sort order direction',
+    example: 'DESC',
+    default: 'DESC',
   })
   @IsOptional()
   @IsIn(['ASC', 'DESC'])
-  sortOrder?: 'ASC' | 'DESC' = 'DESC';
+  sortOrder: 'ASC' | 'DESC' = 'DESC';
 }

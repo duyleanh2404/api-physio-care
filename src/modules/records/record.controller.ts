@@ -34,7 +34,7 @@ import { GetRecordsQueryDto } from './dto/get-records-query.dto';
 import { RolesGuard } from 'src/core/auth/guards/roles.guard';
 import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 
-@ApiTags('Record')
+@ApiTags('Records')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('records')

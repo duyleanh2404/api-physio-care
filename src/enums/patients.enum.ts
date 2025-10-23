@@ -1,5 +1,5 @@
 export enum RecordStatus {
-  OPEN = 'OPEN',
-  IN_PROGRESS = 'IN_PROGRESS',
-  CLOSED = 'CLOSED',
+  open = 'open',
+  in_progress = 'in_progress',
+  closed = 'closed',
 }

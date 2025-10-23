@@ -9,12 +9,13 @@ import googleConfig from './core/auth/config/google.config';
 import cloudinaryConfig from './core/cloudinary/cloudinary.config';
 
 import { AuthModule } from './core/auth/auth.module';
-import { UserModule } from './modules/user/user.module';
-import { RecordModule } from './modules/record/record.module';
-import { DoctorModule } from './modules/doctor/doctor.module';
-import { ClinicModule } from './modules/clinic/clinic.module';
+import { UserModule } from './modules/users/user.module';
+import { RecordModule } from './modules/records/record.module';
+import { DoctorModule } from './modules/doctors/doctor.module';
+import { ClinicModule } from './modules/clinics/clinic.module';
+import { ScheduleModule } from './modules/schedules/schedule.module';
 import { CloudinaryModule } from './core/cloudinary/cloudinary.module';
-import { SpecialtyModule } from './modules/specialty/specialty.module';
+import { SpecialtyModule } from './modules/specialties/specialty.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { SpecialtyModule } from './modules/specialty/specialty.module';
     DoctorModule,
     RecordModule,
     ClinicModule,
+    ScheduleModule,
     SpecialtyModule,
     CloudinaryModule,
     ConfigModule.forRoot({

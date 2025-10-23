@@ -5,7 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthService } from './auth.service';
 import { RolesGuard } from './guards/roles.guard';
 import { AuthController } from './auth.controller';
-import { UserModule } from 'src/modules/user/user.module';
+import { UserModule } from 'src/modules/users/user.module';
 
 import { AuthGateway } from './auth.gateway';
 import { UserToken } from './entity/user-tokens.entity';

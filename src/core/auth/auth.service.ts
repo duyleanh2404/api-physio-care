@@ -15,7 +15,7 @@ import { RegisterAdminDto } from './dto/register-admin.dto';
 import { OtpRepository } from './repository/otp.repository';
 import { TokenRepository } from './repository/token.repository';
 
-import { UserService } from 'src/modules/user/user.service';
+import { UserService } from 'src/modules/users/user.service';
 import { UserProvider, UserRole, UserStatus } from 'src/enums/user.enums';
 
 @Injectable()

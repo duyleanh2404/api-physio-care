@@ -3,7 +3,7 @@ import * as argon2 from 'argon2';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
 import { EmailRepository } from './email.repository';
-import { UserService } from 'src/modules/user/user.service';
+import { UserService } from 'src/modules/users/user.service';
 
 @Injectable()
 export class OtpRepository {

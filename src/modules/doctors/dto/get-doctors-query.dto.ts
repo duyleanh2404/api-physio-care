@@ -1,0 +1,109 @@
+import {
+  Min,
+  IsIn,
+  IsInt,
+  IsUUID,
+  IsString,
+  IsOptional,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+
+export class GetDoctorsQueryDto {
+  @ApiPropertyOptional({
+    description:
+      'Search keyword by doctor name, license number, or specialty name',
+  })
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter doctors by specialty ID',
+  })
+  @IsOptional()
+  @IsUUID()
+  specialtyId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter doctors by clinic ID',
+  })
+  @IsOptional()
+  @IsUUID()
+  clinicId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter doctors created from this date (format: YYYY-MM-DD)',
+  })
+  @IsOptional()
+  @IsString()
+  dateFrom?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter doctors created until this date (format: YYYY-MM-DD)',
+  })
+  @IsOptional()
+  @IsString()
+  dateTo?: string;
+
+  @ApiPropertyOptional({
+    description: 'Minimum years of experience',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  yearsFrom?: number;
+
+  @ApiPropertyOptional({
+    description: 'Maximum years of experience',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  yearsTo?: number;
+
+  @ApiPropertyOptional({
+    description: 'Page number for pagination',
+    example: 1,
+    default: 1,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page: number = 1;
+
+  @ApiPropertyOptional({
+    description: 'Number of records per page',
+    example: 10,
+    default: 10,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  limit: number = 10;
+
+  @ApiPropertyOptional({
+    description: 'Field to sort by',
+    enum: ['createdAt', 'experienceYears', 'name', 'licenseNumber'],
+    example: 'createdAt',
+    default: 'createdAt',
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['createdAt', 'experienceYears', 'name', 'licenseNumber'])
+  sortBy: string = 'createdAt';
+
+  @ApiPropertyOptional({
+    enum: ['ASC', 'DESC'],
+    description: 'Sort order direction',
+    example: 'DESC',
+    default: 'DESC',
+  })
+  @IsOptional()
+  @IsIn(['ASC', 'DESC'])
+  sortOrder: 'ASC' | 'DESC' = 'DESC';
+}
