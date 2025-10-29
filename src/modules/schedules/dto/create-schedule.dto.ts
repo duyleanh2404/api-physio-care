@@ -3,7 +3,7 @@ import {
   IsArray,
   IsString,
   IsOptional,
-  IsDateString,
+  IsDate,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -22,13 +22,19 @@ class TimeSlotDto {
 export class CreateScheduleDto {
   @ApiProperty({
     description: 'Unique ID of the doctor assigned to this schedule',
+    example: 'b3a64d8b-6b85-4cf4-a7d1-c94c3b4e5d33',
   })
   @IsUUID()
   doctorId: string;
 
-  @ApiProperty({ description: 'The working date (format: YYYY-MM-DD)' })
-  @IsDateString()
-  workDate: string;
+  @ApiProperty({
+    description: 'The working date',
+    type: String,
+    format: 'date-time',
+  })
+  @Type(() => Date)
+  @IsDate()
+  workDate: Date;
 
   @ApiProperty({
     type: [TimeSlotDto],
@@ -41,8 +47,7 @@ export class CreateScheduleDto {
 
   @ApiProperty({
     required: false,
-    description:
-      'Optional status of the schedule (e.g., available, booked, cancelled)',
+    description: 'Status of the schedule (e.g., available, booked, cancelled)',
   })
   @IsString()
   @IsOptional()

@@ -25,6 +25,28 @@ export const ApiFindAllDoctors = () =>
     }),
   );
 
+export const ApiFindOneDoctorBySlug = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get doctor by slug',
+      description: 'Retrieve details of a specific doctor by their slug',
+    }),
+    ApiParam({
+      name: 'slug',
+      description: 'Doctor slug',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'Doctor details retrieved successfully',
+      type: DoctorResponseDto,
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Doctor not found',
+      schema: { example: { message: 'Doctor not found' } },
+    }),
+  );
+
 export const ApiFindOneDoctor = () =>
   applyDecorators(
     ApiOperation({

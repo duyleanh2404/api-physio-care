@@ -14,7 +14,10 @@ export class Specialty {
   @Column({ unique: true })
   name: string;
 
-  @Column({ type: 'varchar2', length: 500, nullable: true })
+  @Column({ type: 'varchar2', length: 255, unique: true })
+  slug: string;
+
+  @Column({ type: 'clob', nullable: true })
   description?: string;
 
   @Column({ type: 'varchar2', length: 500, nullable: true })

@@ -1,10 +1,13 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiBody, ApiParam, ApiResponse, ApiOperation } from '@nestjs/swagger';
 
+import {
+  ScheduleResponseDto,
+  ScheduleRangeResponseDto,
+} from 'src/modules/schedules/dto/schedule-response.dto';
 import { PaginatedResponseDto } from 'src/common/dto/paginated-response.dto';
 import { CreateScheduleDto } from 'src/modules/schedules/dto/create-schedule.dto';
 import { UpdateScheduleDto } from 'src/modules/schedules/dto/update-schedule.dto';
-import { ScheduleResponseDto } from 'src/modules/schedules/dto/schedule-response.dto';
 
 export const ApiFindAllSchedules = () =>
   applyDecorators(
@@ -17,6 +20,32 @@ export const ApiFindAllSchedules = () =>
       status: 200,
       description: 'List of schedules retrieved successfully',
       type: PaginatedResponseDto(ScheduleResponseDto),
+    }),
+  );
+
+export const ApiGetSchedulesInRange = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get schedules within a date range',
+      description:
+        'Retrieve a list of schedules for a specific doctor between the given start and end dates.',
+    }),
+    ApiResponse({
+      status: 200,
+      description:
+        'Schedules within the specified range retrieved successfully',
+      type: ScheduleRangeResponseDto,
+      isArray: true,
+    }),
+    ApiResponse({
+      status: 400,
+      description: 'Invalid date range or parameters',
+      schema: { example: { message: 'Invalid date range' } },
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Doctor not found',
+      schema: { example: { message: 'Doctor not found' } },
     }),
   );
 

@@ -10,20 +10,25 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ScheduleStatus } from 'src/enums/schedules.enum';
 
 import { Schedule } from './schedule.entity';
+import { Clinic } from '../clinics/clinic.entity';
 import { Doctor } from '../doctors/doctor.entity';
 
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { UpdateScheduleDto } from './dto/update-schedule.dto';
 import { GetSchedulesQueryDto } from './dto/get-schedules-query.dto';
+import { GetSchedulesRangeDto } from './dto/get-schedules-range.dto';
 
 @Injectable()
 export class ScheduleService {
   constructor(
-    @InjectRepository(Schedule)
-    private readonly scheduleRepo: Repository<Schedule>,
-
     @InjectRepository(Doctor)
     private readonly doctorRepo: Repository<Doctor>,
+
+    @InjectRepository(Doctor)
+    private readonly clinicRepo: Repository<Clinic>,
+
+    @InjectRepository(Schedule)
+    private readonly scheduleRepo: Repository<Schedule>,
   ) {}
 
   async findAll(query: GetSchedulesQueryDto) {
@@ -67,7 +72,7 @@ export class ScheduleService {
       );
     }
 
-    if (doctorId) qb.andWhere('schedule.doctor_id = :doctorId', { doctorId });
+    if (doctorId) qb.andWhere('schedule.doctorId = :doctorId', { doctorId });
 
     if (status) {
       const statuses = status.includes(',') ? status.split(',') : [status];
@@ -94,6 +99,69 @@ export class ScheduleService {
     return { page, limit, total, totalPages, data };
   }
 
+  async findByDateRange(dto: GetSchedulesRangeDto) {
+    const { dateFrom, dateTo, doctorId, clinicId } = dto;
+
+    if (doctorId) {
+      const doctor = await this.doctorRepo.findOne({
+        where: { id: doctorId },
+        relations: ['clinic'],
+      });
+      if (!doctor) throw new NotFoundException('Doctor not found');
+
+      if (clinicId && doctor.clinic.id !== clinicId) {
+        throw new BadRequestException('Doctor does not belong to this clinic');
+      }
+    }
+
+    const qb = this.scheduleRepo
+      .createQueryBuilder('schedule')
+      .innerJoin('schedule.doctor', 'doctor')
+      .where(
+        "TRUNC(schedule.workDate) BETWEEN TO_DATE(:dateFrom, 'YYYY-MM-DD') AND TO_DATE(:dateTo, 'YYYY-MM-DD')",
+        { dateFrom, dateTo },
+      );
+
+    if (doctorId) qb.andWhere('doctor.id = :doctorId', { doctorId });
+
+    if (clinicId) qb.andWhere('doctor.clinicId = :clinicId', { clinicId });
+
+    const schedules = await qb
+      .orderBy('schedule.workDate', 'ASC')
+      .addOrderBy('schedule.startTime', 'ASC')
+      .getMany();
+
+    const groupedRaw = schedules.reduce(
+      (acc, s) => {
+        const date = new Date(s.workDate);
+        const local = new Date(date.getTime() + 7 * 60 * 60 * 1000); // UTC+7
+        const key = `${local.getFullYear()}-${String(local.getMonth() + 1).padStart(2, '0')}-${String(local.getDate()).padStart(2, '0')}`;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(s);
+        return acc;
+      },
+      {} as Record<string, typeof schedules>,
+    );
+
+    const start = new Date(dateFrom);
+    const end = new Date(dateTo);
+    const schedulesByDate: Record<string, typeof schedules> = {};
+
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      schedulesByDate[key] = groupedRaw[key] || [];
+    }
+
+    return {
+      dateFrom,
+      dateTo,
+      doctorId: doctorId ?? null,
+      clinicId: clinicId ?? null,
+      totalDays: Object.keys(schedulesByDate).length,
+      schedulesByDate,
+    };
+  }
+
   async findOne(id: string) {
     const schedule = await this.scheduleRepo.findOne({
       where: { id },
@@ -113,7 +181,7 @@ export class ScheduleService {
     for (const slot of dto.timeSlots) {
       const conflict = await this.scheduleRepo
         .createQueryBuilder('schedule')
-        .where('schedule.doctor_id = :doctorId', { doctorId: dto.doctorId })
+        .where('schedule.doctorId = :doctorId', { doctorId: dto.doctorId })
         .andWhere('schedule.workDate = :workDate', { workDate: dto.workDate })
         .andWhere(
           '(schedule.startTime < :endTime AND schedule.endTime > :startTime)',

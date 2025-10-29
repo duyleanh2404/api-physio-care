@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 
 import { DoctorResponseDto } from 'src/modules/doctors/dto/doctor-response.dto';
 
@@ -50,3 +50,7 @@ export class ScheduleResponseDto {
   })
   updatedAt: Date;
 }
+
+export class ScheduleRangeResponseDto extends OmitType(ScheduleResponseDto, [
+  'doctor',
+] as const) {}

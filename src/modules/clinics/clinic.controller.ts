@@ -24,6 +24,7 @@ import {
   ApiDeleteClinic,
   ApiFindOneClinic,
   ApiFindAllClinics,
+  ApiFindOneClinicBySlug,
 } from 'src/docs/swagger/clinic.swagger';
 import { ClinicService } from './clinic.service';
 import { Roles } from 'src/core/auth/decorators/roles.decorator';
@@ -63,6 +64,12 @@ export class ClinicController {
   @ApiFindAllClinics()
   async findAll(@Query() query: GetClinicsQueryDto) {
     return this.clinicService.findAll(query);
+  }
+
+  @Get('slug/:slug')
+  @ApiFindOneClinicBySlug()
+  async findBySlug(@Param('slug') slug: string) {
+    return this.clinicService.findBySlug(slug);
   }
 
   @Get(':id')

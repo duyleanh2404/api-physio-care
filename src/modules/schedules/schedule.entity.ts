@@ -16,7 +16,7 @@ export class Schedule {
   id: string;
 
   @ManyToOne(() => Doctor, { onDelete: 'CASCADE', eager: true })
-  @JoinColumn({ name: 'doctor_id' })
+  @JoinColumn({ name: 'doctorId' })
   doctor: Doctor;
 
   @Column({ type: 'timestamp' })

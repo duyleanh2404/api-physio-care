@@ -19,5 +19,7 @@ export const dbConfig = (
     serviceName: dbName,
     autoLoadEntities: true,
     port: parseInt(port!, 10),
+    entities: [__dirname + '/**/*.entity{.ts,.js}'],
+    migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
   };
 };

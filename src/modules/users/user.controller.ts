@@ -24,6 +24,7 @@ import {
   ApiFindMeUser,
   ApiFindOneUser,
   ApiFindAllUsers,
+  ApiFindOneUserBySlug,
 } from 'src/docs/swagger/user.swagger';
 import { UserService } from './user.service';
 import { Roles } from 'src/core/auth/decorators/roles.decorator';
@@ -93,6 +94,12 @@ export class UserController {
   @ApiFindAllUsers()
   async findAll(@Query() query: GetUsersQueryDto) {
     return this.userService.findAll(query);
+  }
+
+  @Get('slug/:slug')
+  @ApiFindOneUserBySlug()
+  async findBySlug(@Param('slug') slug: string) {
+    return this.userService.findBySlug(slug);
   }
 
   @Get('me')

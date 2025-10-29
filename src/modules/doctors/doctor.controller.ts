@@ -8,8 +8,8 @@ import {
   Delete,
   UseGuards,
   Controller,
-  UseInterceptors,
   UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -20,6 +20,7 @@ import {
   ApiDeleteDoctor,
   ApiFindOneDoctor,
   ApiFindAllDoctors,
+  ApiFindOneDoctorBySlug,
 } from 'src/docs/swagger/doctor.swagger';
 import { DoctorService } from './doctor.service';
 import { Roles } from 'src/core/auth/decorators/roles.decorator';
@@ -53,6 +54,12 @@ export class DoctorController {
   @ApiFindAllDoctors()
   async findAll(@Query() query: GetDoctorsQueryDto) {
     return this.doctorService.findAll(query);
+  }
+
+  @Get('slug/:slug')
+  @ApiFindOneDoctorBySlug()
+  async findBySlug(@Param('slug') slug: string) {
+    return this.doctorService.findBySlug(slug);
   }
 
   @Get(':id')

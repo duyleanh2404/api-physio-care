@@ -41,6 +41,9 @@ export class User {
   @Column({ type: 'varchar2', length: 255, nullable: true })
   verificationOtp: string;
 
+  @Column({ type: 'varchar2', length: 255, unique: true, nullable: true })
+  slug?: string;
+
   @Column({ type: 'timestamp', nullable: true })
   otpExpiresAt: Date;
 
