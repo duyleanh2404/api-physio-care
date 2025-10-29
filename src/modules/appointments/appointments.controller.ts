@@ -43,12 +43,16 @@ export class AppointmentController {
   }
 
   @Get()
+  @ApiBearerAuth()
+  @Roles('admin')
   @ApiFindAllAppointments()
   async findAll(@Query() query: GetAppointmentsQueryDto) {
     return this.appointmentService.findAll(query);
   }
 
   @Get(':id')
+  @ApiBearerAuth()
+  @Roles('user', 'admin')
   @ApiFindOneAppointment()
   async findOne(@Param('id') id: string) {
     return this.appointmentService.findOne(id);
