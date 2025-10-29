@@ -26,9 +26,6 @@ export class Appointment {
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  @Column({ type: 'timestamp', nullable: false })
-  appointmentDate: Date;
-
   @Column({ type: 'varchar2', length: 20, default: AppointmentStatus.PENDING })
   status: AppointmentStatus;
 

@@ -104,8 +104,7 @@ export class AppointmentService {
       wardCode: dto.wardCode,
       provinceCode: dto.provinceCode,
       districtCode: dto.districtCode,
-      appointmentDate: dto.appointmentDate,
-      status: dto.status || AppointmentStatus.PENDING,
+      status: AppointmentStatus.PENDING,
     });
 
     return this.appointmentRepo.save(appointment);
@@ -114,8 +113,6 @@ export class AppointmentService {
   async update(id: string, dto: UpdateAppointmentDto) {
     const appointment = await this.findOne(id);
 
-    if (dto.appointmentDate)
-      appointment.appointmentDate = new Date(dto.appointmentDate);
     if (dto.notes !== undefined) appointment.notes = dto.notes;
     if (dto.status) appointment.status = dto.status;
 
