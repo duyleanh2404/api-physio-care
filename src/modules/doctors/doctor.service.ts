@@ -139,6 +139,24 @@ export class DoctorService {
     return doctor;
   }
 
+  async findByClinicAndSlug(clinicSlug: string, slug: string) {
+    const doctor = await this.doctorRepo.findOne({
+      where: {
+        slug,
+        clinic: { slug: clinicSlug },
+      },
+      relations: ['user', 'specialty', 'clinic'],
+    });
+
+    if (!doctor) {
+      throw new NotFoundException(
+        `Doctor with slug "${slug}" in clinic "${clinicSlug}" not found`,
+      );
+    }
+
+    return doctor;
+  }
+
   async findOne(id: string) {
     const doctor = await this.doctorRepo.findOne({
       where: { id },

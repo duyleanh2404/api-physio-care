@@ -21,6 +21,7 @@ import {
   ApiFindOneDoctor,
   ApiFindAllDoctors,
   ApiFindOneDoctorBySlug,
+  ApiFindOneDoctorByClinicSlug,
 } from 'src/docs/swagger/doctor.swagger';
 import { DoctorService } from './doctor.service';
 import { Roles } from 'src/core/auth/decorators/roles.decorator';
@@ -60,6 +61,15 @@ export class DoctorController {
   @ApiFindOneDoctorBySlug()
   async findBySlug(@Param('slug') slug: string) {
     return this.doctorService.findBySlug(slug);
+  }
+
+  @Get('clinic/:clinicSlug/:slug')
+  @ApiFindOneDoctorByClinicSlug()
+  async findByClinicAndSlug(
+    @Param('clinicSlug') clinicSlug: string,
+    @Param('slug') slug: string,
+  ) {
+    return this.doctorService.findByClinicAndSlug(clinicSlug, slug);
   }
 
   @Get(':id')
