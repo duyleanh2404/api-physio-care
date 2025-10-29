@@ -7,6 +7,7 @@ import { AppointmentStatus } from 'src/enums/appointments-status.enum';
 import { User } from '../users/user.entity';
 import { Doctor } from '../doctors/doctor.entity';
 import { Appointment } from './appointments.entity';
+import { Schedule } from '../schedules/schedule.entity';
 
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
@@ -15,49 +16,51 @@ import { GetAppointmentsQueryDto } from './dto/get-appointments-query.dto';
 @Injectable()
 export class AppointmentService {
   constructor(
-    @InjectRepository(Appointment)
-    private readonly appointmentRepo: Repository<Appointment>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
 
     @InjectRepository(Doctor)
     private readonly doctorRepo: Repository<Doctor>,
 
-    @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
+    @InjectRepository(Schedule)
+    private readonly scheduleRepo: Repository<Schedule>,
+
+    @InjectRepository(Appointment)
+    private readonly appointmentRepo: Repository<Appointment>,
   ) {}
 
   async findAll(query: GetAppointmentsQueryDto) {
     const {
-      doctorId,
       userId,
       status,
-      startDate,
       endDate,
+      doctorId,
       page = 1,
+      startDate,
       limit = 10,
-      sortBy = 'appointmentDate',
       sortOrder = 'ASC',
+      sortBy = 'createdAt',
     } = query;
 
     const qb = this.appointmentRepo
       .createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.doctor', 'doctor')
+      .leftJoinAndSelect('doctor.user', 'doctorUser')
       .leftJoinAndSelect('appointment.user', 'user');
 
     if (doctorId) qb.andWhere('appointment.doctorId = :doctorId', { doctorId });
     if (userId) qb.andWhere('appointment.userId = :userId', { userId });
     if (status) qb.andWhere('appointment.status = :status', { status });
+
     if (startDate && endDate) {
-      qb.andWhere(
-        'appointment.appointmentDate BETWEEN :startDate AND :endDate',
-        {
-          startDate,
-          endDate,
-        },
-      );
+      qb.andWhere('appointment.createdAt BETWEEN :startDate AND :endDate', {
+        startDate,
+        endDate,
+      });
     } else if (startDate) {
-      qb.andWhere('appointment.appointmentDate >= :startDate', { startDate });
+      qb.andWhere('appointment.createdAt >= :startDate', { startDate });
     } else if (endDate) {
-      qb.andWhere('appointment.appointmentDate <= :endDate', { endDate });
+      qb.andWhere('appointment.createdAt <= :endDate', { endDate });
     }
 
     qb.orderBy(
@@ -93,17 +96,25 @@ export class AppointmentService {
     });
     if (!doctor) throw new NotFoundException('Doctor not found');
 
-    const user = await this.userRepo.findOne({ where: { id: dto.userId } });
+    const user = await this.userRepo.findOne({
+      where: { id: dto.userId },
+    });
     if (!user) throw new NotFoundException('User not found');
+
+    const schedule = await this.scheduleRepo.findOne({
+      where: { id: dto.scheduleId },
+    });
+    if (!schedule) throw new NotFoundException('Schedule not found');
 
     const appointment = this.appointmentRepo.create({
       user,
       doctor,
+      schedule,
       notes: dto.notes,
       address: dto.address,
       wardCode: dto.wardCode,
-      provinceCode: dto.provinceCode,
       districtCode: dto.districtCode,
+      provinceCode: dto.provinceCode,
       status: AppointmentStatus.PENDING,
     });
 

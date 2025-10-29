@@ -10,6 +10,7 @@ import {
 
 import { User } from '../users/user.entity';
 import { Doctor } from '../doctors/doctor.entity';
+import { Schedule } from '../schedules/schedule.entity';
 
 import { AppointmentStatus } from 'src/enums/appointments-status.enum';
 
@@ -25,6 +26,10 @@ export class Appointment {
   @ManyToOne(() => User, { onDelete: 'CASCADE', eager: true })
   @JoinColumn({ name: 'userId' })
   user: User;
+
+  @ManyToOne(() => Schedule, { onDelete: 'CASCADE', eager: true })
+  @JoinColumn({ name: 'scheduleId' })
+  schedule: Schedule;
 
   @Column({ type: 'varchar2', length: 20, default: AppointmentStatus.PENDING })
   status: AppointmentStatus;

@@ -6,21 +6,18 @@ import {
   IsOptional,
   IsDateString,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 import { AppointmentStatus } from 'src/enums/appointments-status.enum';
 
 export class GetAppointmentsQueryDto {
-  @ApiPropertyOptional({
-    description: 'Filter by doctor ID',
-  })
+  @ApiPropertyOptional({ description: 'Filter by doctor ID' })
   @IsOptional()
   @IsUUID()
   doctorId?: string;
 
-  @ApiPropertyOptional({
-    description: 'Filter by user ID',
-  })
+  @ApiPropertyOptional({ description: 'Filter by user ID' })
   @IsOptional()
   @IsUUID()
   userId?: string;
@@ -33,16 +30,12 @@ export class GetAppointmentsQueryDto {
   @IsEnum(AppointmentStatus)
   status?: AppointmentStatus;
 
-  @ApiPropertyOptional({
-    description: 'Filter by start date',
-  })
+  @ApiPropertyOptional({ description: 'Filter by start date' })
   @IsOptional()
   @IsDateString()
   startDate?: string;
 
-  @ApiPropertyOptional({
-    description: 'Filter by end date',
-  })
+  @ApiPropertyOptional({ description: 'Filter by end date' })
   @IsOptional()
   @IsDateString()
   endDate?: string;
@@ -52,15 +45,20 @@ export class GetAppointmentsQueryDto {
     default: 1,
   })
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @Min(1)
-  page?: number = 1;
+  page: number = 1;
 
-  @ApiPropertyOptional({ description: 'Number of items per page', default: 10 })
+  @ApiPropertyOptional({
+    description: 'Number of items per page',
+    default: 10,
+  })
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @Min(1)
-  limit?: number = 10;
+  limit: number = 10;
 
   @ApiPropertyOptional({
     description: 'Sort by field, e.g., appointmentDate',
@@ -68,7 +66,10 @@ export class GetAppointmentsQueryDto {
   @IsOptional()
   sortBy?: string;
 
-  @ApiPropertyOptional({ description: 'Sort direction', example: 'ASC' })
+  @ApiPropertyOptional({
+    description: 'Sort direction',
+    example: 'ASC',
+  })
   @IsOptional()
   sortOrder?: 'ASC' | 'DESC' = 'ASC';
 }
