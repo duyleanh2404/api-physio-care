@@ -47,6 +47,35 @@ export const ApiFindOneDoctorBySlug = () =>
     }),
   );
 
+export const ApiFindOneDoctorByClinicSlug = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get doctor by clinic slug and doctor slug',
+      description:
+        'Retrieve details of a specific doctor by clinic slug and doctor slug. Useful when multiple clinics have doctors with the same slug.',
+    }),
+    ApiParam({
+      name: 'clinicSlug',
+      description: 'Slug of the clinic where the doctor works',
+      example: 'phong-kham-an-binh',
+    }),
+    ApiParam({
+      name: 'slug',
+      description: 'Slug of the doctor',
+      example: 'tran-van-a',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'Doctor details retrieved successfully',
+      type: DoctorResponseDto,
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Doctor not found',
+      schema: { example: { message: 'Doctor not found' } },
+    }),
+  );
+
 export const ApiFindOneDoctor = () =>
   applyDecorators(
     ApiOperation({
