@@ -1,7 +1,12 @@
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Injectable, NotFoundException } from '@nestjs/common';
 
+import { ScheduleStatus } from 'src/enums/schedules.enum';
 import { AppointmentStatus } from 'src/enums/appointments-status.enum';
 
 import { User } from '../users/user.entity';
@@ -46,7 +51,8 @@ export class AppointmentService {
       .createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.doctor', 'doctor')
       .leftJoinAndSelect('doctor.user', 'doctorUser')
-      .leftJoinAndSelect('appointment.user', 'user');
+      .leftJoinAndSelect('appointment.user', 'user')
+      .leftJoinAndSelect('appointment.schedule', 'schedule');
 
     if (doctorId) qb.andWhere('appointment.doctorId = :doctorId', { doctorId });
     if (userId) qb.andWhere('appointment.userId = :userId', { userId });
@@ -67,6 +73,7 @@ export class AppointmentService {
       `appointment.${sortBy}`,
       sortOrder.toUpperCase() as 'ASC' | 'DESC',
     );
+
     qb.skip((page - 1) * limit).take(limit);
 
     const [data, total] = await qb.getManyAndCount();
@@ -105,6 +112,13 @@ export class AppointmentService {
       where: { id: dto.scheduleId },
     });
     if (!schedule) throw new NotFoundException('Schedule not found');
+
+    if (schedule.status === ScheduleStatus.booked) {
+      throw new BadRequestException('This schedule has already been booked');
+    }
+
+    schedule.status = ScheduleStatus.booked;
+    await this.scheduleRepo.save(schedule);
 
     const appointment = this.appointmentRepo.create({
       user,
