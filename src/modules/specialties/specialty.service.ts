@@ -6,6 +6,8 @@ import {
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import { slugifyName } from 'src/utils/slugify';
+
 import { Specialty } from './specialty.entity';
 import { CloudinaryService } from 'src/core/cloudinary/cloudinary.service';
 
@@ -76,6 +78,15 @@ export class SpecialtyService {
     };
   }
 
+  async findBySlug(slug: string) {
+    const specialty = await this.specialtyRepo.findOne({
+      where: { slug },
+    });
+
+    if (!specialty) throw new NotFoundException('Specialty not found');
+    return specialty;
+  }
+
   async findOne(id: string) {
     const specialty = await this.specialtyRepo.findOne({ where: { id } });
     if (!specialty) throw new NotFoundException('Specialty not found');
@@ -96,7 +107,15 @@ export class SpecialtyService {
       dto.imageUrl = uploaded.secure_url;
     }
 
-    const specialty = this.specialtyRepo.create(dto);
+    let slug = slugifyName(dto.name);
+
+    const existingSlug = await this.specialtyRepo.findOne({ where: { slug } });
+    if (existingSlug) {
+      const randomSuffix = Math.floor(Math.random() * 10000);
+      slug = `${slug}-${randomSuffix}`;
+    }
+
+    const specialty = this.specialtyRepo.create({ ...dto, slug });
     return this.specialtyRepo.save(specialty);
   }
 

@@ -14,9 +14,10 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   ApiCreateSchedule,
   ApiUpdateSchedule,
-  ApiFindAllSchedules,
-  ApiFindOneSchedule,
   ApiDeleteSchedule,
+  ApiFindOneSchedule,
+  ApiFindAllSchedules,
+  ApiGetSchedulesInRange,
 } from 'src/docs/swagger/schedule.swagger';
 import { ScheduleService } from './schedule.service';
 import { Roles } from 'src/core/auth/decorators/roles.decorator';
@@ -27,6 +28,7 @@ import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { UpdateScheduleDto } from './dto/update-schedule.dto';
 import { GetSchedulesQueryDto } from './dto/get-schedules-query.dto';
+import { GetSchedulesRangeDto } from './dto/get-schedules-range.dto';
 
 @ApiTags('Schedules')
 @Controller('schedules')
@@ -49,6 +51,12 @@ export class ScheduleController {
   @ApiFindAllSchedules()
   async findAll(@Query() query: GetSchedulesQueryDto) {
     return this.scheduleService.findAll(query);
+  }
+
+  @Get('range')
+  @ApiGetSchedulesInRange()
+  async findByDateRange(@Query() query: GetSchedulesRangeDto) {
+    return this.scheduleService.findByDateRange(query);
   }
 
   @Get(':id')

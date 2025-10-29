@@ -1,11 +1,12 @@
 import {
   Injectable,
   NotFoundException,
-  ConflictException,
   BadRequestException,
 } from '@nestjs/common';
 import { Brackets, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+
+import { slugifyName } from 'src/utils/slugify';
 
 import { Doctor } from './doctor.entity';
 import { Clinic } from '../clinics/clinic.entity';
@@ -125,6 +126,19 @@ export class DoctorService {
     };
   }
 
+  async findBySlug(slug: string) {
+    const doctor = await this.doctorRepo.findOne({
+      where: { slug },
+      relations: ['user', 'specialty', 'clinic'],
+    });
+
+    if (!doctor) {
+      throw new NotFoundException(`Doctor with slug "${slug}" not found`);
+    }
+
+    return doctor;
+  }
+
   async findOne(id: string) {
     const doctor = await this.doctorRepo.findOne({
       where: { id },
@@ -179,13 +193,23 @@ export class DoctorService {
       throw new BadRequestException('yearsOfExperience must be a number');
     }
 
+    const slug = slugifyName(dto.fullName);
+
+    const existingDoctor = await this.doctorRepo.findOne({ where: { slug } });
+    let finalSlug = slug;
+    if (existingDoctor) {
+      const randomSuffix = Math.floor(Math.random() * 10000);
+      finalSlug = `${slug}-${randomSuffix}`;
+    }
+
     const doctor = this.doctorRepo.create({
       user,
       clinic,
       specialty,
       bio: dto.bio,
-      licenseNumber: dto.licenseNumber,
+      slug: finalSlug,
       yearsOfExperience,
+      licenseNumber: dto.licenseNumber,
       avatar: avatarUrl || user.avatarUrl,
     });
 

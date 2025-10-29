@@ -33,7 +33,6 @@ export class GetSchedulesQueryDto {
 
   @ApiPropertyOptional({
     description: 'Filter by schedule status (comma-separated or array)',
-    example: 'available,cancelled',
   })
   @IsOptional()
   @IsString()

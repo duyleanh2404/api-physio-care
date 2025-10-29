@@ -19,16 +19,19 @@ export class Doctor {
   id: string;
 
   @OneToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'userId' })
   user: User;
 
   @ManyToOne(() => Specialty, { eager: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'specialty_id' })
+  @JoinColumn({ name: 'specialtyId' })
   specialty: Specialty;
 
   @ManyToOne(() => Clinic, { eager: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'clinic_id' })
+  @JoinColumn({ name: 'clinicId' })
   clinic: Clinic;
+
+  @Column({ type: 'varchar2', length: 255, unique: true })
+  slug: string;
 
   @Column({ nullable: true })
   licenseNumber?: string;

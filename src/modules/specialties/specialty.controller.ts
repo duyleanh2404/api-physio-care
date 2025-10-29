@@ -20,6 +20,7 @@ import {
   ApiUpdateSpecialty,
   ApiFindOneSpecialty,
   ApiFindAllSpecialties,
+  ApiFindOneSpecialtyBySlug,
 } from 'src/docs/swagger/specialty.swagger';
 import { SpecialtyService } from './specialty.service';
 import { Roles } from 'src/core/auth/decorators/roles.decorator';
@@ -54,6 +55,12 @@ export class SpecialtyController {
   @ApiFindAllSpecialties()
   async findAll(@Query() query: GetSpecialtiesQueryDto) {
     return this.specialtyService.findAll(query);
+  }
+
+  @Get('slug/:slug')
+  @ApiFindOneSpecialtyBySlug()
+  async findBySlug(@Param('slug') slug: string) {
+    return this.specialtyService.findBySlug(slug);
   }
 
   @Get(':id')

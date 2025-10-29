@@ -2,6 +2,8 @@ import { Brackets, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable, NotFoundException } from '@nestjs/common';
 
+import { slugifyName } from 'src/utils/slugify';
+
 import { CreateClinicDto } from './dto/create-clinic.dto';
 import { UpdateClinicDto } from './dto/update-clinic.dto';
 import { GetClinicsQueryDto } from './dto/get-clinics-query.dto';
@@ -41,7 +43,15 @@ export class ClinicService {
       dto.banner = uploadedBanner.secure_url;
     }
 
-    const clinic = this.clinicRepo.create(dto);
+    let slug = slugifyName(dto.name);
+
+    const existingClinic = await this.clinicRepo.findOne({ where: { slug } });
+    if (existingClinic) {
+      const randomSuffix = Math.floor(Math.random() * 10000);
+      slug = `${slug}-${randomSuffix}`;
+    }
+
+    const clinic = this.clinicRepo.create({ ...dto, slug });
     return this.clinicRepo.save(clinic);
   }
 
@@ -111,6 +121,16 @@ export class ClinicService {
       totalPages,
       data,
     };
+  }
+
+  async findBySlug(slug: string) {
+    const clinic = await this.clinicRepo.findOne({
+      where: { slug },
+      relations: ['doctors'],
+    });
+
+    if (!clinic) throw new NotFoundException('Clinic not found');
+    return clinic;
   }
 
   async findOne(id: string) {

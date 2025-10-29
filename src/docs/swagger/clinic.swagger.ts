@@ -17,6 +17,30 @@ export const ApiFindAllClinics = () =>
     }),
   );
 
+export const ApiFindOneClinicBySlug = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get clinic by slug',
+      description:
+        'Retrieve detailed information about a specific clinic by its slug',
+    }),
+    ApiParam({
+      name: 'slug',
+      description: 'Clinic slug',
+      example: 'phong-kham-da-khoa-hoa-hao',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'Clinic details retrieved successfully',
+      type: ClinicResponseDto,
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Clinic not found',
+      schema: { example: { message: 'Clinic not found' } },
+    }),
+  );
+
 export const ApiFindOneClinic = () =>
   applyDecorators(
     ApiOperation({

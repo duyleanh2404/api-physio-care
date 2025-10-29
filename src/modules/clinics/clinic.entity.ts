@@ -20,6 +20,9 @@ export class Clinic {
   @Column({ length: 255 })
   name: string;
 
+  @Column({ type: 'varchar2', length: 255, unique: true })
+  slug: string;
+
   @Column({ type: 'varchar2', length: 500, nullable: true })
   address?: string;
 

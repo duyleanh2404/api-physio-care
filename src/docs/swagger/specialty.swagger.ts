@@ -17,6 +17,22 @@ export const ApiFindAllSpecialties = () =>
     }),
   );
 
+export const ApiFindOneSpecialtyBySlug = () =>
+  applyDecorators(
+    ApiOperation({ summary: 'Get specialty details by slug' }),
+    ApiParam({ name: 'slug', description: 'Specialty slug' }),
+    ApiResponse({
+      status: 200,
+      description: 'Specialty details',
+      type: SpecialtyResponseDto,
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Specialty not found',
+      schema: { example: { message: 'Specialty not found' } },
+    }),
+  );
+
 export const ApiFindOneSpecialty = () =>
   applyDecorators(
     ApiOperation({ summary: 'Get specialty details by ID' }),

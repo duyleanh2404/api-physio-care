@@ -42,6 +42,33 @@ export const ApiFindAllUsers = () =>
     }),
   );
 
+export const ApiFindOneUserBySlug = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get user details by slug (Admin only)',
+    }),
+    ApiParam({
+      name: 'slug',
+      description: 'User slug',
+      example: 'john-doe',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'User details',
+      type: UserResponseDto,
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'User not found',
+      schema: { example: { message: 'User not found' } },
+    }),
+    ApiResponse({
+      status: 403,
+      description: 'Permission denied',
+      schema: { example: { message: 'Permission denied' } },
+    }),
+  );
+
 export const ApiFindOneUser = () =>
   applyDecorators(
     ApiOperation({

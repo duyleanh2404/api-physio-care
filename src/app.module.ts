@@ -17,6 +17,7 @@ import { ClinicModule } from './modules/clinics/clinic.module';
 import { ScheduleModule } from './modules/schedules/schedule.module';
 import { CloudinaryModule } from './core/cloudinary/cloudinary.module';
 import { SpecialtyModule } from './modules/specialties/specialty.module';
+import { AppointmentModule } from './modules/appointments/appointments.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { SpecialtyModule } from './modules/specialties/specialty.module';
     ScheduleModule,
     SpecialtyModule,
     CloudinaryModule,
+    AppointmentModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [googleConfig, jwtConfig, otpConfig, cloudinaryConfig],

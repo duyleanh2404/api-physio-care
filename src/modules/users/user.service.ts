@@ -6,10 +6,11 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
-import { CreateUserDto } from './dto/create-user.dto';
+import { slugifyName } from 'src/utils/slugify';
+
 import { UpdateUserDto } from './dto/update-user.dto';
 import { GetUsersQueryDto } from './dto/get-users-query.dto';
 
@@ -118,6 +119,13 @@ export class UserService {
     };
   }
 
+  async findBySlug(slug: string) {
+    const user = await this.userRepo.findOne({ where: { slug } });
+    if (!user) throw new NotFoundException('User not found');
+    const { password, ...rest } = user;
+    return rest;
+  }
+
   async findOne(id: string) {
     const user = await this.userRepo.findOne({
       where: { id },
@@ -150,9 +158,9 @@ export class UserService {
     return this.userRepo.findOne({ where: { email } });
   }
 
-  async create(dto: CreateUserDto, avatar?: Express.Multer.File) {
-    if (await this.findByEmail(dto.email)) {
-      throw new ConflictException(`Email ${dto.email} already exists`);
+  async create(user: Partial<User>, avatar?: Express.Multer.File) {
+    if (user.email && (await this.findByEmail(user.email))) {
+      throw new ConflictException(`Email ${user.email} already exists`);
     }
 
     if (avatar) {
@@ -160,19 +168,30 @@ export class UserService {
         avatar,
         'avatar',
       );
-      dto.avatarUrl = uploaded.secure_url;
+      user.avatarUrl = uploaded.secure_url;
     }
 
-    if (!dto.status) {
-      dto.status = UserStatus.ACTIVE;
+    if (!user.status) {
+      user.status = UserStatus.ACTIVE;
     }
 
-    if (dto.password) {
-      dto.password = await argon2.hash(dto.password);
+    if (user.password) {
+      user.password = await argon2.hash(user.password);
     }
 
-    const user = this.userRepo.create(dto);
-    const savedUser = await this.userRepo.save(user);
+    if (user.fullName) {
+      let slug = slugifyName(user.fullName);
+
+      const existingSlug = await this.userRepo.findOne({ where: { slug } });
+      if (existingSlug) {
+        const randomSuffix = Math.floor(Math.random() * 10000);
+        slug = `${slug}-${randomSuffix}`;
+      }
+      user.slug = slug;
+    }
+
+    const entity = this.userRepo.create(user);
+    const savedUser = await this.userRepo.save(entity);
 
     const { password, ...rest } = savedUser;
     return rest;
