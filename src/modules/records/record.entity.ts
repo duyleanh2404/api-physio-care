@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 
 import { User } from '../users/user.entity';
+import { Doctor } from '../doctors/doctor.entity';
 
 @Entity('records')
 export class Record {
@@ -18,19 +19,27 @@ export class Record {
   @Column({ type: 'varchar2', length: 50, unique: true })
   recordCode: string;
 
-  @ManyToOne(() => User, { eager: true })
+  @ManyToOne(() => User, {
+    eager: true,
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'patientsId' })
-  patient: User;
+  patient?: User;
 
-  @Column()
-  patientsId: string;
+  @Column({ nullable: true })
+  patientsId?: string;
 
-  @ManyToOne(() => User, { eager: true })
+  @ManyToOne(() => Doctor, {
+    eager: true,
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'doctorId' })
-  doctor: User;
+  doctor?: Doctor;
 
-  @Column()
-  doctorId: string;
+  @Column({ nullable: true })
+  doctorId?: string;
 
   @Column({ type: 'varchar2', length: 20, default: 'active' })
   status: string;
@@ -71,9 +80,15 @@ export class Record {
   @Column({ type: 'clob', nullable: true })
   attachmentSignature?: string;
 
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @UpdateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
   updatedAt: Date;
 }

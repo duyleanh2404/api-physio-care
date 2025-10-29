@@ -19,14 +19,22 @@ import {
   EncryptionService,
 } from 'src/core/encryption/encryption.service';
 import { SignatureService } from 'src/core/signature/signature.service';
+import { User } from '../users/user.entity';
+import { Doctor } from '../doctors/doctor.entity';
 
 @Injectable()
 export class RecordService {
   private readonly logger = new Logger(RecordService.name);
 
   constructor(
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
+
     @InjectRepository(Record)
     private readonly recordRepo: Repository<Record>,
+
+    @InjectRepository(Doctor)
+    private readonly doctorRepo: Repository<Doctor>,
 
     private readonly signatureService: SignatureService,
     private readonly encryptionService: EncryptionService,
@@ -39,8 +47,24 @@ export class RecordService {
     const generateRecordCode = () =>
       `REC-${randomBytes(3).toString('hex').toUpperCase()}`;
 
+    const patient = await this.userRepo.findOne({
+      where: { id: dto.patientsId },
+    });
+    if (!patient)
+      throw new NotFoundException(
+        `Patient with id ${dto.patientsId} not found`,
+      );
+
+    const doctor = await this.doctorRepo.findOne({
+      where: { id: dto.doctorId },
+    });
+    if (!doctor)
+      throw new NotFoundException(`Doctor with id ${dto.doctorId} not found`);
+
     const record = this.recordRepo.create({
       ...dto,
+      doctor,
+      patient,
       recordCode: generateRecordCode(),
     });
 
@@ -50,16 +74,9 @@ export class RecordService {
       );
 
       const decrypted = this.encryptionService.decrypt(encrypted);
-
       if (!decrypted.equals(file.buffer)) {
-        this.logger.error(
-          '❌ Encryption verification failed — decrypted data does NOT match original',
-        );
+        this.logger.error('❌ Encryption verification failed');
         throw new Error('Encryption failed verification');
-      } else {
-        this.logger.log(
-          `✅ Encryption successful for file "${file.originalname}"`,
-        );
       }
 
       record.attachmentIv = encrypted.iv;
@@ -75,12 +92,7 @@ export class RecordService {
         encrypted.ciphertext,
         signature,
       );
-
-      if (verified) {
-        this.logger.log(
-          `✅ Digital signature successful for file "${file.originalname}"`,
-        );
-      } else {
+      if (!verified) {
         this.logger.error('❌ Digital signature verification failed');
         throw new Error('Signature verification failed');
       }
@@ -166,7 +178,8 @@ export class RecordService {
     const qb = this.recordRepo
       .createQueryBuilder('record')
       .leftJoinAndSelect('record.patient', 'patient')
-      .leftJoinAndSelect('record.doctor', 'doctor');
+      .leftJoinAndSelect('record.doctor', 'doctor')
+      .leftJoinAndSelect('doctor.user', 'doctorUser');
 
     if (search) {
       qb.andWhere(
