@@ -35,14 +35,17 @@ export class Appointment {
   @Column({ type: 'clob', nullable: true })
   notes?: string;
 
-  @Column({ type: 'varchar2', length: 10, nullable: true })
-  provinceCode?: string;
+  @Column({ type: 'varchar2', length: 10 })
+  provinceCode: string;
 
-  @Column({ type: 'varchar2', length: 10, nullable: true })
-  districtCode?: string;
+  @Column({ type: 'varchar2', length: 10 })
+  districtCode: string;
 
-  @Column({ type: 'varchar2', length: 10, nullable: true })
-  wardCode?: string;
+  @Column({ type: 'varchar2', length: 10 })
+  wardCode: string;
+
+  @Column({ type: 'varchar2', length: 500 })
+  address: string;
 
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;

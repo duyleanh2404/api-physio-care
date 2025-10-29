@@ -97,10 +97,14 @@ export class AppointmentService {
     if (!user) throw new NotFoundException('User not found');
 
     const appointment = this.appointmentRepo.create({
-      doctor,
       user,
-      appointmentDate: new Date(dto.appointmentDate),
+      doctor,
       notes: dto.notes,
+      address: dto.address,
+      wardCode: dto.wardCode,
+      provinceCode: dto.provinceCode,
+      districtCode: dto.districtCode,
+      appointmentDate: dto.appointmentDate,
       status: dto.status || AppointmentStatus.PENDING,
     });
 

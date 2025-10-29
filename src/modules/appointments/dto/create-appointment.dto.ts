@@ -1,6 +1,7 @@
 import {
   IsUUID,
   IsEnum,
+  IsString,
   IsNotEmpty,
   IsOptional,
   IsDateString,
@@ -46,4 +47,28 @@ export class CreateAppointmentDto {
   @IsOptional()
   @IsEnum(AppointmentStatus)
   status?: AppointmentStatus;
+
+  @ApiProperty({
+    description: 'Province code of the user',
+  })
+  @IsString()
+  provinceCode: string;
+
+  @ApiProperty({
+    description: 'District code of the user',
+  })
+  @IsString()
+  districtCode: string;
+
+  @ApiProperty({
+    description: 'Ward code of the user',
+  })
+  @IsString()
+  wardCode: string;
+
+  @ApiProperty({
+    description: 'Detailed address of the user (street, house number, etc.)',
+  })
+  @IsString()
+  address: string;
 }
