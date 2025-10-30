@@ -19,6 +19,9 @@ export class Appointment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ type: 'varchar2', length: 50, unique: true })
+  code: string;
+
   @ManyToOne(() => Doctor, { onDelete: 'CASCADE', eager: true })
   @JoinColumn({ name: 'doctorId' })
   doctor: Doctor;
