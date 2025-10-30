@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -120,8 +121,16 @@ export class AppointmentService {
     schedule.status = ScheduleStatus.booked;
     await this.scheduleRepo.save(schedule);
 
+    const date = new Date();
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const randomPart = randomUUID().slice(0, 6).toUpperCase();
+    const code = `APP-${y}${m}${d}-${randomPart}`;
+
     const appointment = this.appointmentRepo.create({
       user,
+      code,
       doctor,
       schedule,
       notes: dto.notes,
