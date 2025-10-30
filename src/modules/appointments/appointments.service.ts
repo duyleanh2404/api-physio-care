@@ -133,6 +133,7 @@ export class AppointmentService {
       code,
       doctor,
       schedule,
+      phone: dto.phone,
       notes: dto.notes,
       address: dto.address,
       wardCode: dto.wardCode,
