@@ -40,6 +40,9 @@ export class Appointment {
   @Column({ type: 'clob', nullable: true })
   notes?: string;
 
+  @Column({ type: 'varchar2', length: 20 })
+  phone: string;
+
   @Column({ type: 'varchar2', length: 10 })
   provinceCode: string;
 
