@@ -37,27 +37,60 @@ export class AppointmentService {
 
   async findAll(query: GetAppointmentsQueryDto) {
     const {
+      doctorId,
       userId,
       status,
-      endDate,
-      doctorId,
-      page = 1,
       startDate,
+      endDate,
+      startTime,
+      endTime,
+      page = 1,
       limit = 10,
-      sortOrder = 'ASC',
       sortBy = 'createdAt',
+      sortOrder = 'ASC',
     } = query;
 
     const qb = this.appointmentRepo
       .createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.doctor', 'doctor')
       .leftJoinAndSelect('doctor.user', 'doctorUser')
+      .leftJoinAndSelect('doctor.clinic', 'clinic')
+      .leftJoinAndSelect('doctor.specialty', 'specialty')
       .leftJoinAndSelect('appointment.user', 'user')
-      .leftJoinAndSelect('appointment.schedule', 'schedule');
+      .leftJoinAndSelect('appointment.schedule', 'schedule')
+      .select([
+        'appointment',
+        'doctor.id',
+        'doctor.slug',
+        'doctorUser.id',
+        'doctorUser.fullName',
+        'doctorUser.email',
+        'doctorUser.avatarUrl',
+        'specialty.id',
+        'specialty.name',
+        'specialty.imageUrl',
+        'clinic.id',
+        'clinic.name',
+        'clinic.address',
+        'clinic.avatar',
+        'user.id',
+        'user.fullName',
+        'user.email',
+        'schedule.id',
+        'schedule.workDate',
+        'schedule.startTime',
+        'schedule.endTime',
+      ]);
 
     if (doctorId) qb.andWhere('appointment.doctorId = :doctorId', { doctorId });
-    if (userId) qb.andWhere('appointment.userId = :userId', { userId });
-    if (status) qb.andWhere('appointment.status = :status', { status });
+    if (userId) qb.andWhere('appointment.userId = :userId', { userId }); // FIXED
+
+    if (status) {
+      const statusArray = Array.isArray(status) ? status : [status];
+      qb.andWhere('appointment.status IN (:...status)', {
+        status: statusArray,
+      });
+    }
 
     if (startDate && endDate) {
       qb.andWhere('appointment.createdAt BETWEEN :startDate AND :endDate', {
@@ -70,23 +103,23 @@ export class AppointmentService {
       qb.andWhere('appointment.createdAt <= :endDate', { endDate });
     }
 
+    if (startTime && endTime) {
+      qb.andWhere(
+        "DATE_FORMAT(schedule.startTime, '%H:%i') BETWEEN :startTime AND :endTime",
+        { startTime, endTime },
+      );
+    }
+
     qb.orderBy(
       `appointment.${sortBy}`,
       sortOrder.toUpperCase() as 'ASC' | 'DESC',
     );
-
     qb.skip((page - 1) * limit).take(limit);
 
     const [data, total] = await qb.getManyAndCount();
     const totalPages = Math.ceil(total / limit);
 
-    return {
-      page,
-      limit,
-      total,
-      totalPages,
-      data,
-    };
+    return { page, limit, total, totalPages, data };
   }
 
   async findOne(id: string) {
@@ -149,7 +182,15 @@ export class AppointmentService {
     const appointment = await this.findOne(id);
 
     if (dto.notes !== undefined) appointment.notes = dto.notes;
-    if (dto.status) appointment.status = dto.status;
+
+    if (dto.status) {
+      appointment.status = dto.status;
+
+      if (dto.status === AppointmentStatus.CANCELLED && appointment.schedule) {
+        appointment.schedule.status = ScheduleStatus.available;
+        await this.scheduleRepo.save(appointment.schedule);
+      }
+    }
 
     return this.appointmentRepo.save(appointment);
   }

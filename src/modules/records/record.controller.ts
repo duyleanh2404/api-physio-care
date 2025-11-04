@@ -20,6 +20,7 @@ import {
   ApiCreateRecord,
   ApiDeleteRecord,
   ApiUpdateRecord,
+  ApiVerifyRecord,
   ApiFindOneRecord,
   ApiFindAllRecords,
   ApiDownloadRecord,
@@ -98,5 +99,16 @@ export class RecordController {
   @ApiDeleteRecord()
   async remove(@Param('id') id: string) {
     return this.recordService.remove(id);
+  }
+
+  @Post('verify/:id')
+  @Roles('admin', 'doctor')
+  @ApiVerifyRecord()
+  @UseInterceptors(FileInterceptor('attachment', { storage: memoryStorage() }))
+  async verifyFile(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.recordService.verifyFileIntegrity(id, file);
   }
 }

@@ -9,18 +9,19 @@ import { Repository } from 'typeorm';
 import { randomBytes } from 'crypto';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import { Record } from './record.entity';
+import { User } from '../users/user.entity';
+import { Doctor } from '../doctors/doctor.entity';
+
 import { CreateRecordDto } from './dto/create-record.dto';
 import { UpdateRecordDto } from './dto/update-record.dto';
 import { GetRecordsQueryDto } from './dto/get-records-query.dto';
 
-import { Record } from './record.entity';
 import {
   EncryptedFile,
   EncryptionService,
 } from 'src/core/encryption/encryption.service';
 import { SignatureService } from 'src/core/signature/signature.service';
-import { User } from '../users/user.entity';
-import { Doctor } from '../doctors/doctor.entity';
 
 @Injectable()
 export class RecordService {
@@ -317,6 +318,65 @@ export class RecordService {
     });
 
     res.send(decrypted);
+  }
+
+  async verifyFileIntegrity(
+    id: string,
+    file: Express.Multer.File,
+  ): Promise<{
+    recordId: string;
+    fileName: string;
+    verified: boolean;
+    message: string;
+  }> {
+    const record = await this.getFullRecordWithFile(id);
+    if (!record) throw new NotFoundException('Record not found');
+
+    if (
+      !record.attachmentData ||
+      !record.attachmentSignature ||
+      !record.attachmentIv ||
+      !record.attachmentTag
+    ) {
+      throw new BadRequestException('This record has no attached file');
+    }
+
+    // 1️⃣ Verify chữ ký trên ciphertext đã lưu
+    const validSignature = this.signatureService.verifyBuffer(
+      record.attachmentData,
+      record.attachmentSignature,
+    );
+
+    // 2️⃣ Giải mã ciphertext lưu trong DB
+    const decryptedRecord = this.encryptionService.decrypt({
+      ciphertext: record.attachmentData,
+      iv: record.attachmentIv,
+      tag: record.attachmentTag,
+    });
+
+    // 3️⃣ So sánh file upload với dữ liệu gốc
+    const sameOriginalFile = Buffer.compare(file.buffer, decryptedRecord) === 0;
+
+    const verified = validSignature && sameOriginalFile;
+
+    if (verified) {
+      this.logger.log(
+        `✅ File "${file.originalname}" verified successfully against record ${id}`,
+      );
+    } else {
+      this.logger.error(
+        `❌ Verification failed — file "${file.originalname}" does not match record ${id}`,
+      );
+    }
+
+    return {
+      recordId: id,
+      fileName: file.originalname,
+      verified,
+      message: verified
+        ? '✅ File is authentic and signature verified successfully'
+        : '❌ File has been modified or signature mismatch',
+    };
   }
 
   async remove(id: string): Promise<void> {
