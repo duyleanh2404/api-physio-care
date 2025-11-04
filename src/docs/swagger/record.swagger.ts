@@ -12,6 +12,7 @@ import { UpdateRecordDto } from 'src/modules/records/dto/update-record.dto';
 import { CreateRecordDto } from 'src/modules/records/dto/create-record.dto';
 import { PaginatedResponseDto } from 'src/common/dto/paginated-response.dto';
 import { RecordResponseDto } from 'src/modules/records/dto/record-response.dto';
+import { RecordVerifyResponseDto } from 'src/modules/records/dto/record-verify-response.dto';
 
 export const ApiCreateRecord = () =>
   applyDecorators(
@@ -124,6 +125,53 @@ export const ApiDeleteRecord = () =>
       status: 200,
       description: 'Record deleted successfully',
       schema: { example: { message: 'Record deleted successfully' } },
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Record not found',
+      schema: { example: { message: 'Record not found' } },
+    }),
+  );
+
+export const ApiVerifyRecord = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Verify integrity and authenticity of uploaded record file',
+      description:
+        'Upload a file to verify if it matches the original encrypted file and stored digital signature.',
+    }),
+    ApiConsumes('multipart/form-data'),
+    ApiParam({
+      name: 'id',
+      description: 'Record ID to verify the uploaded file against',
+    }),
+    ApiBody({
+      schema: {
+        type: 'object',
+        required: ['attachment'],
+        properties: {
+          attachment: {
+            type: 'string',
+            format: 'binary',
+            description: 'The file to verify (required)',
+          },
+        },
+      },
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'File verified successfully',
+      type: RecordVerifyResponseDto,
+    }),
+    ApiResponse({
+      status: 400,
+      description: 'Invalid or tampered file',
+      schema: {
+        example: {
+          message:
+            'File has been modified or does not match the stored signature',
+        },
+      },
     }),
     ApiResponse({
       status: 404,

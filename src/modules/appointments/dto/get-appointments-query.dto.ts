@@ -3,10 +3,11 @@ import {
   IsInt,
   IsEnum,
   IsUUID,
+  Matches,
   IsOptional,
   IsDateString,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 import { AppointmentStatus } from 'src/enums/appointments-status.enum';
@@ -23,12 +24,16 @@ export class GetAppointmentsQueryDto {
   userId?: string;
 
   @ApiPropertyOptional({
-    description: 'Filter by appointment status',
+    description:
+      'Filter by appointment status (single or comma-separated for multiple)',
     enum: AppointmentStatus,
   })
   @IsOptional()
-  @IsEnum(AppointmentStatus)
-  status?: AppointmentStatus;
+  @IsEnum(AppointmentStatus, { each: true })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.split(',') : value,
+  )
+  status?: AppointmentStatus | AppointmentStatus[];
 
   @ApiPropertyOptional({ description: 'Filter by start date' })
   @IsOptional()
@@ -39,6 +44,24 @@ export class GetAppointmentsQueryDto {
   @IsOptional()
   @IsDateString()
   endDate?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by appointment start time (HH:mm or HH:mm:ss)',
+  })
+  @IsOptional()
+  @Matches(/^([0-1]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/, {
+    message: 'startTime must be in HH:mm or HH:mm:ss format',
+  })
+  startTime?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by appointment end time (HH:mm or HH:mm:ss)',
+  })
+  @IsOptional()
+  @Matches(/^([0-1]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/, {
+    message: 'endTime must be in HH:mm or HH:mm:ss format',
+  })
+  endTime?: string;
 
   @ApiPropertyOptional({
     description: 'Page number for pagination',

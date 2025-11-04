@@ -18,6 +18,20 @@ export const ApiFindAllAppointments = () =>
     }),
   );
 
+export const ApiFindMyAppointments = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get my appointments',
+      description:
+        'Retrieve all appointments for the currently authenticated user',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'List of user appointments successfully retrieved',
+      type: PaginatedResponseDto(AppointmentResponseDto),
+    }),
+  );
+
 export const ApiFindOneAppointment = () =>
   applyDecorators(
     ApiOperation({

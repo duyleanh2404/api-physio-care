@@ -1,11 +1,4 @@
-import {
-  Min,
-  IsIn,
-  IsInt,
-  IsUUID,
-  IsString,
-  IsOptional,
-} from 'class-validator';
+import { Min, IsIn, IsInt, IsString, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -22,15 +15,22 @@ export class GetDoctorsQueryDto {
     description: 'Filter doctors by specialty ID',
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   specialtyId?: string;
 
   @ApiPropertyOptional({
     description: 'Filter doctors by clinic ID',
   })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   clinicId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter doctors by clinic province code',
+  })
+  @IsOptional()
+  @IsString()
+  provinceCode?: string; // <-- thêm provinceCode
 
   @ApiPropertyOptional({
     description: 'Filter doctors created from this date (format: YYYY-MM-DD)',

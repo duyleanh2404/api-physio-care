@@ -47,6 +47,7 @@ export class DoctorService {
       yearsFrom,
       limit = 10,
       specialtyId,
+      provinceCode,
       sortOrder = 'DESC',
       sortBy = 'createdAt',
     } = query;
@@ -86,6 +87,10 @@ export class DoctorService {
 
     if (clinicId) {
       qb.andWhere('doctor.clinicId = :clinicId', { clinicId });
+    }
+
+    if (provinceCode) {
+      qb.andWhere('clinic.provinceCode = :provinceCode', { provinceCode });
     }
 
     if (yearsFrom !== undefined) {

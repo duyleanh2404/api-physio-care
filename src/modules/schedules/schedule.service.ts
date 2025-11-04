@@ -48,29 +48,17 @@ export class ScheduleService {
       .createQueryBuilder('schedule')
       .leftJoinAndSelect('schedule.doctor', 'doctor')
       .leftJoin('doctor.user', 'user')
-      .addSelect(['user.id', 'user.fullName', 'user.email'])
+      .addSelect(['user.id', 'user.fullName'])
       .leftJoin('doctor.clinic', 'clinic')
       .addSelect([
         'clinic.id',
         'clinic.name',
         'clinic.address',
-        'clinic.phone',
         'clinic.avatar',
         'clinic.banner',
-      ]);
-
-    if (search) {
-      const keyword = `%${search.toLowerCase()}%`;
-      qb.andWhere(
-        new Brackets((qb) => {
-          qb.where('LOWER(user.fullName) LIKE :keyword')
-            .orWhere('LOWER(schedule.status) LIKE :keyword')
-            .orWhere('LOWER(schedule.notes) LIKE :keyword')
-            .orWhere('LOWER(clinic.name) LIKE :keyword');
-        }),
-        { keyword },
-      );
-    }
+      ])
+      .leftJoin('doctor.specialty', 'specialty')
+      .addSelect(['specialty.id', 'specialty.name', 'specialty.imageUrl']);
 
     if (doctorId) qb.andWhere('schedule.doctorId = :doctorId', { doctorId });
 
@@ -90,8 +78,22 @@ export class ScheduleService {
       qb.andWhere('schedule.workDate <= :dateTo', { dateTo });
     }
 
-    qb.orderBy(`schedule.${sortBy}`, sortOrder.toUpperCase() as 'ASC' | 'DESC');
-    qb.skip((page - 1) * limit).take(limit);
+    if (search?.trim()) {
+      const keyword = `%${search.toLowerCase()}%`;
+      qb.andWhere(
+        new Brackets((qb) => {
+          qb.where('LOWER(user.fullName) LIKE :keyword')
+            .orWhere('LOWER(clinic.name) LIKE :keyword')
+            .orWhere('LOWER(specialty.name) LIKE :keyword')
+            .orWhere('LOWER(schedule.notes) LIKE :keyword');
+        }),
+        { keyword },
+      );
+    }
+
+    qb.orderBy(`schedule.${sortBy}`, sortOrder.toUpperCase() as 'ASC' | 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
 
     const [data, total] = await qb.getManyAndCount();
     const totalPages = Math.ceil(total / limit);
@@ -134,7 +136,7 @@ export class ScheduleService {
     const groupedRaw = schedules.reduce(
       (acc, s) => {
         const date = new Date(s.workDate);
-        const local = new Date(date.getTime() + 7 * 60 * 60 * 1000); // UTC+7
+        const local = new Date(date.getTime() + 7 * 60 * 60 * 1000);
         const key = `${local.getFullYear()}-${String(local.getMonth() + 1).padStart(2, '0')}-${String(local.getDate()).padStart(2, '0')}`;
         if (!acc[key]) acc[key] = [];
         acc[key].push(s);

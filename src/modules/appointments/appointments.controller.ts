@@ -6,6 +6,7 @@ import {
   Param,
   Query,
   Delete,
+  Request,
   UseGuards,
   Controller,
 } from '@nestjs/common';
@@ -16,6 +17,7 @@ import {
   ApiUpdateAppointment,
   ApiDeleteAppointment,
   ApiFindOneAppointment,
+  ApiFindMyAppointments,
   ApiFindAllAppointments,
 } from 'src/docs/swagger/appointment.swagger';
 import { AppointmentService } from './appointments.service';
@@ -48,6 +50,19 @@ export class AppointmentController {
   @ApiFindAllAppointments()
   async findAll(@Query() query: GetAppointmentsQueryDto) {
     return this.appointmentService.findAll(query);
+  }
+
+  @Get('me')
+  @ApiBearerAuth()
+  @Roles('user')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiFindMyAppointments()
+  async findMyAppointments(
+    @Query() query: GetAppointmentsQueryDto,
+    @Request() req,
+  ) {
+    const userId = req.user?.id;
+    return this.appointmentService.findAll({ ...query, userId });
   }
 
   @Get(':id')
