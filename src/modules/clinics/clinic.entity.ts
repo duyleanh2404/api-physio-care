@@ -42,13 +42,13 @@ export class Clinic {
   notes?: string;
 
   @Column({ type: 'varchar2', length: 20, nullable: true })
-  provinceCode?: string;
+  provinceId?: string;
 
   @Column({ type: 'varchar2', length: 20, nullable: true })
-  districtCode?: string;
+  districtId?: string;
 
   @Column({ type: 'varchar2', length: 20, nullable: true })
-  wardCode?: string;
+  wardId?: string;
 
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;

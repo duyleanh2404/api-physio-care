@@ -40,7 +40,7 @@ export class CreateClinicDto {
   @IsString()
   @IsNotEmpty({ message: 'Province code is required' })
   @Length(1, 20, { message: 'Province code must not exceed 20 characters' })
-  provinceCode: string;
+  provinceId: string;
 
   @ApiProperty({
     description: 'District code of the clinic',
@@ -49,7 +49,7 @@ export class CreateClinicDto {
   @IsString()
   @IsNotEmpty({ message: 'District code is required' })
   @Length(1, 20, { message: 'District code must not exceed 20 characters' })
-  districtCode: string;
+  districtId: string;
 
   @ApiProperty({
     description: 'Ward code of the clinic',
@@ -58,7 +58,7 @@ export class CreateClinicDto {
   @IsString()
   @IsNotEmpty({ message: 'Ward code is required' })
   @Length(1, 20, { message: 'Ward code must not exceed 20 characters' })
-  wardCode: string;
+  wardId: string;
 
   @IsOptional()
   @ApiPropertyOptional({

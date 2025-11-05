@@ -29,21 +29,21 @@ export class GetClinicsQueryDto {
   })
   @IsOptional()
   @IsString()
-  provinceCode?: string;
+  provinceId?: string;
 
   @ApiPropertyOptional({
     description: 'Filter by district code',
   })
   @IsOptional()
   @IsString()
-  districtCode?: string;
+  districtId?: string;
 
   @ApiPropertyOptional({
     description: 'Filter by ward code',
   })
   @IsOptional()
   @IsString()
-  wardCode?: string;
+  wardId?: string;
 
   @ApiPropertyOptional({
     description: 'Page number for pagination',
@@ -69,13 +69,13 @@ export class GetClinicsQueryDto {
 
   @ApiPropertyOptional({
     description: 'Field name to sort by',
-    enum: ['createdAt', 'name', 'provinceCode', 'districtCode'],
+    enum: ['createdAt', 'name', 'provinceId', 'districtId'],
     example: 'createdAt',
     default: 'createdAt',
   })
   @IsOptional()
   @IsString()
-  @IsIn(['createdAt', 'name', 'provinceCode', 'districtCode'])
+  @IsIn(['createdAt', 'name', 'provinceId', 'districtId'])
   sortBy: string = 'createdAt';
 
   @ApiPropertyOptional({

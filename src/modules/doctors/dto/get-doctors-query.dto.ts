@@ -30,7 +30,7 @@ export class GetDoctorsQueryDto {
   })
   @IsOptional()
   @IsString()
-  provinceCode?: string; // <-- thêm provinceCode
+  provinceId?: string; // <-- thêm provinceId
 
   @ApiPropertyOptional({
     description: 'Filter doctors created from this date (format: YYYY-MM-DD)',
