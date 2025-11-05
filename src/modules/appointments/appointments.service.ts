@@ -169,9 +169,9 @@ export class AppointmentService {
       phone: dto.phone,
       notes: dto.notes,
       address: dto.address,
-      wardCode: dto.wardCode,
-      districtCode: dto.districtCode,
-      provinceCode: dto.provinceCode,
+      wardId: dto.wardId,
+      districtId: dto.districtId,
+      provinceId: dto.provinceId,
       status: AppointmentStatus.PENDING,
     });
 

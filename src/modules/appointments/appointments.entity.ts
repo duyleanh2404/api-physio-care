@@ -44,13 +44,13 @@ export class Appointment {
   phone: string;
 
   @Column({ type: 'varchar2', length: 10 })
-  provinceCode: string;
+  provinceId: string;
 
   @Column({ type: 'varchar2', length: 10 })
-  districtCode: string;
+  districtId: string;
 
   @Column({ type: 'varchar2', length: 10 })
-  wardCode: string;
+  wardId: string;
 
   @Column({ type: 'varchar2', length: 500 })
   address: string;

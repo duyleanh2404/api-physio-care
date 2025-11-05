@@ -53,26 +53,26 @@ export class CreateAppointmentDto {
   @ApiProperty({
     description: 'Province code of the user',
   })
-  @IsString({ message: 'provinceCode must be a string' })
-  @Matches(/^\d+$/, { message: 'provinceCode must contain only digits' })
-  @IsNotEmpty({ message: 'provinceCode is required' })
-  provinceCode: string;
+  @IsString({ message: 'provinceId must be a string' })
+  @Matches(/^\d+$/, { message: 'provinceId must contain only digits' })
+  @IsNotEmpty({ message: 'provinceId is required' })
+  provinceId: string;
 
   @ApiProperty({
     description: 'District code of the user',
   })
-  @IsString({ message: 'districtCode must be a string' })
-  @Matches(/^\d+$/, { message: 'districtCode must contain only digits' })
-  @IsNotEmpty({ message: 'districtCode is required' })
-  districtCode: string;
+  @IsString({ message: 'districtId must be a string' })
+  @Matches(/^\d+$/, { message: 'districtId must contain only digits' })
+  @IsNotEmpty({ message: 'districtId is required' })
+  districtId: string;
 
   @ApiProperty({
     description: 'Ward code of the user',
   })
-  @IsString({ message: 'wardCode must be a string' })
-  @Matches(/^\d+$/, { message: 'wardCode must contain only digits' })
-  @IsNotEmpty({ message: 'wardCode is required' })
-  wardCode: string;
+  @IsString({ message: 'wardId must be a string' })
+  @Matches(/^\d+$/, { message: 'wardId must contain only digits' })
+  @IsNotEmpty({ message: 'wardId is required' })
+  wardId: string;
 
   @ApiProperty({
     description: 'Detailed address (house number, street, etc.)',

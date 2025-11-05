@@ -47,7 +47,7 @@ export class DoctorService {
       yearsFrom,
       limit = 10,
       specialtyId,
-      provinceCode,
+      provinceId,
       sortOrder = 'DESC',
       sortBy = 'createdAt',
     } = query;
@@ -89,8 +89,8 @@ export class DoctorService {
       qb.andWhere('doctor.clinicId = :clinicId', { clinicId });
     }
 
-    if (provinceCode) {
-      qb.andWhere('clinic.provinceCode = :provinceCode', { provinceCode });
+    if (provinceId) {
+      qb.andWhere('clinic.provinceId = :provinceId', { provinceId });
     }
 
     if (yearsFrom !== undefined) {
@@ -180,7 +180,10 @@ export class DoctorService {
       .toLowerCase()}@hospital.com`;
 
     const nowYear = new Date().getFullYear();
-    const password = `${dto.fullName.replace(/\s+/g, '')}@${nowYear}!`;
+    const password = `${dto.fullName
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, '')}@${nowYear}!`;
 
     const userDto = {
       email,

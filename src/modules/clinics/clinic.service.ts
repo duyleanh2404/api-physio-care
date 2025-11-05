@@ -60,9 +60,9 @@ export class ClinicService {
       search,
       dateTo,
       dateFrom,
-      provinceCode,
-      districtCode,
-      wardCode,
+      provinceId,
+      districtId,
+      wardId,
       page = 1,
       limit = 10,
       sortOrder = 'DESC',
@@ -94,14 +94,14 @@ export class ClinicService {
       qb.andWhere('clinic.createdAt <= :dateTo', { dateTo });
     }
 
-    if (provinceCode) {
-      qb.andWhere('clinic.provinceCode = :provinceCode', { provinceCode });
+    if (provinceId) {
+      qb.andWhere('clinic.provinceId = :provinceId', { provinceId });
     }
-    if (districtCode) {
-      qb.andWhere('clinic.districtCode = :districtCode', { districtCode });
+    if (districtId) {
+      qb.andWhere('clinic.districtId = :districtId', { districtId });
     }
-    if (wardCode) {
-      qb.andWhere('clinic.wardCode = :wardCode', { wardCode });
+    if (wardId) {
+      qb.andWhere('clinic.wardId = :wardId', { wardId });
     }
 
     const total = await qb.clone().getCount();
