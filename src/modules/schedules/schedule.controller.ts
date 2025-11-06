@@ -88,7 +88,7 @@ export class ScheduleController {
 
   @Delete(':id')
   @ApiBearerAuth()
-  @Roles('admin')
+  @Roles('admin', 'doctor')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiDeleteSchedule()
   async remove(@Param('id') id: string) {
