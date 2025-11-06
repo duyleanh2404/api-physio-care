@@ -2,55 +2,55 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateRecordDto {
-  @ApiProperty()
-  @IsNotEmpty({ message: 'patientsId is required' })
-  @IsString({ message: 'patientsId must be a string' })
+  @ApiProperty({ description: 'ID of the patient' })
+  @IsNotEmpty({ message: 'Please provide the patient ID.' })
+  @IsString({ message: 'Patient ID must be a string.' })
   patientsId: string;
 
-  @ApiProperty()
-  @IsNotEmpty({ message: 'doctorId is required' })
-  @IsString({ message: 'doctorId must be a string' })
-  doctorId: string;
+  @ApiPropertyOptional({ description: 'ID of the doctor (optional)' })
+  @IsOptional()
+  @IsString({ message: 'Doctor ID must be a string.' })
+  doctorId?: string;
 
   @ApiProperty({
     example: 'active',
     enum: ['active', 'completed', 'pending'],
-    description: 'Record status',
+    description: 'Status of the record',
   })
-  @IsNotEmpty({ message: 'status is required' })
+  @IsNotEmpty({ message: 'Please select a status for the record.' })
   @IsEnum(['active', 'completed', 'pending'], {
-    message: 'status must be one of: active, completed, pending',
+    message: 'Status must be one of the following: active, completed, pending.',
   })
   status: string;
 
-  @ApiProperty()
-  @IsNotEmpty({ message: 'history is required' })
-  @IsString({ message: 'history must be a string' })
+  @ApiProperty({ description: 'Medical history of the patient' })
+  @IsNotEmpty({ message: 'Please provide the medical history.' })
+  @IsString({ message: 'Medical history must be a string.' })
   history: string;
 
-  @ApiProperty()
-  @IsNotEmpty({ message: 'treatmentType is required' })
-  @IsString({ message: 'treatmentType must be a string' })
+  @ApiProperty({ description: 'Type of treatment' })
+  @IsNotEmpty({ message: 'Please specify the type of treatment.' })
+  @IsString({ message: 'Treatment type must be a string.' })
   treatmentType: string;
 
-  @ApiProperty()
-  @IsNotEmpty({ message: 'intensity is required' })
-  @IsString({ message: 'intensity must be a string' })
+  @ApiProperty({ description: 'Intensity of treatment' })
+  @IsNotEmpty({ message: 'Please specify the intensity.' })
+  @IsString({ message: 'Intensity must be a string.' })
   intensity: string;
 
-  @ApiProperty()
-  @IsNotEmpty({ message: 'frequency is required' })
-  @IsString({ message: 'frequency must be a string' })
+  @ApiProperty({ description: 'Frequency of treatment' })
+  @IsNotEmpty({ message: 'Please specify the frequency of treatment.' })
+  @IsString({ message: 'Frequency must be a string.' })
   frequency: string;
 
-  @ApiProperty()
-  @IsNotEmpty({ message: 'goals is required' })
-  @IsString({ message: 'goals must be a string' })
+  @ApiProperty({ description: 'Treatment goals' })
+  @IsNotEmpty({ message: 'Please provide the treatment goals.' })
+  @IsString({ message: 'Treatment goals must be a string.' })
   goals: string;
 
-  @ApiProperty()
-  @IsNotEmpty({ message: 'progress is required' })
-  @IsString({ message: 'progress must be a string' })
+  @ApiProperty({ description: 'Progress of the treatment' })
+  @IsNotEmpty({ message: 'Please provide the treatment progress.' })
+  @IsString({ message: 'Treatment progress must be a string.' })
   progress: string;
 
   @ApiPropertyOptional({

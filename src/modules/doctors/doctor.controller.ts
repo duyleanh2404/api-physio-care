@@ -6,6 +6,7 @@ import {
   Param,
   Query,
   Delete,
+  Request,
   UseGuards,
   Controller,
   UploadedFile,
@@ -18,8 +19,10 @@ import {
   ApiCreateDoctor,
   ApiUpdateDoctor,
   ApiDeleteDoctor,
+  ApiFindMeDoctor,
   ApiFindOneDoctor,
   ApiFindAllDoctors,
+  ApiFindMyPatients,
   ApiFindOneDoctorBySlug,
   ApiFindOneDoctorByClinicSlug,
 } from 'src/docs/swagger/doctor.swagger';
@@ -57,6 +60,16 @@ export class DoctorController {
     return this.doctorService.findAll(query);
   }
 
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('doctor')
+  @Get('my-patients')
+  @ApiFindMyPatients()
+  async findMyPatients(@Query() query: GetDoctorsQueryDto, @Request() req) {
+    const userId = req.user?.sub;
+    return this.doctorService.findMyPatients(userId, query);
+  }
+
   @Get('slug/:slug')
   @ApiFindOneDoctorBySlug()
   async findBySlug(@Param('slug') slug: string) {
@@ -70,6 +83,15 @@ export class DoctorController {
     @Param('slug') slug: string,
   ) {
     return this.doctorService.findByClinicAndSlug(clinicSlug, slug);
+  }
+
+  @Get('me')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiFindMeDoctor()
+  async findMe(@Request() req) {
+    const user = req.user as { sub: string };
+    return this.doctorService.findMe(user.sub);
   }
 
   @Get(':id')

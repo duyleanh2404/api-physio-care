@@ -61,6 +61,30 @@ export const ApiFindAllRecords = () =>
     }),
   );
 
+export const ApiFindMyPatientsRecords = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get all medical records of the currently logged-in doctor',
+      description:
+        'Returns all records assigned to the authenticated doctor (based on the JWT token).',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'List of records belonging to the authenticated doctor',
+      type: PaginatedResponseDto(RecordResponseDto),
+    }),
+    ApiResponse({
+      status: 401,
+      description: 'Unauthorized - Missing or invalid JWT token',
+      schema: { example: { message: 'Unauthorized' } },
+    }),
+    ApiResponse({
+      status: 403,
+      description: 'Forbidden - Only doctors can access this endpoint',
+      schema: { example: { message: 'Forbidden resource' } },
+    }),
+  );
+
 export const ApiFindOneRecord = () =>
   applyDecorators(
     ApiOperation({ summary: 'Get details of a record by ID' }),

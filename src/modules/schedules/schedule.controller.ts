@@ -6,8 +6,9 @@ import {
   Param,
   Query,
   Delete,
-  Controller,
+  Request,
   UseGuards,
+  Controller,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
@@ -15,6 +16,7 @@ import {
   ApiCreateSchedule,
   ApiUpdateSchedule,
   ApiDeleteSchedule,
+  ApiFindMySchedules,
   ApiFindOneSchedule,
   ApiFindAllSchedules,
   ApiGetSchedulesInRange,
@@ -51,6 +53,16 @@ export class ScheduleController {
   @ApiFindAllSchedules()
   async findAll(@Query() query: GetSchedulesQueryDto) {
     return this.scheduleService.findAll(query);
+  }
+
+  @Get('me')
+  @ApiBearerAuth()
+  @Roles('doctor')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiFindMySchedules()
+  async findMySchedules(@Request() req, @Query() query: GetSchedulesQueryDto) {
+    const userId = req.user.sub;
+    return this.scheduleService.findMySchedules(userId, query);
   }
 
   @Get('range')

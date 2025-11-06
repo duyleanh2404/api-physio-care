@@ -248,6 +248,111 @@ export class RecordService {
     return { page, limit, total, totalPages, data: recordsWithoutFiles };
   }
 
+  async findRecordsMyPatients(userId: string, query?: GetRecordsQueryDto) {
+    if (!userId) {
+      throw new BadRequestException('Missing userId in token.');
+    }
+
+    const doctor = await this.doctorRepo.findOne({
+      where: { user: { id: userId } },
+    });
+
+    if (!doctor) {
+      throw new NotFoundException(
+        'No doctor record found for this user account.',
+      );
+    }
+
+    const doctorId = doctor.id;
+
+    const {
+      search,
+      status,
+      dateTo,
+      dateFrom,
+      page = 1,
+      frequency,
+      intensity,
+      limit = 10,
+      treatmentType,
+      sortOrder = 'DESC',
+      sortBy = 'createdAt',
+    } = query || {};
+
+    const qb = this.recordRepo
+      .createQueryBuilder('record')
+      .leftJoinAndSelect('record.patient', 'patient')
+      .leftJoinAndSelect('record.doctor', 'doctor')
+      .leftJoinAndSelect('doctor.user', 'doctorUser')
+      .where('record.doctorId = :doctorId', { doctorId });
+
+    if (search) {
+      qb.andWhere(
+        `(record.history LIKE :search 
+        OR record.goals LIKE :search 
+        OR record.progress LIKE :search 
+        OR record.recordCode LIKE :search)`,
+        { search: `%${search}%` },
+      );
+    }
+
+    const parseArray = (val: any) =>
+      Array.isArray(val)
+        ? val
+        : typeof val === 'string'
+          ? val
+              .split(',')
+              .map((v) => v.trim())
+              .filter(Boolean)
+          : [];
+
+    const statusList = parseArray(status);
+    if (statusList.length)
+      qb.andWhere('record.status IN (:...statusList)', { statusList });
+
+    const frequencyList = parseArray(frequency);
+    if (frequencyList.length)
+      qb.andWhere('record.frequency IN (:...frequencyList)', { frequencyList });
+
+    const intensityList = parseArray(intensity);
+    if (intensityList.length)
+      qb.andWhere('record.intensity IN (:...intensityList)', { intensityList });
+
+    const treatmentList = parseArray(treatmentType);
+    if (treatmentList.length)
+      qb.andWhere('record.treatmentType IN (:...treatmentList)', {
+        treatmentList,
+      });
+
+    if (dateFrom) qb.andWhere('record.createdAt >= :dateFrom', { dateFrom });
+    if (dateTo) qb.andWhere('record.createdAt <= :dateTo', { dateTo });
+
+    qb.orderBy(`record.${sortBy}`, sortOrder as 'ASC' | 'DESC');
+    qb.skip((page - 1) * limit).take(limit);
+
+    const [records, total] = await qb.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    const recordsWithoutFiles = records.map((r) => {
+      const {
+        attachmentIv,
+        attachmentTag,
+        attachmentData,
+        attachmentSignature,
+        ...rest
+      } = r;
+      return rest;
+    });
+
+    return {
+      page,
+      limit,
+      total,
+      totalPages,
+      data: recordsWithoutFiles,
+    };
+  }
+
   async findOne(id: string): Promise<Record> {
     const record = await this.recordRepo.findOne({ where: { id } });
     if (!record) throw new NotFoundException('Record not found');
@@ -341,20 +446,17 @@ export class RecordService {
       throw new BadRequestException('This record has no attached file');
     }
 
-    // 1️⃣ Verify chữ ký trên ciphertext đã lưu
     const validSignature = this.signatureService.verifyBuffer(
       record.attachmentData,
       record.attachmentSignature,
     );
 
-    // 2️⃣ Giải mã ciphertext lưu trong DB
     const decryptedRecord = this.encryptionService.decrypt({
       ciphertext: record.attachmentData,
       iv: record.attachmentIv,
       tag: record.attachmentTag,
     });
 
-    // 3️⃣ So sánh file upload với dữ liệu gốc
     const sameOriginalFile = Buffer.compare(file.buffer, decryptedRecord) === 0;
 
     const verified = validSignature && sameOriginalFile;

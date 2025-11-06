@@ -5,6 +5,7 @@ import { Doctor } from './doctor.entity';
 import { User } from '../users/user.entity';
 import { Clinic } from '../clinics/clinic.entity';
 import { Specialty } from '../specialties/specialty.entity';
+import { Appointment } from '../appointments/appointments.entity';
 
 import { DoctorService } from './doctor.service';
 import { DoctorController } from './doctor.controller';
@@ -16,7 +17,7 @@ import { CloudinaryModule } from 'src/core/cloudinary/cloudinary.module';
   imports: [
     UserModule,
     CloudinaryModule,
-    TypeOrmModule.forFeature([Doctor, User, Specialty, Clinic]),
+    TypeOrmModule.forFeature([Doctor, User, Specialty, Clinic, Appointment]),
   ],
   providers: [DoctorService],
   controllers: [DoctorController],

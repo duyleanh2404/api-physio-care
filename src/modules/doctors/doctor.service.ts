@@ -11,6 +11,7 @@ import { slugifyName } from 'src/utils/slugify';
 import { Doctor } from './doctor.entity';
 import { Clinic } from '../clinics/clinic.entity';
 import { Specialty } from '../specialties/specialty.entity';
+import { Appointment } from '../appointments/appointments.entity';
 
 import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { UpdateDoctorDto } from './dto/update-doctor.dto';
@@ -31,6 +32,9 @@ export class DoctorService {
 
     @InjectRepository(Specialty)
     private readonly specialtyRepo: Repository<Specialty>,
+
+    @InjectRepository(Appointment)
+    private readonly appointmentRepo: Repository<Appointment>,
 
     private readonly userService: UserService,
     private readonly cloudinaryService: CloudinaryService,
@@ -131,6 +135,93 @@ export class DoctorService {
     };
   }
 
+  async findMyPatients(userId: string, query: GetDoctorsQueryDto) {
+    const {
+      search,
+      dateFrom,
+      dateTo,
+      page = 1,
+      limit = 10,
+      sortBy = 'createdAt',
+      sortOrder = 'DESC',
+    } = query;
+
+    const doctor = await this.doctorRepo.findOne({
+      where: { user: { id: userId } },
+    });
+
+    if (!doctor) {
+      throw new NotFoundException('Doctor not found for this user');
+    }
+
+    const qb = this.appointmentRepo
+      .createQueryBuilder('appointment')
+      .leftJoinAndSelect('appointment.user', 'user')
+      .where('appointment.doctorId = :doctorId', { doctorId: doctor.id });
+
+    if (search) {
+      const keyword = `%${search.toLowerCase()}%`;
+      qb.andWhere(
+        new Brackets((qb) => {
+          qb.where('LOWER(user.fullName) LIKE :keyword').orWhere(
+            'LOWER(user.email) LIKE :keyword',
+          );
+        }),
+        { keyword },
+      );
+    }
+
+    if (dateFrom && dateTo) {
+      qb.andWhere('appointment.createdAt BETWEEN :dateFrom AND :dateTo', {
+        dateFrom: new Date(dateFrom).toISOString(),
+        dateTo: new Date(dateTo).toISOString(),
+      });
+    } else if (dateFrom) {
+      qb.andWhere('appointment.createdAt >= :dateFrom', {
+        dateFrom: new Date(dateFrom).toISOString(),
+      });
+    } else if (dateTo) {
+      qb.andWhere('appointment.createdAt <= :dateTo', {
+        dateTo: new Date(dateTo).toISOString(),
+      });
+    }
+
+    qb.orderBy(
+      `appointment.${sortBy}`,
+      sortOrder.toUpperCase() as 'ASC' | 'DESC',
+    );
+
+    const appointments = await qb.getMany();
+
+    const uniqueUsers = Object.values(
+      appointments.reduce(
+        (acc, { user }) => {
+          if (!acc[user.id]) {
+            const { password, verificationOtp, otpExpiresAt, ...safeUser } =
+              user;
+            acc[user.id] = safeUser;
+          }
+          return acc;
+        },
+        {} as Record<string, any>,
+      ),
+    );
+
+    const total = uniqueUsers.length;
+    const totalPages = Math.ceil(total / limit);
+    const start = (page - 1) * limit;
+    const end = start + limit;
+    const data = uniqueUsers.slice(start, end);
+
+    return {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      totalPages,
+      data,
+    };
+  }
+
   async findBySlug(slug: string) {
     const doctor = await this.doctorRepo.findOne({
       where: { slug },
@@ -170,6 +261,19 @@ export class DoctorService {
 
     if (!doctor) throw new NotFoundException('Doctor not found');
     return doctor;
+  }
+
+  async findMe(userId: string) {
+    const doctor = await this.doctorRepo.findOne({
+      where: { user: { id: userId } },
+      select: ['id'],
+    });
+
+    if (!doctor) {
+      throw new NotFoundException('Doctor not found for this user');
+    }
+
+    return { doctorId: doctor.id };
   }
 
   async create(dto: CreateDoctorDto, avatar?: Express.Multer.File) {
