@@ -23,6 +23,30 @@ export const ApiFindAllSchedules = () =>
     }),
   );
 
+export const ApiFindMySchedules = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get schedules of the currently authenticated doctor',
+      description:
+        'Retrieve a paginated list of schedules that belong to the logged-in doctor (based on the doctor’s user account). Supports filtering, date range, and sorting options.',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'Doctor schedules retrieved successfully',
+      type: PaginatedResponseDto(ScheduleResponseDto),
+    }),
+    ApiResponse({
+      status: 400,
+      description: 'Missing or invalid parameters',
+      schema: { example: { message: 'Invalid parameters' } },
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Doctor profile not found for this user',
+      schema: { example: { message: 'Doctor not found' } },
+    }),
+  );
+
 export const ApiGetSchedulesInRange = () =>
   applyDecorators(
     ApiOperation({

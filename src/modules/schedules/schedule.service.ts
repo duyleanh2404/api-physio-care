@@ -101,6 +101,89 @@ export class ScheduleService {
     return { page, limit, total, totalPages, data };
   }
 
+  async findMySchedules(userId: string, query: GetSchedulesQueryDto) {
+    if (!userId) {
+      throw new BadRequestException('Missing userId in token');
+    }
+
+    const doctor = await this.doctorRepo.findOne({
+      where: { user: { id: userId } },
+    });
+
+    if (!doctor) {
+      throw new NotFoundException(
+        'Doctor profile not found for this user account',
+      );
+    }
+
+    const {
+      search,
+      dateTo,
+      status,
+      dateFrom,
+      page = 1,
+      limit = 10,
+      sortOrder = 'DESC',
+      sortBy = 'createdAt',
+    } = query;
+
+    const qb = this.scheduleRepo
+      .createQueryBuilder('schedule')
+      .leftJoinAndSelect('schedule.doctor', 'doctor')
+      .leftJoin('doctor.user', 'user')
+      .addSelect(['user.id', 'user.fullName'])
+      .leftJoin('doctor.clinic', 'clinic')
+      .addSelect([
+        'clinic.id',
+        'clinic.name',
+        'clinic.address',
+        'clinic.avatar',
+        'clinic.banner',
+      ])
+      .leftJoin('doctor.specialty', 'specialty')
+      .addSelect(['specialty.id', 'specialty.name', 'specialty.imageUrl'])
+      .where('schedule.doctorId = :doctorId', { doctorId: doctor.id });
+
+    // Apply filters
+    if (status) {
+      const statuses = status.includes(',') ? status.split(',') : [status];
+      qb.andWhere('schedule.status IN (:...statuses)', { statuses });
+    }
+
+    if (dateFrom && dateTo) {
+      qb.andWhere('schedule.workDate BETWEEN :dateFrom AND :dateTo', {
+        dateFrom,
+        dateTo,
+      });
+    } else if (dateFrom) {
+      qb.andWhere('schedule.workDate >= :dateFrom', { dateFrom });
+    } else if (dateTo) {
+      qb.andWhere('schedule.workDate <= :dateTo', { dateTo });
+    }
+
+    if (search?.trim()) {
+      const keyword = `%${search.toLowerCase()}%`;
+      qb.andWhere(
+        new Brackets((qb) => {
+          qb.where('LOWER(user.fullName) LIKE :keyword')
+            .orWhere('LOWER(clinic.name) LIKE :keyword')
+            .orWhere('LOWER(specialty.name) LIKE :keyword')
+            .orWhere('LOWER(schedule.notes) LIKE :keyword');
+        }),
+        { keyword },
+      );
+    }
+
+    qb.orderBy(`schedule.${sortBy}`, sortOrder.toUpperCase() as 'ASC' | 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    return { page, limit, total, totalPages, data };
+  }
+
   async findByDateRange(dto: GetSchedulesRangeDto) {
     const { dateFrom, dateTo, doctorId, clinicId } = dto;
 

@@ -6,6 +6,7 @@ import {
   Query,
   Param,
   Delete,
+  Request,
   Response,
   UseGuards,
   Controller,
@@ -24,6 +25,7 @@ import {
   ApiFindOneRecord,
   ApiFindAllRecords,
   ApiDownloadRecord,
+  ApiFindMyPatientsRecords,
 } from 'src/docs/swagger/record.swagger';
 import { RecordService } from './record.service';
 import { Roles } from 'src/core/auth/decorators/roles.decorator';
@@ -58,10 +60,21 @@ export class RecordController {
   }
 
   @Get()
-  @Roles('admin', 'doctor')
+  @Roles('admin')
   @ApiFindAllRecords()
   async findAll(@Query() query: GetRecordsQueryDto) {
     return this.recordService.findAll(query);
+  }
+
+  @Get('my-patients')
+  @Roles('doctor')
+  @ApiFindMyPatientsRecords()
+  async findRecordsMyPatients(
+    @Request() req,
+    @Query() query: GetRecordsQueryDto,
+  ) {
+    const userId = req.user.sub;
+    return this.recordService.findRecordsMyPatients(userId, query);
   }
 
   @Get(':id')
@@ -72,6 +85,7 @@ export class RecordController {
   }
 
   @Get('download/:id')
+  @Roles('admin', 'doctor')
   @ApiDownloadRecord()
   async downloadFile(@Param('id') id: string, @Response() res) {
     return this.recordService.downloadFile(id, res);

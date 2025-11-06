@@ -7,6 +7,7 @@ import {
 } from '@nestjs/swagger';
 import { applyDecorators } from '@nestjs/common';
 
+import { UserResponseDto } from 'src/modules/users/dto/user-response.dto';
 import { CreateDoctorDto } from 'src/modules/doctors/dto/create-doctor.dto';
 import { UpdateDoctorDto } from 'src/modules/doctors/dto/update-doctor.dto';
 import { PaginatedResponseDto } from 'src/common/dto/paginated-response.dto';
@@ -22,6 +23,25 @@ export const ApiFindAllDoctors = () =>
       status: 200,
       description: 'List of doctors successfully retrieved',
       type: PaginatedResponseDto(DoctorResponseDto),
+    }),
+  );
+
+export const ApiFindMyPatients = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get patients of the currently logged-in doctor',
+      description:
+        'Retrieve a paginated list of patients who have appointments with the currently authenticated doctor.',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'List of patients retrieved successfully',
+      type: PaginatedResponseDto(UserResponseDto),
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Doctor not found for this user',
+      schema: { example: { message: 'Doctor not found for this user' } },
     }),
   );
 
@@ -96,6 +116,25 @@ export const ApiFindOneDoctor = () =>
       status: 404,
       description: 'Doctor not found',
       schema: { example: { message: 'Doctor not found' } },
+    }),
+  );
+
+export const ApiFindMeDoctor = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get currently logged-in doctor information',
+      description:
+        'Retrieve the doctor profile that is linked to the currently authenticated user (based on the token).',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'Doctor profile retrieved successfully',
+      type: DoctorResponseDto,
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Doctor not found for this user',
+      schema: { example: { message: 'Doctor not found for this user' } },
     }),
   );
 
