@@ -19,6 +19,7 @@ import {
   ApiFindOneAppointment,
   ApiFindMyAppointments,
   ApiFindAllAppointments,
+  ApiFindAppointmentByScheduleId,
 } from 'src/docs/swagger/appointment.swagger';
 import { AppointmentService } from './appointments.service';
 
@@ -71,6 +72,15 @@ export class AppointmentController {
   @ApiFindOneAppointment()
   async findOne(@Param('id') id: string) {
     return this.appointmentService.findOne(id);
+  }
+
+  @Get('schedule/:scheduleId')
+  @ApiBearerAuth()
+  @Roles('admin', 'doctor')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiFindAppointmentByScheduleId()
+  async findByScheduleId(@Param('scheduleId') scheduleId: string) {
+    return this.appointmentService.findByScheduleId(scheduleId);
   }
 
   @Put(':id')

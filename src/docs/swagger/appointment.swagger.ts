@@ -51,6 +51,30 @@ export const ApiFindOneAppointment = () =>
     }),
   );
 
+export const ApiFindAppointmentByScheduleId = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get appointment by Schedule ID',
+      description: 'Retrieve appointment details using a Schedule ID',
+    }),
+    ApiParam({
+      name: 'scheduleId',
+      description: 'The ID of the schedule associated with the appointment',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'Appointment details retrieved successfully',
+      type: AppointmentResponseDto,
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Appointment not found for this schedule',
+      schema: {
+        example: { message: 'Appointment not found for this schedule' },
+      },
+    }),
+  );
+
 export const ApiCreateAppointment = () =>
   applyDecorators(
     ApiOperation({

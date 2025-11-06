@@ -102,19 +102,16 @@ export class ScheduleService {
   }
 
   async findMySchedules(userId: string, query: GetSchedulesQueryDto) {
-    if (!userId) {
-      throw new BadRequestException('Missing userId in token');
-    }
+    if (!userId) throw new BadRequestException('Missing userId in token');
 
     const doctor = await this.doctorRepo.findOne({
       where: { user: { id: userId } },
     });
 
-    if (!doctor) {
+    if (!doctor)
       throw new NotFoundException(
         'Doctor profile not found for this user account',
       );
-    }
 
     const {
       search,
@@ -129,22 +126,8 @@ export class ScheduleService {
 
     const qb = this.scheduleRepo
       .createQueryBuilder('schedule')
-      .leftJoinAndSelect('schedule.doctor', 'doctor')
-      .leftJoin('doctor.user', 'user')
-      .addSelect(['user.id', 'user.fullName'])
-      .leftJoin('doctor.clinic', 'clinic')
-      .addSelect([
-        'clinic.id',
-        'clinic.name',
-        'clinic.address',
-        'clinic.avatar',
-        'clinic.banner',
-      ])
-      .leftJoin('doctor.specialty', 'specialty')
-      .addSelect(['specialty.id', 'specialty.name', 'specialty.imageUrl'])
       .where('schedule.doctorId = :doctorId', { doctorId: doctor.id });
 
-    // Apply filters
     if (status) {
       const statuses = status.includes(',') ? status.split(',') : [status];
       qb.andWhere('schedule.status IN (:...statuses)', { statuses });
@@ -162,16 +145,9 @@ export class ScheduleService {
     }
 
     if (search?.trim()) {
-      const keyword = `%${search.toLowerCase()}%`;
-      qb.andWhere(
-        new Brackets((qb) => {
-          qb.where('LOWER(user.fullName) LIKE :keyword')
-            .orWhere('LOWER(clinic.name) LIKE :keyword')
-            .orWhere('LOWER(specialty.name) LIKE :keyword')
-            .orWhere('LOWER(schedule.notes) LIKE :keyword');
-        }),
-        { keyword },
-      );
+      qb.andWhere('LOWER(schedule.notes) LIKE :keyword', {
+        keyword: `%${search.toLowerCase()}%`,
+      });
     }
 
     qb.orderBy(`schedule.${sortBy}`, sortOrder.toUpperCase() as 'ASC' | 'DESC')
@@ -181,7 +157,24 @@ export class ScheduleService {
     const [data, total] = await qb.getManyAndCount();
     const totalPages = Math.ceil(total / limit);
 
-    return { page, limit, total, totalPages, data };
+    const mappedData = data.map((schedule) => ({
+      ...schedule,
+      workDate: schedule.workDate
+        ? new Date(
+            Date.UTC(
+              schedule.workDate.getFullYear(),
+              schedule.workDate.getMonth(),
+              schedule.workDate.getDate(),
+              schedule.workDate.getHours(),
+              schedule.workDate.getMinutes(),
+              schedule.workDate.getSeconds(),
+              schedule.workDate.getMilliseconds(),
+            ),
+          ).toISOString()
+        : null,
+    }));
+
+    return { page, limit, total, totalPages, data: mappedData };
   }
 
   async findByDateRange(dto: GetSchedulesRangeDto) {

@@ -83,7 +83,6 @@ export class AppointmentService {
       ]);
 
     if (doctorId) qb.andWhere('appointment.doctorId = :doctorId', { doctorId });
-    if (userId) qb.andWhere('appointment.userId = :userId', { userId }); // FIXED
 
     if (status) {
       const statusArray = Array.isArray(status) ? status : [status];
@@ -128,6 +127,59 @@ export class AppointmentService {
       relations: ['doctor', 'user'],
     });
     if (!appointment) throw new NotFoundException('Appointment not found');
+    return appointment;
+  }
+
+  async findByScheduleId(scheduleId: string) {
+    const appointment = await this.appointmentRepo
+      .createQueryBuilder('appointment')
+      .leftJoinAndSelect('appointment.doctor', 'doctor')
+      .leftJoinAndSelect('doctor.user', 'doctorUser')
+      .leftJoinAndSelect('doctor.clinic', 'clinic')
+      .leftJoinAndSelect('doctor.specialty', 'specialty')
+      .leftJoinAndSelect('appointment.user', 'user')
+      .leftJoinAndSelect('appointment.schedule', 'schedule')
+      .where('schedule.id = :scheduleId', { scheduleId })
+      .select([
+        'appointment.id',
+        'appointment.code',
+        'appointment.status',
+        'appointment.phone',
+        'appointment.notes',
+        'appointment.createdAt',
+
+        'doctor.id',
+
+        'doctorUser.id',
+        'doctorUser.fullName',
+        'doctorUser.email',
+        'doctorUser.avatarUrl',
+
+        'clinic.id',
+        'clinic.name',
+        'clinic.address',
+        'clinic.avatar',
+
+        'specialty.id',
+        'specialty.name',
+        'specialty.imageUrl',
+
+        'user.id',
+        'user.fullName',
+        'user.email',
+        'user.avatarUrl',
+
+        'schedule.id',
+        'schedule.workDate',
+        'schedule.startTime',
+        'schedule.endTime',
+      ])
+      .getOne();
+
+    if (!appointment) {
+      throw new NotFoundException('Appointment not found for this schedule');
+    }
+
     return appointment;
   }
 
