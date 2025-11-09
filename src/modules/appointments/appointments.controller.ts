@@ -19,6 +19,7 @@ import {
   ApiFindOneAppointment,
   ApiFindMyAppointments,
   ApiFindAllAppointments,
+  ApiFindDoctorAppointments,
   ApiFindAppointmentByScheduleId,
 } from 'src/docs/swagger/appointment.swagger';
 import { AppointmentService } from './appointments.service';
@@ -66,6 +67,19 @@ export class AppointmentController {
     return this.appointmentService.findAll({ ...query, userId });
   }
 
+  @Get('my-schedules')
+  @ApiBearerAuth()
+  @Roles('doctor')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiFindDoctorAppointments()
+  async findDoctorAppointments(
+    @Query() query: GetAppointmentsQueryDto,
+    @Request() req,
+  ) {
+    const userId = req.user.sub;
+    return this.appointmentService.findDoctorAppointments(userId, query);
+  }
+
   @Get(':id')
   @ApiBearerAuth()
   @Roles('user', 'admin')
@@ -85,7 +99,7 @@ export class AppointmentController {
 
   @Put(':id')
   @ApiBearerAuth()
-  @Roles('user', 'admin')
+  @Roles('user', 'admin', 'doctor')
   @ApiUpdateAppointment()
   @UseGuards(JwtAuthGuard, RolesGuard)
   async update(@Param('id') id: string, @Body() dto: UpdateAppointmentDto) {
@@ -94,7 +108,7 @@ export class AppointmentController {
 
   @Delete(':id')
   @ApiBearerAuth()
-  @Roles('admin')
+  @Roles('admin', 'doctor')
   @ApiDeleteAppointment()
   @UseGuards(JwtAuthGuard, RolesGuard)
   async remove(@Param('id') id: string) {

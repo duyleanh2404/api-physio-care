@@ -183,6 +183,61 @@ export class AppointmentService {
     return appointment;
   }
 
+  async findDoctorAppointments(userId: string, query: GetAppointmentsQueryDto) {
+    if (!userId) throw new BadRequestException('Missing userId in token');
+
+    const doctor = await this.doctorRepo.findOne({
+      where: { user: { id: userId } },
+    });
+    if (!doctor) throw new NotFoundException('Doctor profile not found');
+
+    const {
+      status,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 10,
+      sortBy = 'createdAt',
+      sortOrder = 'ASC',
+    } = query;
+
+    const qb = this.appointmentRepo
+      .createQueryBuilder('appointment')
+      .leftJoinAndSelect('appointment.user', 'user')
+      .leftJoinAndSelect('appointment.schedule', 'schedule')
+      .where('appointment.doctorId = :doctorId', { doctorId: doctor.id });
+
+    if (status) {
+      const statusArray = Array.isArray(status) ? status : [status];
+      qb.andWhere('appointment.status IN (:...status)', {
+        status: statusArray,
+      });
+    }
+
+    if (startDate && endDate) {
+      qb.andWhere('appointment.createdAt BETWEEN :startDate AND :endDate', {
+        startDate,
+        endDate,
+      });
+    } else if (startDate) {
+      qb.andWhere('appointment.createdAt >= :startDate', { startDate });
+    } else if (endDate) {
+      qb.andWhere('appointment.createdAt <= :endDate', { endDate });
+    }
+
+    qb.orderBy(
+      `appointment.${sortBy}`,
+      sortOrder.toUpperCase() as 'ASC' | 'DESC',
+    )
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    return { page, limit, total, totalPages, data };
+  }
+
   async create(dto: CreateAppointmentDto) {
     const doctor = await this.doctorRepo.findOne({
       where: { id: dto.doctorId },

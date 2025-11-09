@@ -32,6 +32,19 @@ export const ApiFindMyAppointments = () =>
     }),
   );
 
+export const ApiFindDoctorAppointments = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get my schedules',
+      description: 'Retrieve all appointments for the authenticated doctor',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'List of doctor appointments successfully retrieved',
+      type: PaginatedResponseDto(AppointmentResponseDto),
+    }),
+  );
+
 export const ApiFindOneAppointment = () =>
   applyDecorators(
     ApiOperation({
