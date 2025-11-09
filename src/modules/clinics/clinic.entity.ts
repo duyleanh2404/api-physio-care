@@ -2,18 +2,18 @@ import {
   Entity,
   Column,
   OneToMany,
+  OneToOne,
+  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+import { User } from '../users/user.entity';
 import { Doctor } from '../doctors/doctor.entity';
 
 @Entity('clinics')
 export class Clinic {
-  @OneToMany(() => Doctor, (doctor) => doctor.clinic)
-  doctors: Doctor[];
-
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -49,6 +49,16 @@ export class Clinic {
 
   @Column({ type: 'varchar2', length: 20, nullable: true })
   wardId?: string;
+
+  @OneToOne(() => User, { nullable: false })
+  @JoinColumn({ name: 'userId' })
+  user: User;
+
+  @Column()
+  userId: string;
+
+  @OneToMany(() => Doctor, (doctor) => doctor.clinic)
+  doctors: Doctor[];
 
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;

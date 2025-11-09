@@ -253,6 +253,62 @@ export class DoctorService {
     return doctor;
   }
 
+  async findDoctorsByClinicUser(userId: string, query: GetDoctorsQueryDto) {
+    const clinic = await this.clinicRepo.findOne({
+      where: { user: { id: userId } },
+    });
+
+    if (!clinic) {
+      throw new NotFoundException('Clinic not found for this user');
+    }
+
+    const {
+      search,
+      specialtyId,
+      yearsFrom,
+      yearsTo,
+      page = 1,
+      limit = 10,
+      sortBy = 'createdAt',
+      sortOrder = 'DESC',
+    } = query;
+
+    const qb = this.doctorRepo
+      .createQueryBuilder('doctor')
+      .leftJoin('doctor.user', 'user')
+      .addSelect(['user.id', 'user.email', 'user.fullName', 'user.avatarUrl'])
+      .leftJoinAndSelect('doctor.specialty', 'specialty')
+      .where('doctor.clinicId = :clinicId', { clinicId: clinic.id });
+
+    if (search) {
+      const keyword = `%${search.toLowerCase()}%`;
+      qb.andWhere(
+        'LOWER(user.fullName) LIKE :keyword OR LOWER(doctor.licenseNumber) LIKE :keyword',
+        { keyword },
+      );
+    }
+
+    if (specialtyId) {
+      qb.andWhere('doctor.specialtyId = :specialtyId', { specialtyId });
+    }
+
+    if (yearsFrom !== undefined) {
+      qb.andWhere('doctor.yearsOfExperience >= :yearsFrom', { yearsFrom });
+    }
+    if (yearsTo !== undefined) {
+      qb.andWhere('doctor.yearsOfExperience <= :yearsTo', { yearsTo });
+    }
+
+    qb.orderBy(`doctor.${sortBy}`, sortOrder.toUpperCase() as 'ASC' | 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    return { page, limit, total, totalPages, data };
+  }
+
   async findOne(id: string) {
     const doctor = await this.doctorRepo.findOne({
       where: { id },
