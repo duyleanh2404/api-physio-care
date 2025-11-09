@@ -9,6 +9,9 @@ import { UpdateClinicDto } from './dto/update-clinic.dto';
 import { GetClinicsQueryDto } from './dto/get-clinics-query.dto';
 
 import { Clinic } from './clinic.entity';
+import { UserRole, UserStatus } from 'src/enums/user.enums';
+
+import { UserService } from '../users/user.service';
 import { CloudinaryService } from 'src/core/cloudinary/cloudinary.service';
 
 @Injectable()
@@ -17,6 +20,7 @@ export class ClinicService {
     @InjectRepository(Clinic)
     private readonly clinicRepo: Repository<Clinic>,
 
+    private readonly userService: UserService,
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
@@ -44,14 +48,45 @@ export class ClinicService {
     }
 
     let slug = slugifyName(dto.name);
-
     const existingClinic = await this.clinicRepo.findOne({ where: { slug } });
     if (existingClinic) {
       const randomSuffix = Math.floor(Math.random() * 10000);
       slug = `${slug}-${randomSuffix}`;
     }
 
-    const clinic = this.clinicRepo.create({ ...dto, slug });
+    const toPascalCase = (str: string) =>
+      str
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .split(/\s+/)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join('');
+
+    const email = `${dto.name
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, '')
+      .toLowerCase()}@hospital.com`;
+
+    const nowYear = new Date().getFullYear();
+    const password = `${toPascalCase(dto.name)}@${nowYear}!`;
+
+    const userDto = {
+      email,
+      password,
+      role: UserRole.CLINIC,
+      fullName: dto.name,
+      status: UserStatus.ACTIVE,
+    };
+
+    const user = await this.userService.create(userDto, files?.avatar?.[0]);
+
+    const clinic = this.clinicRepo.create({
+      ...dto,
+      slug,
+      userId: user.id,
+    });
+
     return this.clinicRepo.save(clinic);
   }
 
