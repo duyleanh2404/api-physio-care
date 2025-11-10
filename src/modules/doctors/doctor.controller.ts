@@ -29,12 +29,14 @@ import {
 import { DoctorService } from './doctor.service';
 import { Roles } from 'src/core/auth/decorators/roles.decorator';
 
+import { RolesGuard } from 'src/core/auth/guards/roles.guard';
+import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
+
 import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { UpdateDoctorDto } from './dto/update-doctor.dto';
 import { GetDoctorsQueryDto } from './dto/get-doctors-query.dto';
-
-import { RolesGuard } from 'src/core/auth/guards/roles.guard';
-import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
+import { GetMyPatientsQueryDto } from './dto/get-my-patients-query.dto';
+import { GetDoctorsByClinicQueryDto } from './dto/get-doctors-by-clinic.dto';
 
 @ApiTags('Doctors')
 @Controller('doctors')
@@ -43,7 +45,7 @@ export class DoctorController {
 
   @Post()
   @ApiBearerAuth()
-  @Roles('admin')
+  @Roles('admin', 'clinic')
   @ApiCreateDoctor()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @UseInterceptors(FileInterceptor('avatar'))
@@ -65,9 +67,22 @@ export class DoctorController {
   @Roles('doctor')
   @Get('my-patients')
   @ApiFindMyPatients()
-  async findMyPatients(@Query() query: GetDoctorsQueryDto, @Request() req) {
+  async findMyPatients(@Query() query: GetMyPatientsQueryDto, @Request() req) {
     const userId = req.user?.sub;
     return this.doctorService.findMyPatients(userId, query);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('clinic')
+  @Get('my-doctors')
+  @ApiFindAllDoctors()
+  async findDoctorsByMyClinic(
+    @Query() query: GetDoctorsByClinicQueryDto,
+    @Request() req,
+  ) {
+    const userId = req.user?.sub;
+    return this.doctorService.findDoctorsByClinicUser(userId, query);
   }
 
   @Get('slug/:slug')
@@ -102,24 +117,29 @@ export class DoctorController {
 
   @Put(':id')
   @ApiBearerAuth()
-  @Roles('admin')
+  @Roles('admin', 'clinic')
   @ApiUpdateDoctor()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @UseInterceptors(FileInterceptor('avatar'))
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateDoctorDto,
-    @UploadedFile() avatar?: Express.Multer.File,
+    @UploadedFile() avatar: Express.Multer.File,
+    @Request() req,
   ) {
-    return this.doctorService.update(id, dto, avatar);
+    const userId = req.user.sub;
+    const role = req.user.role;
+    return this.doctorService.update(id, dto, avatar, userId, role);
   }
 
   @Delete(':id')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @Roles('admin', 'clinic')
   @ApiDeleteDoctor()
-  async remove(@Param('id') id: string) {
-    return this.doctorService.remove(id);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async remove(@Param('id') id: string, @Request() req) {
+    const userId = req.user.sub;
+    const role = req.user.role;
+    return this.doctorService.remove(id, userId, role);
   }
 }

@@ -2,7 +2,7 @@ import { Min, IsIn, IsInt, IsString, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
-export class GetDoctorsQueryDto {
+export class GetDoctorsByClinicQueryDto {
   @ApiPropertyOptional({
     description:
       'Search keyword by doctor name, license number, or specialty name',
@@ -19,32 +19,11 @@ export class GetDoctorsQueryDto {
   specialtyId?: string;
 
   @ApiPropertyOptional({
-    description: 'Filter doctors by clinic ID',
-  })
-  @IsOptional()
-  @IsString()
-  clinicId?: string;
-
-  @ApiPropertyOptional({
     description: 'Filter doctors by clinic province code',
   })
   @IsOptional()
   @IsString()
   provinceId?: string;
-
-  @ApiPropertyOptional({
-    description: 'Filter doctors created from this date (format: YYYY-MM-DD)',
-  })
-  @IsOptional()
-  @IsString()
-  dateFrom?: string;
-
-  @ApiPropertyOptional({
-    description: 'Filter doctors created until this date (format: YYYY-MM-DD)',
-  })
-  @IsOptional()
-  @IsString()
-  dateTo?: string;
 
   @ApiPropertyOptional({
     description: 'Minimum years of experience',
@@ -98,8 +77,8 @@ export class GetDoctorsQueryDto {
   sortBy: string = 'createdAt';
 
   @ApiPropertyOptional({
-    enum: ['ASC', 'DESC'],
     description: 'Sort order direction',
+    enum: ['ASC', 'DESC'],
     example: 'DESC',
     default: 'DESC',
   })

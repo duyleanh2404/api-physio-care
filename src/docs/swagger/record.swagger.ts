@@ -91,7 +91,6 @@ export const ApiFindOneRecord = () =>
     ApiParam({
       name: 'id',
       description: 'Record ID',
-      example: 'acee4e04-3925-4505-83d6-7a2e0b614f7e',
     }),
     ApiResponse({
       status: 200,
@@ -143,7 +142,6 @@ export const ApiDeleteRecord = () =>
     ApiParam({
       name: 'id',
       description: 'Record ID',
-      example: 'acee4e04-3925-4505-83d6-7a2e0b614f7e',
     }),
     ApiResponse({
       status: 200,

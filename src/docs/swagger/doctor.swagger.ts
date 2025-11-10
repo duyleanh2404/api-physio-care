@@ -77,12 +77,10 @@ export const ApiFindOneDoctorByClinicSlug = () =>
     ApiParam({
       name: 'clinicSlug',
       description: 'Slug of the clinic where the doctor works',
-      example: 'phong-kham-an-binh',
     }),
     ApiParam({
       name: 'slug',
       description: 'Slug of the doctor',
-      example: 'tran-van-a',
     }),
     ApiResponse({
       status: 200,
@@ -105,7 +103,6 @@ export const ApiFindOneDoctor = () =>
     ApiParam({
       name: 'id',
       description: 'Doctor ID',
-      example: 'a15b7e42-0a6b-47a1-9d4f-1c1b88e4d6e9',
     }),
     ApiResponse({
       status: 200,
@@ -174,7 +171,6 @@ export const ApiUpdateDoctor = () =>
     ApiParam({
       name: 'id',
       description: 'Doctor ID',
-      example: 'b57e8b1c-5b91-4e21-92b3-3b024f1a7a4d',
     }),
     ApiConsumes('multipart/form-data'),
     ApiBody({ type: UpdateDoctorDto }),
@@ -199,7 +195,6 @@ export const ApiDeleteDoctor = () =>
     ApiParam({
       name: 'id',
       description: 'Doctor ID',
-      example: '4f57a56d-20e7-4c4a-b5f3-f9b8a5fdb776',
     }),
     ApiResponse({
       status: 200,

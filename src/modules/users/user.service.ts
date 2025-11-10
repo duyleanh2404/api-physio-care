@@ -122,7 +122,14 @@ export class UserService {
   async findBySlug(slug: string) {
     const user = await this.userRepo.findOne({ where: { slug } });
     if (!user) throw new NotFoundException('User not found');
-    const { password, ...rest } = user;
+
+    const {
+      password,
+      verificationOtp,
+      otpExpiresAt,
+      slug: _slug,
+      ...rest
+    } = user;
     return rest;
   }
 

@@ -13,15 +13,16 @@ import { Record } from './record.entity';
 import { User } from '../users/user.entity';
 import { Doctor } from '../doctors/doctor.entity';
 
-import { CreateRecordDto } from './dto/create-record.dto';
-import { UpdateRecordDto } from './dto/update-record.dto';
-import { GetRecordsQueryDto } from './dto/get-records-query.dto';
-
 import {
   EncryptedFile,
   EncryptionService,
 } from 'src/core/encryption/encryption.service';
 import { SignatureService } from 'src/core/signature/signature.service';
+
+import { CreateRecordDto } from './dto/create-record.dto';
+import { UpdateRecordDto } from './dto/update-record.dto';
+import { GetRecordsQueryDto } from './dto/get-records-query.dto';
+import { GetMyPatientsRecordsQueryDto } from './dto/get-my-patients-records.dto';
 
 @Injectable()
 export class RecordService {
@@ -180,7 +181,18 @@ export class RecordService {
       .createQueryBuilder('record')
       .leftJoinAndSelect('record.patient', 'patient')
       .leftJoinAndSelect('record.doctor', 'doctor')
-      .leftJoinAndSelect('doctor.user', 'doctorUser');
+      .leftJoin('doctor.user', 'doctorUser')
+      .addSelect([
+        'doctorUser.id',
+        'doctorUser.email',
+        'doctorUser.fullName',
+        'doctorUser.avatarUrl',
+        'doctorUser.role',
+        'doctorUser.status',
+        'doctorUser.provider',
+        'doctorUser.createdAt',
+        'doctorUser.updatedAt',
+      ]);
 
     if (search) {
       qb.andWhere(
@@ -240,15 +252,26 @@ export class RecordService {
         attachmentTag,
         attachmentData,
         attachmentSignature,
+        patient,
         ...rest
       } = r;
-      return rest;
+
+      const { password, verificationOtp, otpExpiresAt, ...safePatient } =
+        patient as User;
+
+      return {
+        ...rest,
+        patients: safePatient,
+      };
     });
 
     return { page, limit, total, totalPages, data: recordsWithoutFiles };
   }
 
-  async findRecordsMyPatients(userId: string, query?: GetRecordsQueryDto) {
+  async findRecordsMyPatients(
+    userId: string,
+    query?: GetMyPatientsRecordsQueryDto,
+  ) {
     if (!userId) {
       throw new BadRequestException('Missing userId in token.');
     }
@@ -281,9 +304,36 @@ export class RecordService {
 
     const qb = this.recordRepo
       .createQueryBuilder('record')
-      .leftJoinAndSelect('record.patient', 'patient')
-      .leftJoinAndSelect('record.doctor', 'doctor')
-      .leftJoinAndSelect('doctor.user', 'doctorUser')
+      .leftJoin('record.patient', 'patient')
+      .addSelect([
+        'patient.id',
+        'patient.email',
+        'patient.fullName',
+        'patient.avatarUrl',
+        'patient.role',
+        'patient.status',
+        'patient.provider',
+        'patient.slug',
+      ])
+      .leftJoin('record.doctor', 'doctor')
+      .addSelect([
+        'doctor.id',
+        'doctor.yearsOfExperience',
+        'doctor.licenseNumber',
+        'doctor.specialtyId',
+        'doctor.clinicId',
+      ])
+      .leftJoin('doctor.user', 'doctorUser')
+      .addSelect([
+        'doctorUser.id',
+        'doctorUser.email',
+        'doctorUser.fullName',
+        'doctorUser.avatarUrl',
+        'doctorUser.role',
+        'doctorUser.status',
+        'doctorUser.provider',
+        'doctorUser.slug',
+      ])
       .where('record.doctorId = :doctorId', { doctorId });
 
     if (search) {
@@ -333,7 +383,7 @@ export class RecordService {
     const [records, total] = await qb.getManyAndCount();
     const totalPages = Math.ceil(total / limit);
 
-    const recordsWithoutFiles = records.map((r) => {
+    const recordsSanitized = records.map((r) => {
       const {
         attachmentIv,
         attachmentTag,
@@ -341,6 +391,7 @@ export class RecordService {
         attachmentSignature,
         ...rest
       } = r;
+
       return rest;
     });
 
@@ -349,12 +400,47 @@ export class RecordService {
       limit,
       total,
       totalPages,
-      data: recordsWithoutFiles,
+      data: recordsSanitized,
     };
   }
 
   async findOne(id: string): Promise<Record> {
-    const record = await this.recordRepo.findOne({ where: { id } });
+    const record = await this.recordRepo
+      .createQueryBuilder('record')
+      .leftJoin('record.patient', 'patient')
+      .addSelect([
+        'patient.id',
+        'patient.email',
+        'patient.fullName',
+        'patient.avatarUrl',
+        'patient.role',
+        'patient.status',
+        'patient.provider',
+        'patient.slug',
+      ])
+      .leftJoin('record.doctor', 'doctor')
+      .addSelect([
+        'doctor.id',
+        'doctor.slug',
+        'doctor.avatar',
+        'doctor.yearsOfExperience',
+        'doctor.licenseNumber',
+      ])
+      .leftJoin('doctor.user', 'doctorUser')
+      .addSelect([
+        'doctorUser.id',
+        'doctorUser.email',
+        'doctorUser.fullName',
+        'doctorUser.avatarUrl',
+        'doctorUser.role',
+        'doctorUser.status',
+        'doctorUser.provider',
+        'doctorUser.createdAt',
+        'doctorUser.updatedAt',
+      ])
+      .where('record.id = :id', { id })
+      .getOne();
+
     if (!record) throw new NotFoundException('Record not found');
 
     const {
@@ -365,7 +451,7 @@ export class RecordService {
       ...rest
     } = record;
 
-    return rest as Record;
+    return rest;
   }
 
   async getFullRecordWithFile(id: string): Promise<Record> {

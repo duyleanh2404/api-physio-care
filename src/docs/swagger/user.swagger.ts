@@ -50,7 +50,6 @@ export const ApiFindOneUserBySlug = () =>
     ApiParam({
       name: 'slug',
       description: 'User slug',
-      example: 'john-doe',
     }),
     ApiResponse({
       status: 200,
@@ -144,7 +143,6 @@ export const ApiBanUser = () =>
     ApiParam({
       name: 'id',
       description: 'ID of the user to be banned',
-      example: 'acee4e04-3925-4505-83d6-7a2e0b614f7e',
     }),
     ApiResponse({
       status: 200,
@@ -174,7 +172,6 @@ export const ApiUnbanUser = () =>
     ApiParam({
       name: 'id',
       description: 'ID of the user to be unbanned',
-      example: 'acee4e04-3925-4505-83d6-7a2e0b614f7e',
     }),
     ApiResponse({
       status: 200,

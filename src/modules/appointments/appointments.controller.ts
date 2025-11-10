@@ -31,6 +31,7 @@ import { Roles } from 'src/core/auth/decorators/roles.decorator';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { GetAppointmentsQueryDto } from './dto/get-appointments-query.dto';
+import { GetDoctorAppointmentsQueryDto } from './dto/get-doctor-appointments-query.dto';
 
 @ApiTags('Appointments')
 @Controller('appointments')
@@ -73,7 +74,7 @@ export class AppointmentController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiFindDoctorAppointments()
   async findDoctorAppointments(
-    @Query() query: GetAppointmentsQueryDto,
+    @Query() query: GetDoctorAppointmentsQueryDto,
     @Request() req,
   ) {
     const userId = req.user.sub;

@@ -30,12 +30,13 @@ import {
 import { RecordService } from './record.service';
 import { Roles } from 'src/core/auth/decorators/roles.decorator';
 
+import { RolesGuard } from 'src/core/auth/guards/roles.guard';
+import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
+
 import { CreateRecordDto } from './dto/create-record.dto';
 import { UpdateRecordDto } from './dto/update-record.dto';
 import { GetRecordsQueryDto } from './dto/get-records-query.dto';
-
-import { RolesGuard } from 'src/core/auth/guards/roles.guard';
-import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
+import { GetMyPatientsRecordsQueryDto } from './dto/get-my-patients-records.dto';
 
 @ApiTags('Records')
 @ApiBearerAuth()
@@ -71,7 +72,7 @@ export class RecordController {
   @ApiFindMyPatientsRecords()
   async findRecordsMyPatients(
     @Request() req,
-    @Query() query: GetRecordsQueryDto,
+    @Query() query: GetMyPatientsRecordsQueryDto,
   ) {
     const userId = req.user.sub;
     return this.recordService.findRecordsMyPatients(userId, query);
