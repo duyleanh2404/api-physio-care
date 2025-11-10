@@ -82,7 +82,6 @@ export const ApiFindOneSchedule = () =>
     ApiParam({
       name: 'id',
       description: 'Schedule ID',
-      example: 'b7f9b78e-2c2b-42cf-95d0-9b85d2ce9f3e',
     }),
     ApiResponse({
       status: 200,
@@ -136,7 +135,6 @@ export const ApiUpdateSchedule = () =>
     ApiParam({
       name: 'id',
       description: 'Schedule ID',
-      example: 'f8b6b57e-45d3-4de7-9a14-b2c34b5e5a44',
     }),
     ApiBody({ type: UpdateScheduleDto }),
     ApiResponse({
@@ -160,7 +158,6 @@ export const ApiDeleteSchedule = () =>
     ApiParam({
       name: 'id',
       description: 'Schedule ID',
-      example: '7e3cdb8e-0c2a-4f13-9c5c-fd5b0a62ad23',
     }),
     ApiResponse({
       status: 200,

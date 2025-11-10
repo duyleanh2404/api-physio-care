@@ -46,7 +46,16 @@ export class ScheduleService {
 
     const qb = this.scheduleRepo
       .createQueryBuilder('schedule')
-      .leftJoinAndSelect('schedule.doctor', 'doctor')
+      .leftJoin('schedule.doctor', 'doctor')
+      .addSelect([
+        'doctor.id',
+        'doctor.bio',
+        'doctor.avatar',
+        'doctor.licenseNumber',
+        'doctor.yearsOfExperience',
+        'doctor.createdAt',
+        'doctor.updatedAt',
+      ])
       .leftJoin('doctor.user', 'user')
       .addSelect(['user.id', 'user.fullName'])
       .leftJoin('doctor.clinic', 'clinic')
@@ -241,10 +250,11 @@ export class ScheduleService {
   }
 
   async findOne(id: string) {
-    const schedule = await this.scheduleRepo.findOne({
-      where: { id },
-      relations: ['doctor', 'doctor.user'],
-    });
+    const schedule = await this.scheduleRepo
+      .createQueryBuilder('schedule')
+      .where('schedule.id = :id', { id })
+      .getOne();
+
     if (!schedule) throw new NotFoundException('Schedule not found');
     return schedule;
   }

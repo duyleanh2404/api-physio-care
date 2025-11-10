@@ -6,6 +6,7 @@ import {
   Query,
   Param,
   Delete,
+  Request,
   UseGuards,
   Controller,
   UploadedFiles,
@@ -22,6 +23,7 @@ import {
   ApiCreateClinic,
   ApiUpdateClinic,
   ApiDeleteClinic,
+  ApiFindMeClinic,
   ApiFindOneClinic,
   ApiFindAllClinics,
   ApiFindOneClinicBySlug,
@@ -70,6 +72,15 @@ export class ClinicController {
   @ApiFindOneClinicBySlug()
   async findBySlug(@Param('slug') slug: string) {
     return this.clinicService.findBySlug(slug);
+  }
+
+  @Get('me')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiFindMeClinic()
+  async findMe(@Request() req) {
+    const user = req.user as { sub: string };
+    return this.clinicService.findMe(user.sub);
   }
 
   @Get(':id')

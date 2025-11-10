@@ -13,13 +13,16 @@ import { Clinic } from '../clinics/clinic.entity';
 import { Specialty } from '../specialties/specialty.entity';
 import { Appointment } from '../appointments/appointments.entity';
 
+import { UserService } from '../users/user.service';
+import { UserRole, UserStatus } from 'src/enums/user.enums';
+import { getAuthorizedDoctor } from './helpers/get-authorized-doctor';
+import { CloudinaryService } from 'src/core/cloudinary/cloudinary.service';
+
 import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { UpdateDoctorDto } from './dto/update-doctor.dto';
 import { GetDoctorsQueryDto } from './dto/get-doctors-query.dto';
-
-import { UserService } from '../users/user.service';
-import { UserRole, UserStatus } from 'src/enums/user.enums';
-import { CloudinaryService } from 'src/core/cloudinary/cloudinary.service';
+import { GetMyPatientsQueryDto } from './dto/get-my-patients-query.dto';
+import { GetDoctorsByClinicQueryDto } from './dto/get-doctors-by-clinic.dto';
 
 @Injectable()
 export class DoctorService {
@@ -59,19 +62,16 @@ export class DoctorService {
     const qb = this.doctorRepo
       .createQueryBuilder('doctor')
       .leftJoin('doctor.user', 'user')
+      .addSelect(['user.id', 'user.email', 'user.fullName', 'user.avatarUrl'])
+      .leftJoin('doctor.specialty', 'specialty')
+      .addSelect(['specialty.id', 'specialty.name', 'specialty.imageUrl'])
+      .leftJoin('doctor.clinic', 'clinic')
       .addSelect([
-        'user.id',
-        'user.email',
-        'user.fullName',
-        'user.avatarUrl',
-        'user.role',
-        'user.status',
-        'user.provider',
-        'user.createdAt',
-        'user.updatedAt',
-      ])
-      .leftJoinAndSelect('doctor.specialty', 'specialty')
-      .leftJoinAndSelect('doctor.clinic', 'clinic');
+        'clinic.id',
+        'clinic.name',
+        'clinic.address',
+        'clinic.avatar',
+      ]);
 
     if (search) {
       const keyword = `%${search.toLowerCase()}%`;
@@ -135,7 +135,7 @@ export class DoctorService {
     };
   }
 
-  async findMyPatients(userId: string, query: GetDoctorsQueryDto) {
+  async findMyPatients(userId: string, query: GetMyPatientsQueryDto) {
     const {
       search,
       dateFrom,
@@ -222,6 +222,58 @@ export class DoctorService {
     };
   }
 
+  async findDoctorsByClinicUser(
+    userId: string,
+    query: GetDoctorsByClinicQueryDto,
+  ) {
+    const {
+      search,
+      specialtyId,
+      yearsFrom,
+      yearsTo,
+      page = 1,
+      limit = 10,
+      sortBy = 'createdAt',
+      sortOrder = 'DESC',
+    } = query;
+
+    const qb = this.doctorRepo
+      .createQueryBuilder('doctor')
+      .innerJoin('doctor.clinic', 'clinic')
+      .innerJoin('doctor.user', 'user')
+      .addSelect(['user.id', 'user.email', 'user.fullName', 'user.avatarUrl'])
+      .leftJoinAndSelect('doctor.specialty', 'specialty')
+      .where('clinic.userId = :userId', { userId });
+
+    if (search) {
+      const keyword = `%${search.toLowerCase()}%`;
+      qb.andWhere(
+        '(LOWER(user.fullName) LIKE :keyword OR LOWER(doctor.licenseNumber) LIKE :keyword)',
+        { keyword },
+      );
+    }
+
+    if (specialtyId) {
+      qb.andWhere('doctor.specialtyId = :specialtyId', { specialtyId });
+    }
+
+    if (yearsFrom !== undefined) {
+      qb.andWhere('doctor.yearsOfExperience >= :yearsFrom', { yearsFrom });
+    }
+    if (yearsTo !== undefined) {
+      qb.andWhere('doctor.yearsOfExperience <= :yearsTo', { yearsTo });
+    }
+
+    qb.orderBy(`doctor.${sortBy}`, sortOrder.toUpperCase() as 'ASC' | 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    return { page, limit, total, totalPages, data };
+  }
+
   async findBySlug(slug: string) {
     const doctor = await this.doctorRepo.findOne({
       where: { slug },
@@ -253,62 +305,6 @@ export class DoctorService {
     return doctor;
   }
 
-  async findDoctorsByClinicUser(userId: string, query: GetDoctorsQueryDto) {
-    const clinic = await this.clinicRepo.findOne({
-      where: { user: { id: userId } },
-    });
-
-    if (!clinic) {
-      throw new NotFoundException('Clinic not found for this user');
-    }
-
-    const {
-      search,
-      specialtyId,
-      yearsFrom,
-      yearsTo,
-      page = 1,
-      limit = 10,
-      sortBy = 'createdAt',
-      sortOrder = 'DESC',
-    } = query;
-
-    const qb = this.doctorRepo
-      .createQueryBuilder('doctor')
-      .leftJoin('doctor.user', 'user')
-      .addSelect(['user.id', 'user.email', 'user.fullName', 'user.avatarUrl'])
-      .leftJoinAndSelect('doctor.specialty', 'specialty')
-      .where('doctor.clinicId = :clinicId', { clinicId: clinic.id });
-
-    if (search) {
-      const keyword = `%${search.toLowerCase()}%`;
-      qb.andWhere(
-        'LOWER(user.fullName) LIKE :keyword OR LOWER(doctor.licenseNumber) LIKE :keyword',
-        { keyword },
-      );
-    }
-
-    if (specialtyId) {
-      qb.andWhere('doctor.specialtyId = :specialtyId', { specialtyId });
-    }
-
-    if (yearsFrom !== undefined) {
-      qb.andWhere('doctor.yearsOfExperience >= :yearsFrom', { yearsFrom });
-    }
-    if (yearsTo !== undefined) {
-      qb.andWhere('doctor.yearsOfExperience <= :yearsTo', { yearsTo });
-    }
-
-    qb.orderBy(`doctor.${sortBy}`, sortOrder.toUpperCase() as 'ASC' | 'DESC')
-      .skip((page - 1) * limit)
-      .take(limit);
-
-    const [data, total] = await qb.getManyAndCount();
-    const totalPages = Math.ceil(total / limit);
-
-    return { page, limit, total, totalPages, data };
-  }
-
   async findOne(id: string) {
     const doctor = await this.doctorRepo.findOne({
       where: { id },
@@ -323,13 +319,20 @@ export class DoctorService {
     const doctor = await this.doctorRepo.findOne({
       where: { user: { id: userId } },
       select: ['id'],
+      relations: ['user'],
     });
 
     if (!doctor) {
       throw new NotFoundException('Doctor not found for this user');
     }
 
-    return { doctorId: doctor.id };
+    const { password, verificationOtp, otpExpiresAt, ...safeUser } =
+      doctor.user;
+
+    return {
+      doctorId: doctor.id,
+      user: safeUser,
+    };
   }
 
   async create(dto: CreateDoctorDto, avatar?: Express.Multer.File) {
@@ -402,8 +405,21 @@ export class DoctorService {
     return this.doctorRepo.save(doctor);
   }
 
-  async update(id: string, dto: UpdateDoctorDto, avatar?: Express.Multer.File) {
-    const doctor = await this.findOne(id);
+  async update(
+    id: string,
+    dto: UpdateDoctorDto,
+    avatar: Express.Multer.File,
+    userId: string,
+    role: string,
+  ) {
+    const doctor = await getAuthorizedDoctor(
+      id,
+      userId,
+      role,
+      this.doctorRepo,
+      this.clinicRepo,
+      this.findOne.bind(this),
+    );
 
     if (dto.specialtyId) {
       const specialty = await this.specialtyRepo.findOne({
@@ -422,12 +438,19 @@ export class DoctorService {
     }
 
     Object.assign(doctor, dto);
-
     return this.doctorRepo.save(doctor);
   }
 
-  async remove(id: string) {
-    const doctor = await this.findOne(id);
+  async remove(id: string, userId: string, role: string) {
+    const doctor = await getAuthorizedDoctor(
+      id,
+      userId,
+      role,
+      this.doctorRepo,
+      this.clinicRepo,
+      this.findOne.bind(this),
+    );
+
     await this.doctorRepo.remove(doctor);
     return { message: 'Doctor deleted successfully' };
   }

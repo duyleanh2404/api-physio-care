@@ -161,22 +161,61 @@ export class ClinicService {
   }
 
   async findBySlug(slug: string) {
-    const clinic = await this.clinicRepo.findOne({
-      where: { slug },
-      relations: ['doctors'],
-    });
+    const clinic = await this.clinicRepo
+      .createQueryBuilder('clinic')
+      .select([
+        'clinic.id',
+        'clinic.name',
+        'clinic.address',
+        'clinic.avatar',
+        'clinic.banner',
+        'clinic.phone',
+        'clinic.description',
+      ])
+      .where('clinic.slug = :slug', { slug })
+      .getOne();
 
     if (!clinic) throw new NotFoundException('Clinic not found');
     return clinic;
   }
 
   async findOne(id: string) {
-    const clinic = await this.clinicRepo.findOne({
-      where: { id },
-      relations: ['doctors'],
-    });
-    if (!clinic) throw new NotFoundException('Không tìm thấy phòng khám');
+    const clinic = await this.clinicRepo
+      .createQueryBuilder('clinic')
+      .select([
+        'clinic.id',
+        'clinic.name',
+        'clinic.address',
+        'clinic.avatar',
+        'clinic.banner',
+        'clinic.phone',
+        'clinic.description',
+      ])
+      .where('clinic.id = :id', { id })
+      .getOne();
+
+    if (!clinic) throw new NotFoundException('Clinic not found');
     return clinic;
+  }
+
+  async findMe(userId: string) {
+    const clinic = await this.clinicRepo.findOne({
+      where: { user: { id: userId } },
+      select: ['id', 'name', 'address', 'avatar', 'banner'],
+      relations: ['user'],
+    });
+
+    if (!clinic) {
+      throw new NotFoundException('Clinic not found for this user');
+    }
+
+    const { password, verificationOtp, otpExpiresAt, ...safeUser } =
+      clinic.user;
+
+    return {
+      clinicId: clinic.id,
+      user: safeUser,
+    };
   }
 
   async update(

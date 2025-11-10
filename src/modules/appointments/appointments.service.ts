@@ -18,6 +18,7 @@ import { Schedule } from '../schedules/schedule.entity';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { GetAppointmentsQueryDto } from './dto/get-appointments-query.dto';
+import { GetDoctorAppointmentsQueryDto } from './dto/get-doctor-appointments-query.dto';
 
 @Injectable()
 export class AppointmentService {
@@ -52,30 +53,44 @@ export class AppointmentService {
 
     const qb = this.appointmentRepo
       .createQueryBuilder('appointment')
-      .leftJoinAndSelect('appointment.doctor', 'doctor')
-      .leftJoinAndSelect('doctor.user', 'doctorUser')
-      .leftJoinAndSelect('doctor.clinic', 'clinic')
-      .leftJoinAndSelect('doctor.specialty', 'specialty')
-      .leftJoinAndSelect('appointment.user', 'user')
-      .leftJoinAndSelect('appointment.schedule', 'schedule')
+      .leftJoin('appointment.doctor', 'doctor')
+      .leftJoin('doctor.user', 'doctorUser')
+      .leftJoin('doctor.clinic', 'clinic')
+      .leftJoin('doctor.specialty', 'specialty')
+      .leftJoin('appointment.user', 'user')
+      .leftJoin('appointment.schedule', 'schedule')
       .select([
-        'appointment',
+        'appointment.id',
+        'appointment.code',
+        'appointment.status',
+        'appointment.notes',
+        'appointment.phone',
+        'appointment.address',
+        'appointment.createdAt',
+        'appointment.updatedAt',
+
         'doctor.id',
         'doctor.slug',
+
         'doctorUser.id',
         'doctorUser.fullName',
         'doctorUser.email',
         'doctorUser.avatarUrl',
+
         'specialty.id',
         'specialty.name',
         'specialty.imageUrl',
+
         'clinic.id',
         'clinic.name',
-        'clinic.address',
+        'clinic.slug',
         'clinic.avatar',
+        'clinic.address',
+
         'user.id',
         'user.fullName',
         'user.email',
+
         'schedule.id',
         'schedule.workDate',
         'schedule.startTime',
@@ -136,6 +151,92 @@ export class AppointmentService {
     return appointment;
   }
 
+  async findDoctorAppointments(
+    userId: string,
+    query: GetDoctorAppointmentsQueryDto,
+  ) {
+    if (!userId) throw new BadRequestException('Missing userId in token');
+
+    const doctor = await this.doctorRepo.findOne({
+      where: { user: { id: userId } },
+    });
+    if (!doctor) throw new NotFoundException('Doctor profile not found');
+
+    const {
+      status,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 10,
+      sortBy = 'createdAt',
+      sortOrder = 'ASC',
+    } = query;
+
+    const qb = this.appointmentRepo
+      .createQueryBuilder('appointment')
+      .select([
+        'appointment.id',
+        'appointment.code',
+        'appointment.status',
+        'appointment.notes',
+        'appointment.phone',
+        'appointment.address',
+        'appointment.createdAt',
+        'appointment.updatedAt',
+      ])
+      .leftJoin('appointment.user', 'user')
+      .addSelect([
+        'user.id',
+        'user.email',
+        'user.fullName',
+        'user.avatarUrl',
+        'user.role',
+        'user.status',
+        'user.provider',
+        'user.slug',
+      ])
+      .leftJoin('appointment.schedule', 'schedule')
+      .addSelect([
+        'schedule.id',
+        'schedule.workDate',
+        'schedule.startTime',
+        'schedule.endTime',
+        'schedule.status',
+        'schedule.notes',
+      ])
+      .where('appointment.doctorId = :doctorId', { doctorId: doctor.id });
+
+    if (status) {
+      const statusArray = Array.isArray(status) ? status : [status];
+      qb.andWhere('appointment.status IN (:...status)', {
+        status: statusArray,
+      });
+    }
+
+    if (startDate && endDate) {
+      qb.andWhere('appointment.createdAt BETWEEN :startDate AND :endDate', {
+        startDate,
+        endDate,
+      });
+    } else if (startDate) {
+      qb.andWhere('appointment.createdAt >= :startDate', { startDate });
+    } else if (endDate) {
+      qb.andWhere('appointment.createdAt <= :endDate', { endDate });
+    }
+
+    qb.orderBy(
+      `appointment.${sortBy}`,
+      sortOrder.toUpperCase() as 'ASC' | 'DESC',
+    )
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    return { page, limit, total, totalPages, data };
+  }
+
   async findByScheduleId(scheduleId: string) {
     const appointment = await this.appointmentRepo
       .createQueryBuilder('appointment')
@@ -187,61 +288,6 @@ export class AppointmentService {
     }
 
     return appointment;
-  }
-
-  async findDoctorAppointments(userId: string, query: GetAppointmentsQueryDto) {
-    if (!userId) throw new BadRequestException('Missing userId in token');
-
-    const doctor = await this.doctorRepo.findOne({
-      where: { user: { id: userId } },
-    });
-    if (!doctor) throw new NotFoundException('Doctor profile not found');
-
-    const {
-      status,
-      startDate,
-      endDate,
-      page = 1,
-      limit = 10,
-      sortBy = 'createdAt',
-      sortOrder = 'ASC',
-    } = query;
-
-    const qb = this.appointmentRepo
-      .createQueryBuilder('appointment')
-      .leftJoinAndSelect('appointment.user', 'user')
-      .leftJoinAndSelect('appointment.schedule', 'schedule')
-      .where('appointment.doctorId = :doctorId', { doctorId: doctor.id });
-
-    if (status) {
-      const statusArray = Array.isArray(status) ? status : [status];
-      qb.andWhere('appointment.status IN (:...status)', {
-        status: statusArray,
-      });
-    }
-
-    if (startDate && endDate) {
-      qb.andWhere('appointment.createdAt BETWEEN :startDate AND :endDate', {
-        startDate,
-        endDate,
-      });
-    } else if (startDate) {
-      qb.andWhere('appointment.createdAt >= :startDate', { startDate });
-    } else if (endDate) {
-      qb.andWhere('appointment.createdAt <= :endDate', { endDate });
-    }
-
-    qb.orderBy(
-      `appointment.${sortBy}`,
-      sortOrder.toUpperCase() as 'ASC' | 'DESC',
-    )
-      .skip((page - 1) * limit)
-      .take(limit);
-
-    const [data, total] = await qb.getManyAndCount();
-    const totalPages = Math.ceil(total / limit);
-
-    return { page, limit, total, totalPages, data };
   }
 
   async create(dto: CreateAppointmentDto) {

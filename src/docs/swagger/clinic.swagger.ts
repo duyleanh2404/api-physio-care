@@ -27,7 +27,6 @@ export const ApiFindOneClinicBySlug = () =>
     ApiParam({
       name: 'slug',
       description: 'Clinic slug',
-      example: 'phong-kham-da-khoa-hoa-hao',
     }),
     ApiResponse({
       status: 200,
@@ -51,7 +50,6 @@ export const ApiFindOneClinic = () =>
     ApiParam({
       name: 'id',
       description: 'Clinic ID',
-      example: 'a3f24c6d-7e2b-44d9-81f2-91a1b9c26f02',
     }),
     ApiResponse({
       status: 200,
@@ -62,6 +60,30 @@ export const ApiFindOneClinic = () =>
       status: 404,
       description: 'Clinic not found',
       schema: { example: { message: 'Clinic not found' } },
+    }),
+  );
+
+export const ApiFindMeClinic = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: "Get current user's clinic information",
+      description:
+        'Retrieve clinic information associated with the currently authenticated user',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'Clinic information retrieved successfully',
+      type: ClinicResponseDto,
+    }),
+    ApiResponse({
+      status: 401,
+      description: 'Unauthorized - missing or invalid token',
+      schema: { example: { message: 'Unauthorized' } },
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Clinic not found for this user',
+      schema: { example: { message: 'Clinic not found for this user' } },
     }),
   );
 
@@ -99,7 +121,6 @@ export const ApiUpdateClinic = () =>
     ApiParam({
       name: 'id',
       description: 'Clinic ID',
-      example: 'b91c5e44-9e3d-45ac-bd7e-1f20fdb4a812',
     }),
     ApiResponse({
       status: 200,
@@ -122,7 +143,6 @@ export const ApiDeleteClinic = () =>
     ApiParam({
       name: 'id',
       description: 'Clinic ID',
-      example: '4a1e9a22-b9c3-48e8-8c23-61c8798b47d1',
     }),
     ApiResponse({
       status: 200,
