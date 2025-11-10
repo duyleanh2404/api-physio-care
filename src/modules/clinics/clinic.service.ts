@@ -58,6 +58,8 @@ export class ClinicService {
       str
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd')
+        .replace(/Đ/g, 'D')
         .split(/\s+/)
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join('');
