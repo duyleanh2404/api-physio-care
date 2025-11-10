@@ -82,7 +82,13 @@ export class AppointmentService {
         'schedule.endTime',
       ]);
 
-    if (doctorId) qb.andWhere('appointment.doctorId = :doctorId', { doctorId });
+    if (doctorId) {
+      qb.andWhere('appointment.doctorId = :doctorId', { doctorId });
+    }
+
+    if (userId) {
+      qb.andWhere('appointment.userId = :userId', { userId });
+    }
 
     if (status) {
       const statusArray = Array.isArray(status) ? status : [status];

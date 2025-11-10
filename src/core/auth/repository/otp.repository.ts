@@ -1,6 +1,6 @@
 import * as argon2 from 'argon2';
 
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 
 import { EmailRepository } from './email.repository';
 import { UserService } from 'src/modules/users/user.service';
@@ -32,9 +32,7 @@ export class OtpRepository {
 
       return otp;
     } catch (err) {
-      throw new InternalServerErrorException(
-        `Không thể tạo OTP: ${err.message || err}`,
-      );
+      throw new HttpException(err.message || err, HttpStatus.TOO_MANY_REQUESTS);
     }
   }
 
@@ -53,9 +51,7 @@ export class OtpRepository {
 
       return otp;
     } catch (err) {
-      throw new InternalServerErrorException(
-        `Không thể gửi lại OTP: ${err.message || err}`,
-      );
+      throw new HttpException(err.message || err, HttpStatus.TOO_MANY_REQUESTS);
     }
   }
 
@@ -77,9 +73,7 @@ export class OtpRepository {
 
       return otp;
     } catch (err) {
-      throw new InternalServerErrorException(
-        `Không thể gửi OTP đặt lại mật khẩu: ${err.message || err}`,
-      );
+      throw new HttpException(err.message || err, HttpStatus.TOO_MANY_REQUESTS);
     }
   }
 

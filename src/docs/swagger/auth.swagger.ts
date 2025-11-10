@@ -67,6 +67,21 @@ export const ApiLogin = () =>
         },
       },
     }),
+    ApiResponse({
+      status: 429,
+      description: 'Rate limit exceeded (too many login attempts)',
+      schema: {
+        type: 'object',
+        properties: {
+          statusCode: { type: 'number', example: 429 },
+          message: {
+            type: 'string',
+            example: 'Too many login attempts. Try again in 60 seconds.',
+          },
+          error: { type: 'string', example: 'Too Many Requests' },
+        },
+      },
+    }),
   );
 
 export const ApiRegister = () =>
@@ -85,6 +100,22 @@ export const ApiRegister = () =>
         type: 'object',
         properties: {
           message: { type: 'string', example: 'Email already exists' },
+        },
+      },
+    }),
+    ApiResponse({
+      status: 429,
+      description: 'Rate limit exceeded (too many registration attempts)',
+      schema: {
+        type: 'object',
+        properties: {
+          statusCode: { type: 'number', example: 429 },
+          message: {
+            type: 'string',
+            example:
+              'Too many registration attempts. Please try again in 60 seconds.',
+          },
+          error: { type: 'string', example: 'Too Many Requests' },
         },
       },
     }),
@@ -121,7 +152,25 @@ export const ApiVerifyAccount = () =>
       schema: {
         type: 'object',
         properties: {
+          statusCode: { type: 'number', example: 400 },
           message: { type: 'string', example: 'Invalid or expired OTP' },
+          error: { type: 'string', example: 'Bad Request' },
+        },
+      },
+    }),
+    ApiResponse({
+      status: 429,
+      description: 'Rate limit exceeded (too many verification attempts)',
+      schema: {
+        type: 'object',
+        properties: {
+          statusCode: { type: 'number', example: 429 },
+          message: {
+            type: 'string',
+            example:
+              'Too many OTP verification attempts. Try again in 60 seconds.',
+          },
+          error: { type: 'string', example: 'Too Many Requests' },
         },
       },
     }),
@@ -176,6 +225,22 @@ export const ApiForgotPassword = () =>
         },
       },
     }),
+    ApiResponse({
+      status: 429,
+      description: 'Rate limit exceeded (too many forgot password requests)',
+      schema: {
+        type: 'object',
+        properties: {
+          statusCode: { type: 'number', example: 429 },
+          message: {
+            type: 'string',
+            example:
+              'Too many forgot password requests. Please try again in 60 seconds.',
+          },
+          error: { type: 'string', example: 'Too Many Requests' },
+        },
+      },
+    }),
   );
 
 export const ApiResetPassword = () =>
@@ -199,6 +264,22 @@ export const ApiResetPassword = () =>
         type: 'object',
         properties: {
           message: { type: 'string', example: 'Invalid or expired OTP' },
+        },
+      },
+    }),
+    ApiResponse({
+      status: 429,
+      description: 'Rate limit exceeded (too many reset attempts)',
+      schema: {
+        type: 'object',
+        properties: {
+          statusCode: { type: 'number', example: 429 },
+          message: {
+            type: 'string',
+            example:
+              'Too many password reset attempts. Please try again in 60 seconds.',
+          },
+          error: { type: 'string', example: 'Too Many Requests' },
         },
       },
     }),
@@ -263,6 +344,21 @@ export const ApiResendOtp = () =>
         type: 'object',
         properties: {
           message: { type: 'string', example: 'User not found' },
+        },
+      },
+    }),
+    ApiResponse({
+      status: 429,
+      description: 'Rate limit exceeded (too many OTP requests)',
+      schema: {
+        type: 'object',
+        properties: {
+          statusCode: { type: 'number', example: 400 },
+          message: {
+            type: 'string',
+            example: 'Too many OTP requests. Try again in 120 seconds.',
+          },
+          error: { type: 'string', example: 'Bad Request' },
         },
       },
     }),
