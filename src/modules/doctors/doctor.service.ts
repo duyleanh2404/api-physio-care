@@ -1,6 +1,7 @@
 import {
   Injectable,
   NotFoundException,
+  ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
 import { Brackets, Repository } from 'typeorm';
@@ -15,7 +16,6 @@ import { Appointment } from '../appointments/appointments.entity';
 
 import { UserService } from '../users/user.service';
 import { UserRole, UserStatus } from 'src/enums/user.enums';
-import { getAuthorizedDoctor } from './helpers/get-authorized-doctor';
 import { CloudinaryService } from 'src/core/cloudinary/cloudinary.service';
 
 import { CreateDoctorDto } from './dto/create-doctor.dto';
@@ -412,14 +412,17 @@ export class DoctorService {
     userId: string,
     role: string,
   ) {
-    const doctor = await getAuthorizedDoctor(
-      id,
-      userId,
-      role,
-      this.doctorRepo,
-      this.clinicRepo,
-      this.findOne.bind(this),
-    );
+    const doctor = await this.doctorRepo.findOne({
+      where: { id },
+      relations: ['clinic', 'user', 'specialty'],
+    });
+    if (!doctor) throw new NotFoundException('Doctor not found');
+
+    if (role === 'clinic' && doctor.clinic.userId !== userId) {
+      throw new ForbiddenException(
+        'You cannot update a doctor not in your clinic',
+      );
+    }
 
     if (dto.specialtyId) {
       const specialty = await this.specialtyRepo.findOne({
@@ -442,14 +445,17 @@ export class DoctorService {
   }
 
   async remove(id: string, userId: string, role: string) {
-    const doctor = await getAuthorizedDoctor(
-      id,
-      userId,
-      role,
-      this.doctorRepo,
-      this.clinicRepo,
-      this.findOne.bind(this),
-    );
+    const doctor = await this.doctorRepo.findOne({
+      where: { id },
+      relations: ['clinic', 'user'],
+    });
+    if (!doctor) throw new NotFoundException('Doctor not found');
+
+    if (role === 'clinic' && doctor.clinic.userId !== userId) {
+      throw new ForbiddenException(
+        'You cannot delete a doctor not in your clinic',
+      );
+    }
 
     await this.doctorRepo.remove(doctor);
     return { message: 'Doctor deleted successfully' };

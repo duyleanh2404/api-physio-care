@@ -20,6 +20,7 @@ import {
   ApiFindOneSchedule,
   ApiFindAllSchedules,
   ApiGetSchedulesInRange,
+  ApiFindSchedulesByClinic,
 } from 'src/docs/swagger/schedule.swagger';
 import { ScheduleService } from './schedule.service';
 import { Roles } from 'src/core/auth/decorators/roles.decorator';
@@ -39,7 +40,7 @@ export class ScheduleController {
 
   @Post()
   @ApiBearerAuth()
-  @Roles('admin', 'doctor')
+  @Roles('admin', 'doctor', 'clinic')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiCreateSchedule()
   async create(@Body() dto: CreateScheduleDto) {
@@ -65,6 +66,19 @@ export class ScheduleController {
     return this.scheduleService.findMySchedules(userId, query);
   }
 
+  @Get('my-doctors')
+  @ApiBearerAuth()
+  @Roles('clinic')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiFindSchedulesByClinic()
+  async findMyDoctorsSchedules(
+    @Request() req,
+    @Query() query: GetSchedulesQueryDto,
+  ) {
+    const userId = req.user.sub;
+    return this.scheduleService.findSchedulesByClinic(userId, query);
+  }
+
   @Get('range')
   @ApiGetSchedulesInRange()
   async findByDateRange(@Query() query: GetSchedulesRangeDto) {
@@ -79,19 +93,23 @@ export class ScheduleController {
 
   @Put(':id')
   @ApiBearerAuth()
-  @Roles('admin', 'doctor')
+  @Roles('admin', 'doctor', 'clinic')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiUpdateSchedule()
-  async update(@Param('id') id: string, @Body() dto: UpdateScheduleDto) {
-    return this.scheduleService.update(id, dto);
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateScheduleDto,
+    @Request() req,
+  ) {
+    return this.scheduleService.update(id, dto, req.user.sub, req.user.role);
   }
 
   @Delete(':id')
   @ApiBearerAuth()
-  @Roles('admin', 'doctor')
+  @Roles('admin', 'doctor', 'clinic')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiDeleteSchedule()
-  async remove(@Param('id') id: string) {
-    return this.scheduleService.remove(id);
+  async remove(@Param('id') id: string, @Request() req) {
+    return this.scheduleService.remove(id, req.user.sub, req.user.role);
   }
 }

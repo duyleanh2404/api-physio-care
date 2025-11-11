@@ -47,6 +47,30 @@ export const ApiFindMySchedules = () =>
     }),
   );
 
+export const ApiFindSchedulesByClinic = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get schedules of all doctors in your clinic',
+      description:
+        'Retrieve a paginated list of schedules for all doctors belonging to the clinic of the authenticated user. Supports filtering by date range, status, and search by doctor name.',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'Schedules retrieved successfully',
+      type: PaginatedResponseDto(ScheduleResponseDto),
+    }),
+    ApiResponse({
+      status: 400,
+      description: 'Missing or invalid parameters',
+      schema: { example: { message: 'Invalid parameters' } },
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Clinic not found for this user',
+      schema: { example: { message: 'Clinic not found' } },
+    }),
+  );
+
 export const ApiGetSchedulesInRange = () =>
   applyDecorators(
     ApiOperation({
