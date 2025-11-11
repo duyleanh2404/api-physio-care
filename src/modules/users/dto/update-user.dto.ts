@@ -1,4 +1,6 @@
 import {
+  Min,
+  IsInt,
   IsUrl,
   IsEnum,
   Matches,
@@ -9,11 +11,11 @@ import {
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
-import { UserRole, UserStatus } from 'src/enums/user.enums';
+import { UserStatus } from 'src/enums/user.enums';
 
 export class UpdateUserDto {
   @ApiPropertyOptional({
-    example: '',
+    example: 'Nguyen Van A',
     description: 'Full name of the user',
   })
   @IsOptional()
@@ -21,7 +23,7 @@ export class UpdateUserDto {
   fullName?: string;
 
   @ApiPropertyOptional({
-    example: '',
+    example: 'StrongP@ssword1!',
     description:
       'Password must be at least 8 characters, contain uppercase, lowercase, number, and special character',
     minLength: 8,
@@ -68,4 +70,20 @@ export class UpdateUserDto {
 
   @IsOptional()
   otpExpiresAt?: Date | null;
+
+  @ApiPropertyOptional({
+    example: 0,
+    description: 'Number of consecutive failed login attempts',
+  })
+  @IsOptional()
+  @IsInt({ message: 'failedLoginAttempts must be an integer' })
+  @Min(0, { message: 'failedLoginAttempts cannot be negative' })
+  failedLoginAttempts?: number;
+
+  @ApiPropertyOptional({
+    example: false,
+    description: 'Indicates whether the account is locked',
+  })
+  @IsOptional()
+  locked?: boolean;
 }

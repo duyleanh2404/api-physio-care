@@ -5,12 +5,12 @@ import Redis from 'ioredis';
 @Injectable()
 export class AuthRateLimiter {
   private readonly redis: Redis;
-  private readonly WINDOW_SECONDS = 60;
+  private readonly WINDOW_SECONDS = 300;
   private readonly LIMITS = {
-    login: 5,
-    register: 3,
-    forgotPassword: 3,
-    resetPassword: 3,
+    login: 10,
+    register: 5,
+    forgotPassword: 5,
+    resetPassword: 5,
   };
 
   constructor() {

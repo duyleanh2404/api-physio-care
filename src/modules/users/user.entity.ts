@@ -3,10 +3,16 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ValueTransformer,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
 import { UserStatus, UserProvider, UserRole } from 'src/enums/user.enums';
+
+const booleanNumberTransformer: ValueTransformer = {
+  to: (value: boolean) => (value ? 1 : 0),
+  from: (value: number) => value === 1,
+};
 
 @Entity('users')
 export class User {
@@ -46,6 +52,20 @@ export class User {
 
   @Column({ type: 'timestamp', nullable: true })
   otpExpiresAt: Date;
+
+  @Column({
+    type: 'number',
+    width: 1,
+    default: 0,
+    transformer: booleanNumberTransformer,
+  })
+  locked: boolean;
+
+  @Column({ type: 'timestamp', nullable: true })
+  lastPasswordChangeAt: Date;
+
+  @Column({ type: 'number', default: 0 })
+  failedLoginAttempts: number;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -68,6 +68,23 @@ export const ApiLogin = () =>
       },
     }),
     ApiResponse({
+      status: 423,
+      description:
+        'Account locked due to too many failed login attempts. Please contact support or try again later.',
+      schema: {
+        type: 'object',
+        properties: {
+          statusCode: { type: 'number', example: 423 },
+          message: {
+            type: 'string',
+            example:
+              'Account locked due to too many failed login attempts. Please try again in 15 minutes.',
+          },
+          error: { type: 'string', example: 'Locked' },
+        },
+      },
+    }),
+    ApiResponse({
       status: 429,
       description: 'Rate limit exceeded (too many login attempts)',
       schema: {

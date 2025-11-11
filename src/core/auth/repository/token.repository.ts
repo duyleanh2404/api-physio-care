@@ -38,6 +38,11 @@ export class TokenRepository {
   async generateTokens(user: any, deviceInfo?: string, ipAddress?: string) {
     const jti = randomUUID();
 
+    await this.userTokenRepo.update(
+      { user: { id: user.id }, revoked: false },
+      { revoked: true, revokedAt: new Date() },
+    );
+
     const payload: JwtPayload = {
       jti,
       sub: user.id,
