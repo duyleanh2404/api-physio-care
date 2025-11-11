@@ -2,6 +2,8 @@ import * as argon2 from 'argon2';
 
 import {
   Injectable,
+  HttpStatus,
+  HttpException,
   ConflictException,
   NotFoundException,
   ForbiddenException,
@@ -20,6 +22,7 @@ import { AuthRateLimiter } from './services/auth-rate-limiter.service';
 
 import { AuthGateway } from './auth.gateway';
 import { UserProvider, UserRole, UserStatus } from 'src/enums/user.enums';
+import { differenceInDays } from 'date-fns';
 
 @Injectable()
 export class AuthService {
@@ -46,9 +49,31 @@ export class AuthService {
     }
 
     if (user.locked) {
-      throw new ForbiddenException(
-        'Your account is locked due to multiple failed login attempts. Please contact support or reset your password.',
+      if (user.failedLoginAttempts >= 5) {
+        throw new HttpException(
+          'Your account has been temporarily locked due to multiple failed login attempts. Please reset your password or contact support.',
+          HttpStatus.LOCKED,
+        );
+      } else {
+        throw new HttpException(
+          'Your account has been banned by an administrator. Please contact support.',
+          HttpStatus.FORBIDDEN,
+        );
+      }
+    }
+
+    const MAX_PASSWORD_AGE_DAYS = 90;
+    if (user.lastPasswordChangeAt) {
+      const daysSinceChange = differenceInDays(
+        new Date(),
+        new Date(user.lastPasswordChangeAt),
       );
+      if (daysSinceChange > MAX_PASSWORD_AGE_DAYS) {
+        throw new HttpException(
+          `Your password is expired. It was last changed ${daysSinceChange} days ago. Please reset your password.`,
+          426,
+        );
+      }
     }
 
     const isPasswordValid = await argon2.verify(user.password!, password);
@@ -60,9 +85,12 @@ export class AuthService {
         await this.userService.update(user.id, {
           failedLoginAttempts: user.failedLoginAttempts,
           locked: true,
+          status: UserStatus.BANNED,
         });
-        throw new ForbiddenException(
-          'Your account has been locked after 5 failed login attempts.',
+
+        throw new HttpException(
+          'Your account has been locked due to 5 failed login attempts. Please reset your password or contact support.',
+          HttpStatus.LOCKED,
         );
       }
 
@@ -73,14 +101,19 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    if (user.failedLoginAttempts > 0) {
-      await this.userService.update(user.id, { failedLoginAttempts: 0 });
+    if (user.failedLoginAttempts > 0 || user.locked) {
+      await this.userService.update(user.id, {
+        failedLoginAttempts: 0,
+        locked: false,
+        status: UserStatus.ACTIVE,
+      });
     }
 
     if (user.status !== UserStatus.ACTIVE) {
       await this.otpRepo.createOtp(user.id, email);
-      throw new ForbiddenException(
-        'Account not verified. OTP has been sent to your email',
+      throw new HttpException(
+        'Account not verified. OTP has been sent to your email.',
+        428,
       );
     }
 
@@ -227,6 +260,10 @@ export class AuthService {
 
     await this.userService.update(user.id, {
       password: await argon2.hash(newPassword),
+      lastPasswordChangeAt: new Date(),
+      failedLoginAttempts: 0,
+      locked: false,
+      status: UserStatus.ACTIVE,
     });
 
     await this.otpRepo.removeOtp(user.id);
