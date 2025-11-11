@@ -12,12 +12,8 @@ import {
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-
-import { CreateClinicDto } from './dto/create-clinic.dto';
-import { UpdateClinicDto } from './dto/update-clinic.dto';
-import { GetClinicsQueryDto } from './dto/get-clinics-query.dto';
+import { ApiTags, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 
 import {
   ApiCreateClinic,
@@ -26,6 +22,7 @@ import {
   ApiFindMeClinic,
   ApiFindOneClinic,
   ApiFindAllClinics,
+  ApiFindMyPatients,
   ApiFindOneClinicBySlug,
 } from 'src/docs/swagger/clinic.swagger';
 import { ClinicService } from './clinic.service';
@@ -33,6 +30,11 @@ import { Roles } from 'src/core/auth/decorators/roles.decorator';
 
 import { RolesGuard } from 'src/core/auth/guards/roles.guard';
 import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
+
+import { CreateClinicDto } from './dto/create-clinic.dto';
+import { UpdateClinicDto } from './dto/update-clinic.dto';
+import { GetClinicsQueryDto } from './dto/get-clinics-query.dto';
+import { GetMyPatientsQueryDto } from './dto/get-my-patients-query.dto';
 
 @ApiTags('Clinics')
 @Controller('clinics')
@@ -66,6 +68,19 @@ export class ClinicController {
   @ApiFindAllClinics()
   async findAll(@Query() query: GetClinicsQueryDto) {
     return this.clinicService.findAll(query);
+  }
+
+  @Get('my-patients')
+  @ApiBearerAuth()
+  @Roles('clinic')
+  @ApiFindMyPatients()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async findClinicPatients(
+    @Request() req,
+    @Query() query: GetMyPatientsQueryDto,
+  ) {
+    const userId = req.user.sub;
+    return this.clinicService.findClinicPatients(userId, query);
   }
 
   @Get('slug/:slug')

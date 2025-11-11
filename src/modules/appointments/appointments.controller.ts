@@ -68,6 +68,19 @@ export class AppointmentController {
     return this.appointmentService.findAll({ ...query, userId });
   }
 
+  @Get('my-doctors')
+  @ApiBearerAuth()
+  @Roles('clinic')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiFindDoctorAppointments()
+  async findClinicDoctorsAppointments(
+    @Query() query: GetDoctorAppointmentsQueryDto,
+    @Request() req,
+  ) {
+    const userId = req.user.sub;
+    return this.appointmentService.findClinicDoctorsAppointments(userId, query);
+  }
+
   @Get('my-schedules')
   @ApiBearerAuth()
   @Roles('doctor')

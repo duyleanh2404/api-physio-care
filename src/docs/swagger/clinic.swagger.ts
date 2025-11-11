@@ -1,6 +1,7 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiParam, ApiResponse, ApiOperation } from '@nestjs/swagger';
 
+import { UserResponseDto } from 'src/modules/users/dto/user-response.dto';
 import { PaginatedResponseDto } from 'src/common/dto/paginated-response.dto';
 import { ClinicResponseDto } from 'src/modules/clinics/dto/clinic-response.dto';
 
@@ -84,6 +85,25 @@ export const ApiFindMeClinic = () =>
       status: 404,
       description: 'Clinic not found for this user',
       schema: { example: { message: 'Clinic not found for this user' } },
+    }),
+  );
+
+export const ApiFindMyPatients = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get patients of the currently logged-in doctor',
+      description:
+        'Retrieve a paginated list of patients who have appointments with the currently authenticated doctor.',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'List of patients retrieved successfully',
+      type: PaginatedResponseDto(UserResponseDto),
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Doctor not found for this user',
+      schema: { example: { message: 'Doctor not found for this user' } },
     }),
   );
 
