@@ -250,6 +250,8 @@ export class UserService {
     }
 
     user.status = UserStatus.BANNED;
+    user.locked = true;
+
     const savedUser = await this.userRepo.save(user);
 
     const { password, verificationOtp, otpExpiresAt, ...rest } = savedUser;
@@ -260,11 +262,13 @@ export class UserService {
     const user = await this.userRepo.findOne({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
 
-    if (user.status === UserStatus.ACTIVE) {
+    if (user.status === UserStatus.ACTIVE && !user.locked) {
       throw new ConflictException('User is already active');
     }
 
     user.status = UserStatus.ACTIVE;
+    user.locked = false;
+
     const savedUser = await this.userRepo.save(user);
 
     const { password, verificationOtp, otpExpiresAt, ...rest } = savedUser;

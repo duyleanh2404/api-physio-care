@@ -86,4 +86,11 @@ export class UpdateUserDto {
   })
   @IsOptional()
   locked?: boolean;
+
+  @ApiPropertyOptional({
+    example: new Date().toISOString(),
+    description: 'Timestamp of the last password change',
+  })
+  @IsOptional()
+  lastPasswordChangeAt?: Date;
 }
