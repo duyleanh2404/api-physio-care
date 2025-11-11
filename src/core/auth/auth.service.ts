@@ -18,12 +18,14 @@ import { TokenRepository } from './repository/token.repository';
 import { UserService } from 'src/modules/users/user.service';
 import { AuthRateLimiter } from './services/auth-rate-limiter.service';
 
+import { AuthGateway } from './auth.gateway';
 import { UserProvider, UserRole, UserStatus } from 'src/enums/user.enums';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
+    private readonly authGateway: AuthGateway,
 
     private readonly otpRepo: OtpRepository,
     private readonly tokenRepo: TokenRepository,
@@ -39,9 +41,40 @@ export class AuthService {
     await this.authRateLimiter.checkLogin(ipAddress || email);
 
     const user = await this.userService.findByEmail(email);
-
-    if (!user || !(await argon2.verify(user.password!, password))) {
+    if (!user) {
       throw new UnauthorizedException('Invalid email or password');
+    }
+
+    if (user.locked) {
+      throw new ForbiddenException(
+        'Your account is locked due to multiple failed login attempts. Please contact support or reset your password.',
+      );
+    }
+
+    const isPasswordValid = await argon2.verify(user.password!, password);
+    if (!isPasswordValid) {
+      user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
+
+      if (user.failedLoginAttempts >= 5) {
+        user.locked = true;
+        await this.userService.update(user.id, {
+          failedLoginAttempts: user.failedLoginAttempts,
+          locked: true,
+        });
+        throw new ForbiddenException(
+          'Your account has been locked after 5 failed login attempts.',
+        );
+      }
+
+      await this.userService.update(user.id, {
+        failedLoginAttempts: user.failedLoginAttempts,
+      });
+
+      throw new UnauthorizedException('Invalid email or password');
+    }
+
+    if (user.failedLoginAttempts > 0) {
+      await this.userService.update(user.id, { failedLoginAttempts: 0 });
     }
 
     if (user.status !== UserStatus.ACTIVE) {
@@ -50,6 +83,8 @@ export class AuthService {
         'Account not verified. OTP has been sent to your email',
       );
     }
+
+    this.authGateway.logoutAll(user.id);
 
     const tokens = await this.tokenRepo.generateTokens(
       user,

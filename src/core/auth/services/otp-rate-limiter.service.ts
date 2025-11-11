@@ -5,8 +5,8 @@ import Redis from 'ioredis';
 @Injectable()
 export class OtpRateLimiter {
   private readonly redis: Redis;
-  private readonly MAX_ATTEMPTS = 3;
-  private readonly WINDOW_SECONDS = 5 * 60;
+  private readonly MAX_ATTEMPTS = 5;
+  private readonly WINDOW_SECONDS = 10 * 60;
 
   constructor() {
     this.redis = new Redis(process.env.REDIS_URL!);
