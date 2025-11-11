@@ -268,6 +268,7 @@ export class UserService {
 
     user.status = UserStatus.ACTIVE;
     user.locked = false;
+    user.failedLoginAttempts = 0;
 
     const savedUser = await this.userRepo.save(user);
 

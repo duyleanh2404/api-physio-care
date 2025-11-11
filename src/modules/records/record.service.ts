@@ -179,7 +179,17 @@ export class RecordService {
 
     const qb = this.recordRepo
       .createQueryBuilder('record')
-      .leftJoinAndSelect('record.patient', 'patient')
+      .leftJoin('record.patient', 'patient')
+      .addSelect([
+        'patient.id',
+        'patient.email',
+        'patient.fullName',
+        'patient.avatarUrl',
+        'patient.role',
+        'patient.status',
+        'patient.provider',
+        'patient.slug',
+      ])
       .leftJoinAndSelect('record.doctor', 'doctor')
       .leftJoin('doctor.user', 'doctorUser')
       .addSelect([

@@ -12,6 +12,7 @@ import { AppointmentStatus } from 'src/enums/appointments-status.enum';
 
 import { User } from '../users/user.entity';
 import { Doctor } from '../doctors/doctor.entity';
+import { Clinic } from '../clinics/clinic.entity';
 import { Appointment } from './appointments.entity';
 import { Schedule } from '../schedules/schedule.entity';
 
@@ -28,6 +29,9 @@ export class AppointmentService {
 
     @InjectRepository(Doctor)
     private readonly doctorRepo: Repository<Doctor>,
+
+    @InjectRepository(Clinic)
+    private readonly clinicRepo: Repository<Clinic>,
 
     @InjectRepository(Schedule)
     private readonly scheduleRepo: Repository<Schedule>,
@@ -224,6 +228,126 @@ export class AppointmentService {
       qb.andWhere('appointment.createdAt <= :endDate', { endDate });
     }
 
+    qb.orderBy(
+      `appointment.${sortBy}`,
+      sortOrder.toUpperCase() as 'ASC' | 'DESC',
+    )
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    return { page, limit, total, totalPages, data };
+  }
+
+  async findClinicDoctorsAppointments(
+    userId: string,
+    query: GetDoctorAppointmentsQueryDto,
+  ) {
+    const clinic = await this.clinicRepo.findOne({
+      where: { user: { id: userId } },
+    });
+    if (!clinic) throw new NotFoundException('Clinic not found');
+
+    const doctors = await this.doctorRepo.find({
+      where: { clinic: { id: clinic.id } },
+      select: ['id'],
+    });
+    const doctorIds = doctors.map((d) => d.id);
+    if (!doctorIds.length)
+      return { page: 1, limit: 10, total: 0, totalPages: 0, data: [] };
+
+    const {
+      status,
+      search,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 10,
+      sortBy = 'createdAt',
+      sortOrder = 'ASC',
+    } = query;
+
+    const qb = this.appointmentRepo
+      .createQueryBuilder('appointment')
+      .leftJoin('appointment.doctor', 'doctor')
+      .leftJoin('doctor.user', 'doctorUser')
+      .leftJoin('doctor.specialty', 'specialty')
+      .leftJoin('doctor.clinic', 'clinic')
+      .leftJoin('appointment.user', 'user')
+      .leftJoin('appointment.schedule', 'schedule')
+      .where('appointment.doctorId IN (:...doctorIds)', { doctorIds })
+      .andWhere('user.role = :role', { role: 'user' })
+      .select([
+        'appointment.id',
+        'appointment.code',
+        'appointment.status',
+        'appointment.notes',
+        'appointment.phone',
+        'appointment.address',
+        'appointment.createdAt',
+
+        'doctor.id',
+        'doctor.slug',
+
+        'doctorUser.id',
+        'doctorUser.fullName',
+        'doctorUser.email',
+        'doctorUser.avatarUrl',
+
+        'specialty.id',
+        'specialty.name',
+        'specialty.imageUrl',
+
+        'clinic.id',
+        'clinic.name',
+        'clinic.slug',
+        'clinic.avatar',
+        'clinic.address',
+
+        'user.id',
+        'user.fullName',
+        'user.email',
+
+        'schedule.id',
+        'schedule.workDate',
+        'schedule.startTime',
+        'schedule.endTime',
+      ]);
+
+    // Filter theo status
+    if (status) {
+      const statusArray = Array.isArray(status) ? status : [status];
+      qb.andWhere('appointment.status IN (:...status)', {
+        status: statusArray,
+      });
+    }
+
+    // Filter theo khoảng thời gian
+    if (startDate && endDate) {
+      qb.andWhere('appointment.createdAt BETWEEN :startDate AND :endDate', {
+        startDate,
+        endDate,
+      });
+    } else if (startDate) {
+      qb.andWhere('appointment.createdAt >= :startDate', { startDate });
+    } else if (endDate) {
+      qb.andWhere('appointment.createdAt <= :endDate', { endDate });
+    }
+
+    // Filter theo search (appointment code, tên bệnh nhân, tên bác sĩ)
+    if (search) {
+      const keyword = `%${search.toLowerCase()}%`;
+      qb.andWhere(
+        `LOWER(appointment.code) LIKE :keyword
+       OR LOWER(user.fullName) LIKE :keyword
+       OR LOWER(doctorUser.fullName) LIKE :keyword`,
+        { keyword },
+      );
+    }
+
+    // Order + pagination
     qb.orderBy(
       `appointment.${sortBy}`,
       sortOrder.toUpperCase() as 'ASC' | 'DESC',

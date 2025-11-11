@@ -57,6 +57,10 @@ export class GetDoctorAppointmentsQueryDto {
   })
   endTime?: string;
 
+  @ApiPropertyOptional({ description: 'Search keyword' })
+  @IsOptional()
+  search?: string;
+
   @ApiPropertyOptional({
     description: 'Page number for pagination',
     default: 1,

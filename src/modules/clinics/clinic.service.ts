@@ -3,13 +3,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { slugifyName } from 'src/utils/slugify';
+import { UserRole, UserStatus } from 'src/enums/user.enums';
+
+import { Clinic } from './clinic.entity';
+import { User } from '../users/user.entity';
+import { Doctor } from '../doctors/doctor.entity';
+import { Appointment } from '../appointments/appointments.entity';
 
 import { CreateClinicDto } from './dto/create-clinic.dto';
 import { UpdateClinicDto } from './dto/update-clinic.dto';
 import { GetClinicsQueryDto } from './dto/get-clinics-query.dto';
-
-import { Clinic } from './clinic.entity';
-import { UserRole, UserStatus } from 'src/enums/user.enums';
+import { GetMyPatientsQueryDto } from './dto/get-my-patients-query.dto';
 
 import { UserService } from '../users/user.service';
 import { CloudinaryService } from 'src/core/cloudinary/cloudinary.service';
@@ -17,6 +21,14 @@ import { CloudinaryService } from 'src/core/cloudinary/cloudinary.service';
 @Injectable()
 export class ClinicService {
   constructor(
+    @InjectRepository(Appointment)
+    private readonly appointmentRepo: Repository<Appointment>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
+
+    @InjectRepository(Doctor)
+    private readonly doctorRepo: Repository<Doctor>,
+
     @InjectRepository(Clinic)
     private readonly clinicRepo: Repository<Clinic>,
 
@@ -216,6 +228,69 @@ export class ClinicService {
       clinicId: clinic.id,
       user: safeUser,
     };
+  }
+
+  async findClinicPatients(userId: string, query: GetMyPatientsQueryDto) {
+    const clinic = await this.clinicRepo.findOne({
+      where: { user: { id: userId } },
+    });
+    if (!clinic) throw new NotFoundException('Clinic not found');
+
+    const doctors = await this.doctorRepo.find({
+      where: { clinic: { id: clinic.id } },
+      select: ['id'],
+    });
+    const doctorIds = doctors.map((d) => d.id);
+    if (!doctorIds.length) {
+      return { page: 1, limit: 10, total: 0, totalPages: 0, data: [] };
+    }
+
+    const {
+      search,
+      page = 1,
+      limit = 10,
+      sortBy = 'fullName',
+      sortOrder = 'ASC',
+    } = query;
+
+    const subQuery = this.appointmentRepo
+      .createQueryBuilder('appointment')
+      .select('appointment.userId')
+      .where('appointment.doctorId IN (:...doctorIds)', { doctorIds })
+      .distinct(true);
+
+    const qb = this.userRepo
+      .createQueryBuilder('user')
+      .where(`user.id IN (${subQuery.getQuery()})`)
+      .setParameters(subQuery.getParameters())
+      .andWhere('user.role = :role', { role: 'user' });
+
+    if (search) {
+      qb.andWhere('LOWER(TRIM(user.fullName)) LIKE :search', {
+        search: `%${search.toLowerCase()}%`,
+      });
+    }
+
+    qb.select([
+      'user.id',
+      'user.email',
+      'user.fullName',
+      'user.avatarUrl',
+      'user.role',
+      'user.status',
+      'user.provider',
+      'user.slug',
+      'user.createdAt',
+      'user.updatedAt',
+    ])
+      .orderBy(`user.${sortBy}`, sortOrder.toUpperCase() as 'ASC' | 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    return { page, limit, total, totalPages, data };
   }
 
   async update(
