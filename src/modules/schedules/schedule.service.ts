@@ -24,7 +24,7 @@ export class ScheduleService {
     @InjectRepository(Doctor)
     private readonly doctorRepo: Repository<Doctor>,
 
-    @InjectRepository(Doctor)
+    @InjectRepository(Clinic)
     private readonly clinicRepo: Repository<Clinic>,
 
     @InjectRepository(Schedule)
@@ -186,6 +186,79 @@ export class ScheduleService {
     return { page, limit, total, totalPages, data: mappedData };
   }
 
+  async findSchedulesByClinic(userId: string, query: GetSchedulesQueryDto) {
+    const clinic = await this.clinicRepo.findOne({ where: { userId } });
+    if (!clinic) throw new NotFoundException('Clinic not found for this user');
+
+    const {
+      search,
+      dateFrom,
+      dateTo,
+      status,
+      page = 1,
+      limit = 10,
+      sortBy = 'createdAt',
+      sortOrder = 'DESC',
+    } = query;
+
+    const doctors = await this.doctorRepo.find({
+      where: { clinic: { id: clinic.id } },
+      select: ['id'],
+    });
+    const doctorIds = doctors.map((d) => d.id);
+
+    if (!doctorIds.length)
+      throw new NotFoundException('No doctors found for this clinic');
+
+    const qb = this.scheduleRepo
+      .createQueryBuilder('schedule')
+      .innerJoinAndSelect('schedule.doctor', 'doctor')
+      .innerJoin('doctor.user', 'user')
+      .addSelect([
+        'user.id',
+        'user.email',
+        'user.fullName',
+        'user.avatarUrl',
+        'user.role',
+        'user.status',
+        'user.provider',
+        'user.slug',
+      ])
+      .innerJoin('doctor.specialty', 'specialty')
+      .addSelect(['specialty.id', 'specialty.name', 'specialty.imageUrl'])
+      .where('schedule.doctorId IN (:...doctorIds)', { doctorIds });
+
+    if (status) {
+      const statuses = status.includes(',') ? status.split(',') : [status];
+      qb.andWhere('schedule.status IN (:...statuses)', { statuses });
+    }
+
+    if (dateFrom && dateTo) {
+      qb.andWhere('schedule.workDate BETWEEN :dateFrom AND :dateTo', {
+        dateFrom,
+        dateTo,
+      });
+    } else if (dateFrom) {
+      qb.andWhere('schedule.workDate >= :dateFrom', { dateFrom });
+    } else if (dateTo) {
+      qb.andWhere('schedule.workDate <= :dateTo', { dateTo });
+    }
+
+    if (search?.trim()) {
+      const keyword = `%${search.toLowerCase()}%`;
+      qb.andWhere('LOWER(user.fullName) LIKE :keyword', { keyword });
+    }
+
+    qb.orderBy(`schedule.${sortBy}`, sortOrder.toUpperCase() as 'ASC' | 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    return { page, limit, total, totalPages, data };
+  }
+
   async findByDateRange(dto: GetSchedulesRangeDto) {
     const { dateFrom, dateTo, doctorId, clinicId } = dto;
 
@@ -300,7 +373,12 @@ export class ScheduleService {
     return this.scheduleRepo.save(schedules);
   }
 
-  async update(id: string, dto: UpdateScheduleDto) {
+  async update(
+    id: string,
+    dto: UpdateScheduleDto,
+    userId: string,
+    role: 'admin' | 'doctor' | 'clinic',
+  ) {
     const { doctorId, workDate, startTime, endTime, status, notes } = dto;
 
     if (!doctorId || !workDate || !startTime || !endTime) {
@@ -309,7 +387,10 @@ export class ScheduleService {
 
     const workDateObj = new Date(workDate);
 
-    const doctor = await this.doctorRepo.findOne({ where: { id: doctorId } });
+    const doctor = await this.doctorRepo.findOne({
+      where: { id: doctorId },
+      relations: ['clinic', 'user'],
+    });
     if (!doctor) throw new NotFoundException('Doctor not found');
 
     const schedule = await this.scheduleRepo.findOne({
@@ -318,9 +399,18 @@ export class ScheduleService {
         doctor: { id: doctorId },
         workDate: workDateObj,
       },
+      relations: ['doctor', 'doctor.clinic', 'doctor.user'],
     });
-
     if (!schedule) throw new NotFoundException('Schedule not found');
+
+    if (role === 'doctor' && doctor.user.id !== userId) {
+      throw new BadRequestException('You can only edit your own schedule');
+    }
+    if (role === 'clinic' && doctor.clinic.userId !== userId) {
+      throw new BadRequestException(
+        'You can only edit schedules of doctors in your clinic',
+      );
+    }
 
     schedule.startTime = startTime;
     schedule.endTime = endTime;
@@ -330,8 +420,27 @@ export class ScheduleService {
     return this.scheduleRepo.save(schedule);
   }
 
-  async remove(id: string) {
-    const schedule = await this.findOne(id);
+  async remove(
+    id: string,
+    userId: string,
+    role: 'admin' | 'doctor' | 'clinic',
+  ) {
+    const schedule = await this.scheduleRepo.findOne({
+      where: { id },
+      relations: ['doctor', 'doctor.clinic', 'doctor.user'],
+    });
+
+    if (!schedule) throw new NotFoundException('Schedule not found');
+
+    if (role === 'doctor' && schedule.doctor.user.id !== userId) {
+      throw new BadRequestException('You can only delete your own schedule');
+    }
+    if (role === 'clinic' && schedule.doctor.clinic.userId !== userId) {
+      throw new BadRequestException(
+        'You can only delete schedules of doctors in your clinic',
+      );
+    }
+
     await this.scheduleRepo.remove(schedule);
     return { message: 'Schedule deleted successfully' };
   }

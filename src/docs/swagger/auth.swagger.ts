@@ -55,7 +55,7 @@ export const ApiLogin = () =>
       },
     }),
     ApiResponse({
-      status: 403,
+      status: 428,
       description: 'Account not verified. OTP has been sent to your email',
       schema: {
         type: 'object',
