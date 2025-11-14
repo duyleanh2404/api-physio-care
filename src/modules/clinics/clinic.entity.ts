@@ -11,6 +11,7 @@ import {
 
 import { User } from '../users/user.entity';
 import { Doctor } from '../doctors/doctor.entity';
+import { Equipment } from '../equipments/equipment.entity';
 
 @Entity('clinics')
 export class Clinic {
@@ -59,6 +60,9 @@ export class Clinic {
 
   @OneToMany(() => Doctor, (doctor) => doctor.clinic)
   doctors: Doctor[];
+
+  @OneToMany(() => Equipment, (equipment) => equipment.clinic)
+  equipments: Equipment[];
 
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;

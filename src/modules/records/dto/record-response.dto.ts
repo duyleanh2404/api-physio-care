@@ -33,7 +33,7 @@ export class RecordResponseDto {
   status: string;
 
   @ApiPropertyOptional({
-    example: 'Patient had mild headache for 3 days',
+    example: 'Patients had mild headache for 3 days',
     description: 'History or notes of the record',
   })
   history?: string;

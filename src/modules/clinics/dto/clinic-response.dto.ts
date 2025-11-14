@@ -16,6 +16,13 @@ export class ClinicResponseDto {
   @Expose()
   name: string;
 
+  @ApiProperty({
+    example: 'an-tam-general-clinic',
+    description: 'URL-friendly unique slug for the clinic',
+  })
+  @Expose()
+  slug: string;
+
   @ApiPropertyOptional({
     example: '12 Nguyen Van Bao, Ward 4, Go Vap, Ho Chi Minh City',
     description: 'Full address of the clinic',
@@ -31,22 +38,8 @@ export class ClinicResponseDto {
   phone?: string;
 
   @ApiPropertyOptional({
-    example: 'info@antamclinic.vn',
-    description: 'Contact email of the clinic',
-  })
-  @Expose()
-  email?: string;
-
-  @ApiPropertyOptional({
-    example: 'https://antamclinic.vn',
-    description: 'Official website of the clinic',
-  })
-  @Expose()
-  website?: string;
-
-  @ApiPropertyOptional({
     example: 'https://cdn.antamclinic.vn/avatar.jpg',
-    description: 'Thumbnail or logo of the clinic',
+    description: 'Avatar or logo image of the clinic',
   })
   @Expose()
   avatar?: string;
@@ -61,17 +54,24 @@ export class ClinicResponseDto {
   @ApiPropertyOptional({
     example:
       'The clinic specializes in internal medicine, ENT, dermatology, and cardiology.',
-    description: 'Short description of clinic services and expertise',
+    description: 'Detailed description of clinic services and expertise',
   })
   @Expose()
   description?: string;
 
   @ApiPropertyOptional({
-    example: 'Mon - Sun: 8:00 AM - 8:00 PM',
-    description: 'Working hours of the clinic',
+    example: 'Located near Go Vap Park, parking available for patients.',
+    description: 'Additional internal notes or remarks about the clinic',
   })
   @Expose()
-  workingHours?: string;
+  notes?: string;
+
+  @ApiProperty({
+    example: 'c22c7e8f-1e35-4acb-9f51-52b5a68b37e1',
+    description: 'Identifier of the user who owns or manages this clinic',
+  })
+  @Expose()
+  userId: string;
 
   @ApiProperty({
     example: '2025-10-14T08:00:00.000Z',
