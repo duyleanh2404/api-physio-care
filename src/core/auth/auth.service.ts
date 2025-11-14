@@ -6,10 +6,11 @@ import {
   HttpException,
   ConflictException,
   NotFoundException,
-  ForbiddenException,
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
+
+import { differenceInDays } from 'date-fns';
 
 import { RegisterDto } from './dto/register.dto';
 import { RegisterAdminDto } from './dto/register-admin.dto';
@@ -18,11 +19,10 @@ import { OtpRepository } from './repository/otp.repository';
 import { TokenRepository } from './repository/token.repository';
 
 import { UserService } from 'src/modules/users/user.service';
-import { AuthRateLimiter } from './services/auth-rate-limiter.service';
+import { RateLimiterService } from './modules/rate-limiter/rate-limiter.service';
 
 import { AuthGateway } from './auth.gateway';
 import { UserProvider, UserRole, UserStatus } from 'src/enums/user.enums';
-import { differenceInDays } from 'date-fns';
 
 @Injectable()
 export class AuthService {
@@ -32,7 +32,7 @@ export class AuthService {
 
     private readonly otpRepo: OtpRepository,
     private readonly tokenRepo: TokenRepository,
-    private readonly authRateLimiter: AuthRateLimiter,
+    private readonly rateLimiter: RateLimiterService,
   ) {}
 
   async login(
@@ -41,7 +41,7 @@ export class AuthService {
     deviceInfo?: any,
     ipAddress?: string,
   ) {
-    await this.authRateLimiter.checkLogin(ipAddress || email);
+    await this.rateLimiter.checkLogin(ipAddress || email);
 
     const user = await this.userService.findByEmail(email);
     if (!user) {
@@ -151,7 +151,7 @@ export class AuthService {
   }
 
   async register(registerDto: RegisterDto) {
-    await this.authRateLimiter.checkRegister(registerDto.email);
+    await this.rateLimiter.checkRegister(registerDto.email);
 
     const existingUser = await this.userService.findByEmail(registerDto.email);
     if (existingUser) throw new ConflictException('Email already exists');
@@ -239,7 +239,7 @@ export class AuthService {
   }
 
   async forgotPassword(email: string) {
-    await this.authRateLimiter.checkForgotPassword(email);
+    await this.rateLimiter.checkForgotPassword(email);
 
     const user = await this.userService.findByEmail(email);
     if (!user) throw new NotFoundException('User not found');
@@ -250,7 +250,7 @@ export class AuthService {
   }
 
   async resetPassword(email: string, otp: string, newPassword: string) {
-    await this.authRateLimiter.checkResetPassword(email);
+    await this.rateLimiter.checkResetPassword(email);
 
     const user = await this.userService.findByEmail(email);
     if (!user) throw new NotFoundException('User not found');

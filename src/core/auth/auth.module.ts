@@ -17,8 +17,7 @@ import { OtpRepository } from './repository/otp.repository';
 import { TokenRepository } from './repository/token.repository';
 import { EmailRepository } from './repository/email.repository';
 
-import { OtpRateLimiter } from './services/otp-rate-limiter.service';
-import { AuthRateLimiter } from './services/auth-rate-limiter.service';
+import { RateLimiterService } from './modules/rate-limiter/rate-limiter.service';
 
 @Module({
   imports: [
@@ -33,11 +32,10 @@ import { AuthRateLimiter } from './services/auth-rate-limiter.service';
     JwtStrategy,
     AuthGateway,
     OtpRepository,
-    OtpRateLimiter,
     GoogleStrategy,
-    AuthRateLimiter,
     EmailRepository,
     TokenRepository,
+    RateLimiterService,
   ],
   exports: [AuthService, TokenRepository],
 })
