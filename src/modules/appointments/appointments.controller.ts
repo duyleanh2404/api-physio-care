@@ -35,7 +35,6 @@ import { GetDoctorAppointmentsQueryDto } from './dto/get-doctor-appointments-que
 
 @ApiTags('Appointments')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('appointments')
 export class AppointmentController {
   constructor(private readonly appointmentService: AppointmentService) {}

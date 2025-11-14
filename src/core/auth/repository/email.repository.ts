@@ -7,7 +7,7 @@ import { ConfigService, ConfigType } from '@nestjs/config';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
 import otpConfig from '../config/otp.config';
-import { OtpRateLimiter } from '../services/otp-rate-limiter.service';
+import { RateLimiterService } from '../modules/rate-limiter/rate-limiter.service';
 
 @Injectable()
 export class EmailRepository {
@@ -16,7 +16,7 @@ export class EmailRepository {
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly otpRateLimiter: OtpRateLimiter,
+    private readonly rateLimiter: RateLimiterService,
   ) {
     const otpCfg =
       this.configService.getOrThrow<ConfigType<typeof otpConfig>>('otp');
@@ -39,7 +39,7 @@ export class EmailRepository {
   }
 
   async sendOtp(email: string, otp: string, subject: string) {
-    await this.otpRateLimiter.check(email);
+    await this.rateLimiter.checkOtp(email);
 
     const html = this.compileTemplate('confirmation', {
       otp,

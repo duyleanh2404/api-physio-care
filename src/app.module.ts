@@ -19,6 +19,7 @@ import { CloudinaryModule } from './core/cloudinary/cloudinary.module';
 import { EquipmentModule } from './modules/equipments/equipment.module';
 import { SpecialtyModule } from './modules/specialties/specialty.module';
 import { AppointmentModule } from './modules/appointments/appointments.module';
+import { RateLimiterModule } from './core/auth/modules/rate-limiter/rate-limiter.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { AppointmentModule } from './modules/appointments/appointments.module';
     SpecialtyModule,
     CloudinaryModule,
     AppointmentModule,
+    RateLimiterModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [googleConfig, jwtConfig, otpConfig, cloudinaryConfig],
