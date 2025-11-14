@@ -16,6 +16,7 @@ import { DoctorModule } from './modules/doctors/doctor.module';
 import { ClinicModule } from './modules/clinics/clinic.module';
 import { ScheduleModule } from './modules/schedules/schedule.module';
 import { CloudinaryModule } from './core/cloudinary/cloudinary.module';
+import { EquipmentModule } from './modules/equipments/equipment.module';
 import { SpecialtyModule } from './modules/specialties/specialty.module';
 import { AppointmentModule } from './modules/appointments/appointments.module';
 
@@ -28,6 +29,7 @@ import { AppointmentModule } from './modules/appointments/appointments.module';
     RecordModule,
     ClinicModule,
     ScheduleModule,
+    EquipmentModule,
     SpecialtyModule,
     CloudinaryModule,
     AppointmentModule,

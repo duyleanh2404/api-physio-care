@@ -34,12 +34,13 @@ import { GetAppointmentsQueryDto } from './dto/get-appointments-query.dto';
 import { GetDoctorAppointmentsQueryDto } from './dto/get-doctor-appointments-query.dto';
 
 @ApiTags('Appointments')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('appointments')
 export class AppointmentController {
   constructor(private readonly appointmentService: AppointmentService) {}
 
   @Post()
-  @ApiBearerAuth()
   @Roles('user', 'admin')
   @ApiCreateAppointment()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -48,7 +49,6 @@ export class AppointmentController {
   }
 
   @Get()
-  @ApiBearerAuth()
   @Roles('admin')
   @ApiFindAllAppointments()
   async findAll(@Query() query: GetAppointmentsQueryDto) {
@@ -56,7 +56,6 @@ export class AppointmentController {
   }
 
   @Get('me')
-  @ApiBearerAuth()
   @Roles('user')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiFindMyAppointments()
@@ -69,7 +68,6 @@ export class AppointmentController {
   }
 
   @Get('my-doctors')
-  @ApiBearerAuth()
   @Roles('clinic')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiFindDoctorAppointments()
@@ -82,7 +80,6 @@ export class AppointmentController {
   }
 
   @Get('my-schedules')
-  @ApiBearerAuth()
   @Roles('doctor')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiFindDoctorAppointments()
@@ -95,7 +92,6 @@ export class AppointmentController {
   }
 
   @Get(':id')
-  @ApiBearerAuth()
   @Roles('user', 'admin')
   @ApiFindOneAppointment()
   async findOne(@Param('id') id: string) {
@@ -103,7 +99,6 @@ export class AppointmentController {
   }
 
   @Get('schedule/:scheduleId')
-  @ApiBearerAuth()
   @Roles('admin', 'doctor')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiFindAppointmentByScheduleId()

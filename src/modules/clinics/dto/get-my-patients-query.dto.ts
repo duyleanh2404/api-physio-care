@@ -1,12 +1,33 @@
-import { Type } from 'class-transformer';
+import {
+  Min,
+  IsIn,
+  IsInt,
+  IsEnum,
+  IsString,
+  IsOptional,
+} from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsInt, Min, IsIn } from 'class-validator';
+
+import { UserStatus } from 'src/enums/user.enums';
 
 export class GetMyPatientsQueryDto {
   @ApiPropertyOptional({ description: 'Search by patient name or email' })
   @IsOptional()
   @IsString()
   search?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by user status (single or comma-separated)',
+    enum: UserStatus,
+    example: 'active,inactive',
+  })
+  @IsOptional()
+  @IsEnum(UserStatus, { each: true })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.split(',') : value,
+  )
+  status?: UserStatus | UserStatus[];
 
   @ApiPropertyOptional({
     description: 'Filter appointments from this date (YYYY-MM-DD)',

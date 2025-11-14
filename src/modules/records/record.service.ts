@@ -49,10 +49,10 @@ export class RecordService {
     const generateRecordCode = () =>
       `REC-${randomBytes(3).toString('hex').toUpperCase()}`;
 
-    const patient = await this.userRepo.findOne({
+    const patients = await this.userRepo.findOne({
       where: { id: dto.patientsId },
     });
-    if (!patient)
+    if (!patients)
       throw new NotFoundException(
         `Patient with id ${dto.patientsId} not found`,
       );
@@ -66,7 +66,7 @@ export class RecordService {
     const record = this.recordRepo.create({
       ...dto,
       doctor,
-      patient,
+      patients,
       recordCode: generateRecordCode(),
     });
 
@@ -179,16 +179,16 @@ export class RecordService {
 
     const qb = this.recordRepo
       .createQueryBuilder('record')
-      .leftJoin('record.patient', 'patient')
+      .leftJoin('record.patients', 'patients')
       .addSelect([
-        'patient.id',
-        'patient.email',
-        'patient.fullName',
-        'patient.avatarUrl',
-        'patient.role',
-        'patient.status',
-        'patient.provider',
-        'patient.slug',
+        'patients.id',
+        'patients.email',
+        'patients.fullName',
+        'patients.avatarUrl',
+        'patients.role',
+        'patients.status',
+        'patients.provider',
+        'patients.slug',
       ])
       .leftJoinAndSelect('record.doctor', 'doctor')
       .leftJoin('doctor.user', 'doctorUser')
@@ -262,12 +262,12 @@ export class RecordService {
         attachmentTag,
         attachmentData,
         attachmentSignature,
-        patient,
+        patients,
         ...rest
       } = r;
 
       const { password, verificationOtp, otpExpiresAt, ...safePatient } =
-        patient as User;
+        patients as User;
 
       return {
         ...rest,
@@ -314,16 +314,16 @@ export class RecordService {
 
     const qb = this.recordRepo
       .createQueryBuilder('record')
-      .leftJoin('record.patient', 'patient')
+      .leftJoin('record.patients', 'patients')
       .addSelect([
-        'patient.id',
-        'patient.email',
-        'patient.fullName',
-        'patient.avatarUrl',
-        'patient.role',
-        'patient.status',
-        'patient.provider',
-        'patient.slug',
+        'patients.id',
+        'patients.email',
+        'patients.fullName',
+        'patients.avatarUrl',
+        'patients.role',
+        'patients.status',
+        'patients.provider',
+        'patients.slug',
       ])
       .leftJoin('record.doctor', 'doctor')
       .addSelect([
@@ -417,16 +417,16 @@ export class RecordService {
   async findOne(id: string): Promise<Record> {
     const record = await this.recordRepo
       .createQueryBuilder('record')
-      .leftJoin('record.patient', 'patient')
+      .leftJoin('record.patients', 'patients')
       .addSelect([
-        'patient.id',
-        'patient.email',
-        'patient.fullName',
-        'patient.avatarUrl',
-        'patient.role',
-        'patient.status',
-        'patient.provider',
-        'patient.slug',
+        'patients.id',
+        'patients.email',
+        'patients.fullName',
+        'patients.avatarUrl',
+        'patients.role',
+        'patients.status',
+        'patients.provider',
+        'patients.slug',
       ])
       .leftJoin('record.doctor', 'doctor')
       .addSelect([

@@ -25,7 +25,7 @@ export class Record {
     onDelete: 'SET NULL',
   })
   @JoinColumn({ name: 'patientsId' })
-  patient?: User;
+  patients?: User;
 
   @Column({ nullable: true })
   patientsId?: string;

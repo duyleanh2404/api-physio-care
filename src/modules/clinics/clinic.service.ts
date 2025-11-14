@@ -247,6 +247,7 @@ export class ClinicService {
 
     const {
       search,
+      status,
       page = 1,
       limit = 10,
       sortBy = 'fullName',
@@ -266,9 +267,19 @@ export class ClinicService {
       .andWhere('user.role = :role', { role: 'user' });
 
     if (search) {
-      qb.andWhere('LOWER(TRIM(user.fullName)) LIKE :search', {
-        search: `%${search.toLowerCase()}%`,
-      });
+      qb.andWhere(
+        '(LOWER(TRIM(user.fullName)) LIKE :search OR LOWER(TRIM(user.email)) LIKE :search)',
+        { search: `%${search.toLowerCase()}%` },
+      );
+    }
+
+    if (status) {
+      const statuses = Array.isArray(status)
+        ? status
+        : typeof status === 'string'
+          ? status.split(',')
+          : [status];
+      qb.andWhere('user.status IN (:...statuses)', { statuses });
     }
 
     qb.select([
