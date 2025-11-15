@@ -21,9 +21,9 @@ async function bootstrap() {
     if (!dataSource.isInitialized) {
       await dataSource.initialize();
     }
-    console.log('✅ Oracle DB connected successfully');
+    console.log('✅ PostgreSQL DB connected successfully');
   } catch (err) {
-    console.error('❌ Oracle DB connection failed:', err.message);
+    console.error('❌ PostgreSQL DB connection failed:', err.message); // 🔄
     process.exit(1);
   }
 

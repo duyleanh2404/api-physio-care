@@ -21,34 +21,34 @@ export class Clinic {
   @Column({ length: 255 })
   name: string;
 
-  @Column({ type: 'varchar2', length: 255, unique: true })
+  @Column({ type: 'varchar', length: 255, unique: true })
   slug: string;
 
-  @Column({ type: 'varchar2', length: 500, nullable: true })
+  @Column({ type: 'varchar', length: 500, nullable: true })
   address?: string;
 
-  @Column({ type: 'varchar2', length: 20, nullable: true })
+  @Column({ type: 'varchar', length: 20, nullable: true })
   phone?: string;
 
-  @Column({ type: 'varchar2', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   avatar?: string;
 
-  @Column({ type: 'varchar2', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   banner?: string;
 
-  @Column({ type: 'clob', nullable: true })
+  @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @Column({ type: 'clob', nullable: true })
+  @Column({ type: 'text', nullable: true })
   notes?: string;
 
-  @Column({ type: 'varchar2', length: 20, nullable: true })
+  @Column({ type: 'varchar', length: 20, nullable: true })
   provinceId?: string;
 
-  @Column({ type: 'varchar2', length: 20, nullable: true })
+  @Column({ type: 'varchar', length: 20, nullable: true })
   districtId?: string;
 
-  @Column({ type: 'varchar2', length: 20, nullable: true })
+  @Column({ type: 'varchar', length: 20, nullable: true })
   wardId?: string;
 
   @OneToOne(() => User, { nullable: false })
@@ -64,9 +64,9 @@ export class Clinic {
   @OneToMany(() => Equipment, (equipment) => equipment.clinic)
   equipments: Equipment[];
 
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({ type: 'timestamp with time zone' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @UpdateDateColumn({ type: 'timestamp with time zone' })
   updatedAt: Date;
 }
