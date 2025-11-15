@@ -14,21 +14,21 @@ export class Specialty {
   @Column({ unique: true })
   name: string;
 
-  @Column({ type: 'varchar2', length: 255, unique: true })
+  @Column({ type: 'varchar', length: 255, unique: true })
   slug: string;
 
-  @Column({ type: 'clob', nullable: true })
+  @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @Column({ type: 'varchar2', length: 500, nullable: true })
+  @Column({ type: 'varchar', length: 500, nullable: true })
   notes?: string;
 
   @Column({ nullable: true })
   imageUrl?: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamp with time zone' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamp with time zone' })
   updatedAt: Date;
 }

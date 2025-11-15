@@ -30,24 +30,24 @@ export class Doctor {
   @JoinColumn({ name: 'clinicId' })
   clinic: Clinic;
 
-  @Column({ type: 'varchar2', length: 255, unique: true })
+  @Column({ type: 'varchar', length: 255, unique: true })
   slug: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   licenseNumber?: string;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'integer', nullable: true })
   yearsOfExperience?: number;
 
-  @Column({ type: 'clob', nullable: true })
+  @Column({ type: 'text', nullable: true })
   bio?: string;
 
-  @Column({ type: 'varchar2', length: 500, nullable: true })
+  @Column({ type: 'varchar', length: 500, nullable: true })
   avatar?: string | null;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamp with time zone' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamp with time zone' })
   updatedAt: Date;
 }

@@ -16,25 +16,25 @@ export class Equipment {
   @Column({ length: 255 })
   name: string;
 
-  @Column({ type: 'varchar2', length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   code?: string;
 
-  @Column({ type: 'varchar2', length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   type?: string;
 
-  @Column({ type: 'varchar2', length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   model?: string;
 
-  @Column({ type: 'varchar2', length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   serialNumber?: string;
 
-  @Column({ type: 'varchar2', length: 20, default: 'active' })
+  @Column({ type: 'varchar', length: 20, default: 'active' })
   status: string;
 
-  @Column({ type: 'clob', nullable: true })
+  @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @Column({ type: 'varchar2', length: 500, nullable: true })
+  @Column({ type: 'varchar', length: 500, nullable: true })
   image?: string;
 
   @ManyToOne(() => Clinic, (clinic) => clinic.equipments, {
@@ -45,9 +45,9 @@ export class Equipment {
   @Column()
   clinicId: string;
 
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({ type: 'timestamp with time zone' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @UpdateDateColumn({ type: 'timestamp with time zone' })
   updatedAt: Date;
 }

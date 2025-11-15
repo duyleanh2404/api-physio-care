@@ -11,14 +11,14 @@ export const dbConfig = (
   const password = configService.get<string>('DB_PASS');
 
   return {
+    type: 'postgres',
     host,
+    port: parseInt(port!, 10),
     username,
     password,
-    type: 'oracle',
+    database: dbName,
     synchronize: true,
-    serviceName: dbName,
     autoLoadEntities: true,
-    port: parseInt(port!, 10),
     entities: [__dirname + '/**/*.entity{.ts,.js}'],
     migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
   };

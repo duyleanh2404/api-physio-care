@@ -19,7 +19,7 @@ export class Appointment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar2', length: 50, unique: true })
+  @Column({ type: 'varchar', length: 50, unique: true })
   code: string;
 
   @ManyToOne(() => Doctor, { onDelete: 'CASCADE', eager: true })
@@ -34,30 +34,30 @@ export class Appointment {
   @JoinColumn({ name: 'scheduleId' })
   schedule: Schedule;
 
-  @Column({ type: 'varchar2', length: 20, default: AppointmentStatus.PENDING })
+  @Column({ type: 'varchar', length: 20, default: AppointmentStatus.PENDING })
   status: AppointmentStatus;
 
-  @Column({ type: 'clob', nullable: true })
+  @Column({ type: 'text', nullable: true })
   notes?: string;
 
-  @Column({ type: 'varchar2', length: 20 })
+  @Column({ type: 'varchar', length: 20 })
   phone: string;
 
-  @Column({ type: 'varchar2', length: 10 })
+  @Column({ type: 'varchar', length: 10 })
   provinceId: string;
 
-  @Column({ type: 'varchar2', length: 10 })
+  @Column({ type: 'varchar', length: 10 })
   districtId: string;
 
-  @Column({ type: 'varchar2', length: 10 })
+  @Column({ type: 'varchar', length: 10 })
   wardId: string;
 
-  @Column({ type: 'varchar2', length: 500 })
+  @Column({ type: 'varchar', length: 500 })
   address: string;
 
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({ type: 'timestamp with time zone' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @UpdateDateColumn({ type: 'timestamp with time zone' })
   updatedAt: Date;
 }

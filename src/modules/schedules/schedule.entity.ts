@@ -19,24 +19,24 @@ export class Schedule {
   @JoinColumn({ name: 'doctorId' })
   doctor: Doctor;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamp with time zone' })
   workDate: Date;
 
-  @Column({ type: 'varchar2', length: 10 })
+  @Column({ type: 'varchar', length: 10 })
   startTime: string;
 
-  @Column({ type: 'varchar2', length: 10 })
+  @Column({ type: 'varchar', length: 10 })
   endTime: string;
 
-  @Column({ type: 'varchar2', length: 50, default: 'available' })
+  @Column({ type: 'varchar', length: 50, default: 'available' })
   status: string;
 
-  @Column({ type: 'clob', nullable: true })
+  @Column({ type: 'text', nullable: true })
   notes?: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamp with time zone' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamp with time zone' })
   updatedAt: Date;
 }

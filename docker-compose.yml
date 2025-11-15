@@ -1,16 +1,18 @@
 version: '3.8'
+
 services:
-  oracle:
-    image: gvenzl/oracle-xe:21-slim
-    container_name: oracle-xe
+  postgres:
+    image: postgres:15
+    container_name: postgres
     ports:
-      - '1521:1521'
-      - '5500:5500'
+      - '5432:5432'
     environment:
-      ORACLE_PASSWORD: ${DB_PASS}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_DB: ${DB_NAME:-appdb}
     volumes:
-      - oracle-data:/opt/oracle/oradata
+      - postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
 
 volumes:
-  oracle-data:
+  postgres-data:
