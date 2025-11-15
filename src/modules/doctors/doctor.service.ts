@@ -71,6 +71,7 @@ export class DoctorService {
         'clinic.name',
         'clinic.address',
         'clinic.avatar',
+        'clinic.phone',
       ]);
 
     if (search) {
