@@ -136,6 +136,35 @@ export const ApiDownloadRecord = () =>
     }),
   );
 
+export const ApiDownloadEncryptedRecord = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Download the raw encrypted file of a record',
+      description:
+        'Returns the encrypted file as-is without decryption, useful for demonstration or verification of encryption.',
+    }),
+    ApiParam({
+      name: 'id',
+      description: 'Record ID',
+    }),
+    ApiProduces('application/octet-stream'),
+    ApiResponse({
+      status: 200,
+      description: 'Encrypted file returned successfully',
+      schema: {
+        type: 'string',
+        format: 'binary',
+      },
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Record not found or no encrypted file available',
+      schema: {
+        example: { message: 'This record does not have an encrypted file' },
+      },
+    }),
+  );
+
 export const ApiDeleteRecord = () =>
   applyDecorators(
     ApiOperation({ summary: 'Delete a record by ID' }),

@@ -39,12 +39,6 @@ export class RecordResponseDto {
   history?: string;
 
   @ApiPropertyOptional({
-    example: 'Physiotherapy',
-    description: 'Type of treatment',
-  })
-  treatmentType?: string;
-
-  @ApiPropertyOptional({
     example: 'Moderate',
     description: 'Treatment intensity',
   })

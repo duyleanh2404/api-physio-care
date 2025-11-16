@@ -37,13 +37,32 @@ export class GetRecordsQueryDto {
   @ApiPropertyOptional({
     description: 'Field to sort by',
     example: 'createdAt',
-    enum: ['id', 'status', 'doctorId', 'patientsId', 'createdAt', 'updatedAt'],
+    enum: [
+      'id',
+      'status',
+      'doctorId',
+      'patientsId',
+      'specialtyId',
+      'createdAt',
+      'updatedAt',
+    ],
   })
   @IsOptional()
   @IsString({ message: 'sortBy must be a string' })
-  @IsIn(['id', 'status', 'doctorId', 'patientsId', 'createdAt', 'updatedAt'], {
-    message: 'sortBy must be one of the allowed fields',
-  })
+  @IsIn(
+    [
+      'id',
+      'status',
+      'doctorId',
+      'patientsId',
+      'specialtyId',
+      'createdAt',
+      'updatedAt',
+    ],
+    {
+      message: 'sortBy must be one of the allowed fields',
+    },
+  )
   sortBy?: string = 'id';
 
   @ApiPropertyOptional({
@@ -70,37 +89,22 @@ export class GetRecordsQueryDto {
   @IsString({ message: 'status must be a string' })
   status?: string;
 
-  @ApiPropertyOptional({
-    description: 'Filter by patient ID',
-  })
+  @ApiPropertyOptional({ description: 'Filter by patient ID' })
   @IsOptional()
   @IsString({ message: 'patientsId must be a string' })
   patientsId?: string;
 
-  @ApiPropertyOptional({
-    description: 'Filter by doctor ID',
-  })
+  @ApiPropertyOptional({ description: 'Filter by doctor ID' })
   @IsOptional()
   @IsString({ message: 'doctorId must be a string' })
   doctorId?: string;
 
-  @ApiPropertyOptional({
-    description: 'Filter by treatment type',
-  })
-  @IsOptional()
-  @IsString({ message: 'treatmentType must be a string' })
-  treatmentType?: string;
-
-  @ApiPropertyOptional({
-    description: 'Filter by treatment frequency',
-  })
+  @ApiPropertyOptional({ description: 'Filter by treatment frequency' })
   @IsOptional()
   @IsString({ message: 'frequency must be a string' })
   frequency?: string;
 
-  @ApiPropertyOptional({
-    description: 'Filter by treatment intensity',
-  })
+  @ApiPropertyOptional({ description: 'Filter by treatment intensity' })
   @IsOptional()
   @IsString({ message: 'intensity must be a string' })
   intensity?: string;

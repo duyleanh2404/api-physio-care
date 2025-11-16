@@ -47,8 +47,8 @@ export class Record {
   @Column({ type: 'varchar', length: 2000, nullable: true })
   history?: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  treatmentType?: string;
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  specialtyId?: string;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   intensity?: string;

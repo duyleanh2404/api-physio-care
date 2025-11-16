@@ -29,11 +29,6 @@ export class GetMyPatientsRecordsQueryDto {
   @IsString({ message: 'patientsId must be a string' })
   patientsId?: string;
 
-  @ApiPropertyOptional({ description: 'Filter by treatment type' })
-  @IsOptional()
-  @IsString({ message: 'treatmentType must be a string' })
-  treatmentType?: string;
-
   @ApiPropertyOptional({ description: 'Filter by treatment frequency' })
   @IsOptional()
   @IsString({ message: 'frequency must be a string' })
@@ -82,7 +77,7 @@ export class GetMyPatientsRecordsQueryDto {
       'id',
       'status',
       'patientsId',
-      'treatmentType',
+      'specialtyId',
       'createdAt',
       'updatedAt',
     ],
@@ -90,10 +85,10 @@ export class GetMyPatientsRecordsQueryDto {
   @IsOptional()
   @IsString({ message: 'sortBy must be a string' })
   @IsIn(
-    ['id', 'status', 'patientsId', 'treatmentType', 'createdAt', 'updatedAt'],
+    ['id', 'status', 'patientsId', 'specialtyId', 'createdAt', 'updatedAt'],
     {
       message:
-        'sortBy must be one of the allowed fields: id, status, patientsId, treatmentType, createdAt, updatedAt',
+        'sortBy must be one of the allowed fields: id, status, patientsId, specialtyId, createdAt, updatedAt',
     },
   )
   sortBy?: string = 'createdAt';
