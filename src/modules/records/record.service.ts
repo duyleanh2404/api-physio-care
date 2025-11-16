@@ -172,7 +172,6 @@ export class RecordService {
       intensity,
       limit = 10,
       patientsId,
-      treatmentType,
       sortOrder = 'DESC',
       sortBy = 'createdAt',
     } = query;
@@ -241,12 +240,6 @@ export class RecordService {
     if (intensityList.length)
       qb.andWhere('record.intensity IN (:...intensityList)', { intensityList });
 
-    const treatmentList = parseArray(treatmentType);
-    if (treatmentList.length)
-      qb.andWhere('record.treatmentType IN (:...treatmentList)', {
-        treatmentList,
-      });
-
     if (dateFrom) qb.andWhere('record.createdAt >= :dateFrom', { dateFrom });
     if (dateTo) qb.andWhere('record.createdAt <= :dateTo', { dateTo });
 
@@ -307,7 +300,6 @@ export class RecordService {
       frequency,
       intensity,
       limit = 10,
-      treatmentType,
       sortOrder = 'DESC',
       sortBy = 'createdAt',
     } = query || {};
@@ -349,9 +341,9 @@ export class RecordService {
     if (search) {
       qb.andWhere(
         `(record.history LIKE :search 
-        OR record.goals LIKE :search 
-        OR record.progress LIKE :search 
-        OR record.recordCode LIKE :search)`,
+      OR record.goals LIKE :search 
+      OR record.progress LIKE :search 
+      OR record.recordCode LIKE :search)`,
         { search: `%${search}%` },
       );
     }
@@ -377,12 +369,6 @@ export class RecordService {
     const intensityList = parseArray(intensity);
     if (intensityList.length)
       qb.andWhere('record.intensity IN (:...intensityList)', { intensityList });
-
-    const treatmentList = parseArray(treatmentType);
-    if (treatmentList.length)
-      qb.andWhere('record.treatmentType IN (:...treatmentList)', {
-        treatmentList,
-      });
 
     if (dateFrom) qb.andWhere('record.createdAt >= :dateFrom', { dateFrom });
     if (dateTo) qb.andWhere('record.createdAt <= :dateTo', { dateTo });
@@ -519,6 +505,28 @@ export class RecordService {
     });
 
     res.send(decrypted);
+  }
+
+  async downloadEncryptedFile(id: string, res: Response): Promise<void> {
+    const record = await this.getFullRecordWithFile(id);
+
+    if (!record.attachmentData) {
+      throw new NotFoundException(
+        'This record does not have an encrypted file',
+      );
+    }
+
+    res.set({
+      'Content-Type': 'application/octet-stream',
+      'Content-Disposition': `attachment; filename="${encodeURIComponent(
+        record.attachmentName + '.enc',
+      )}"`,
+    });
+
+    res.send(record.attachmentData);
+    this.logger.log(
+      `📦 Encrypted file "${record.attachmentName}" sent successfully`,
+    );
   }
 
   async verifyFileIntegrity(

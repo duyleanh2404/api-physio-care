@@ -26,6 +26,7 @@ import {
   ApiFindAllRecords,
   ApiDownloadRecord,
   ApiFindMyPatientsRecords,
+  ApiDownloadEncryptedRecord,
 } from 'src/docs/swagger/record.swagger';
 import { RecordService } from './record.service';
 import { Roles } from 'src/core/auth/decorators/roles.decorator';
@@ -83,6 +84,13 @@ export class RecordController {
   @ApiFindOneRecord()
   async findOne(@Param('id') id: string) {
     return this.recordService.findOne(id);
+  }
+
+  @Get('download/encrypted/:id')
+  @Roles('admin', 'doctor')
+  @ApiDownloadEncryptedRecord()
+  async downloadEncrypted(@Param('id') id: string, @Response() res) {
+    return this.recordService.downloadEncryptedFile(id, res);
   }
 
   @Get('download/:id')

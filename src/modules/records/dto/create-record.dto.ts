@@ -1,5 +1,7 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
+
+import { RecordStatus } from 'src/enums/patients.enum';
 
 export class CreateRecordDto {
   @ApiProperty({ description: 'ID of the patient' })
@@ -7,31 +9,26 @@ export class CreateRecordDto {
   @IsString({ message: 'Patient ID must be a string.' })
   patientsId: string;
 
-  @ApiPropertyOptional({ description: 'ID of the doctor (optional)' })
-  @IsOptional()
+  @ApiProperty({ description: 'ID of the doctor' })
+  @IsNotEmpty({ message: 'Please provide the doctor ID.' })
   @IsString({ message: 'Doctor ID must be a string.' })
-  doctorId?: string;
+  doctorId: string;
 
   @ApiProperty({
     example: 'active',
-    enum: ['active', 'completed', 'pending'],
+    enum: Object.values(RecordStatus),
     description: 'Status of the record',
   })
   @IsNotEmpty({ message: 'Please select a status for the record.' })
-  @IsEnum(['active', 'completed', 'pending'], {
-    message: 'Status must be one of the following: active, completed, pending.',
+  @IsEnum(Object.values(RecordStatus), {
+    message: 'Status must be one of the allowed values.',
   })
-  status: string;
+  status: RecordStatus;
 
   @ApiProperty({ description: 'Medical history of the patient' })
   @IsNotEmpty({ message: 'Please provide the medical history.' })
   @IsString({ message: 'Medical history must be a string.' })
   history: string;
-
-  @ApiProperty({ description: 'Type of treatment' })
-  @IsNotEmpty({ message: 'Please specify the type of treatment.' })
-  @IsString({ message: 'Treatment type must be a string.' })
-  treatmentType: string;
 
   @ApiProperty({ description: 'Intensity of treatment' })
   @IsNotEmpty({ message: 'Please specify the intensity.' })
@@ -53,10 +50,11 @@ export class CreateRecordDto {
   @IsString({ message: 'Treatment progress must be a string.' })
   progress: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     type: 'string',
     format: 'binary',
-    description: 'Upload a single attachment file (optional)',
+    description: 'Upload a single attachment file',
+    required: false,
   })
   @IsOptional()
   attachment?: any;

@@ -2,11 +2,11 @@ import { IsOptional } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateRecordDto {
-  @ApiPropertyOptional({ example: '' })
+  @ApiPropertyOptional()
   @IsOptional()
   patientsId?: string;
 
-  @ApiPropertyOptional({ example: '' })
+  @ApiPropertyOptional()
   @IsOptional()
   doctorId?: string;
 
@@ -17,27 +17,23 @@ export class UpdateRecordDto {
   @IsOptional()
   status?: string;
 
-  @ApiPropertyOptional({ example: '' })
+  @ApiPropertyOptional()
   @IsOptional()
   history?: string;
 
-  @ApiPropertyOptional({ example: '' })
-  @IsOptional()
-  treatmentType?: string;
-
-  @ApiPropertyOptional({ example: '' })
+  @ApiPropertyOptional()
   @IsOptional()
   intensity?: string;
 
-  @ApiPropertyOptional({ example: '' })
+  @ApiPropertyOptional()
   @IsOptional()
   frequency?: string;
 
-  @ApiPropertyOptional({ example: '' })
+  @ApiPropertyOptional()
   @IsOptional()
   goals?: string;
 
-  @ApiPropertyOptional({ example: '' })
+  @ApiPropertyOptional()
   @IsOptional()
   progress?: string;
 
