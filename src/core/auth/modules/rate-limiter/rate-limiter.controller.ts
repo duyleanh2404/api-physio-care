@@ -33,13 +33,10 @@ export class RateLimiterController {
     private readonly limiter: RateLimiterService.RateLimiterService,
   ) {}
 
-  @Put(':action')
+  @Put()
   @ApiUpdateRateLimit()
-  async updateRateLimit(
-    @Param('action') action: RateLimiterService.RateLimitAction,
-    @Body() body: UpdateRateLimitDto,
-  ) {
-    return this.limiter.updateConfig(action, body.limit, body.window);
+  async updateRateLimit(@Body() body: UpdateRateLimitDto) {
+    return this.limiter.updateConfig(body);
   }
 
   @Post(':action/reset/:key')

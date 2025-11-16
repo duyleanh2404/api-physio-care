@@ -1,17 +1,34 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsPositive } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsInt, Min, ValidateNested } from 'class-validator';
 
-export class UpdateRateLimitDto {
-  @ApiProperty({
-    description: 'Maximum number of failed attempts',
-    example: 10,
-  })
+export class RateLimitItemDto {
   @IsInt()
-  @IsPositive()
+  @Min(1)
   limit: number;
 
-  @ApiProperty({ description: 'Block duration in seconds', example: 300 })
   @IsInt()
-  @IsPositive()
+  @Min(1)
   window: number;
+}
+
+export class UpdateRateLimitDto {
+  @ValidateNested()
+  @Type(() => RateLimitItemDto)
+  login: RateLimitItemDto;
+
+  @ValidateNested()
+  @Type(() => RateLimitItemDto)
+  register: RateLimitItemDto;
+
+  @ValidateNested()
+  @Type(() => RateLimitItemDto)
+  forgotPassword: RateLimitItemDto;
+
+  @ValidateNested()
+  @Type(() => RateLimitItemDto)
+  resetPassword: RateLimitItemDto;
+
+  @ValidateNested()
+  @Type(() => RateLimitItemDto)
+  otp: RateLimitItemDto;
 }

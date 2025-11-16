@@ -123,7 +123,7 @@ export class AuthController {
     const appUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
 
     return res.redirect(
-      `${appUrl}?accessToken=${accessToken}&refreshToken=${refreshToken}`,
+      `${appUrl}/login?accessToken=${accessToken}&refreshToken=${refreshToken}`,
     );
   }
 

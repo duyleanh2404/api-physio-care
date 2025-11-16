@@ -1,11 +1,7 @@
-import {
-  HttpStatus,
-  Injectable,
-  HttpException,
-  BadRequestException,
-} from '@nestjs/common';
-
 import Redis from 'ioredis';
+import { HttpStatus, Injectable, HttpException } from '@nestjs/common';
+
+import { UpdateRateLimitDto } from '../../dto/update-rate-limit.dto';
 
 export type RateLimitAction =
   | 'login'
@@ -23,13 +19,13 @@ export class RateLimiterService {
     this.redis = new Redis(process.env.REDIS_URL!);
   }
 
-  async updateConfig(action: RateLimitAction, limit: number, window: number) {
-    await this.redis.hset(
-      this.configKey,
-      action,
-      JSON.stringify({ limit, window }),
-    );
-    return { action, limit, window };
+  async updateConfig(payload: UpdateRateLimitDto) {
+    const pipeline = this.redis.pipeline();
+    for (const [action, config] of Object.entries(payload)) {
+      pipeline.hset(this.configKey, action, JSON.stringify(config));
+    }
+    await pipeline.exec();
+    return payload;
   }
 
   async resetFailCount(action: RateLimitAction, key: string) {
