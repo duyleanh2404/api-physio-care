@@ -77,6 +77,7 @@ export class ClinicService {
         .join('');
 
     const email = `${dto.name
+      .replace(/đ/g, 'd')
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/\s+/g, '')
