@@ -26,12 +26,18 @@ export class EmailRepository {
   }
 
   private compileTemplate(templateName: string, context: any): string {
-    const basePath =
-      process.env.NODE_ENV === 'production'
-        ? path.join(__dirname, 'templates')
-        : path.join(__dirname, '../../../core/auth/mail/templates');
+    const isProd = __dirname.includes('dist');
+
+    const basePath = isProd
+      ? path.resolve(__dirname, 'templates')
+      : path.resolve(process.cwd(), 'src/core/auth/mail/templates');
 
     const templatePath = path.join(basePath, `${templateName}.hbs`);
+
+    if (!fs.existsSync(templatePath)) {
+      throw new Error(`Template not found at path: ${templatePath}`);
+    }
+
     const templateSource = fs.readFileSync(templatePath, 'utf8');
     const template = Handlebars.compile(templateSource);
 
