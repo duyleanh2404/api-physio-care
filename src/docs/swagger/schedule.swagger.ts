@@ -7,7 +7,6 @@ import {
 } from 'src/modules/schedules/dto/schedule-response.dto';
 import { PaginatedResponseDto } from 'src/common/dto/paginated-response.dto';
 import { CreateScheduleDto } from 'src/modules/schedules/dto/create-schedule.dto';
-import { UpdateScheduleDto } from 'src/modules/schedules/dto/update-schedule.dto';
 
 export const ApiFindAllSchedules = () =>
   applyDecorators(
@@ -20,6 +19,30 @@ export const ApiFindAllSchedules = () =>
       status: 200,
       description: 'List of schedules retrieved successfully',
       type: PaginatedResponseDto(ScheduleResponseDto),
+    }),
+  );
+
+export const ApiGetSchedulesByDoctorAndDate = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get schedules by doctor and date',
+      description:
+        'Retrieve a paginated list of schedules for a specific doctor on a specific date.',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'Schedules retrieved successfully',
+      type: PaginatedResponseDto(ScheduleResponseDto),
+    }),
+    ApiResponse({
+      status: 400,
+      description: 'Invalid parameters',
+      schema: { example: { message: 'Invalid parameters' } },
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Doctor not found',
+      schema: { example: { message: 'Doctor not found' } },
     }),
   );
 
@@ -146,30 +169,6 @@ export const ApiCreateSchedule = () =>
       status: 409,
       description: 'Schedule time conflict',
       schema: { example: { message: 'Schedule time conflict' } },
-    }),
-  );
-
-export const ApiUpdateSchedule = () =>
-  applyDecorators(
-    ApiOperation({
-      summary: 'Update a schedule (Admin/Doctor only)',
-      description:
-        'Update schedule details such as date, start/end time, status, or notes.',
-    }),
-    ApiParam({
-      name: 'id',
-      description: 'Schedule ID',
-    }),
-    ApiBody({ type: UpdateScheduleDto }),
-    ApiResponse({
-      status: 200,
-      description: 'Schedule updated successfully',
-      type: ScheduleResponseDto,
-    }),
-    ApiResponse({
-      status: 404,
-      description: 'Schedule not found',
-      schema: { example: { message: 'Schedule not found' } },
     }),
   );
 

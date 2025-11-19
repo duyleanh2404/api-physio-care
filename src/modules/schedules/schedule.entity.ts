@@ -19,8 +19,8 @@ export class Schedule {
   @JoinColumn({ name: 'doctorId' })
   doctor: Doctor;
 
-  @Column({ type: 'timestamp with time zone' })
-  workDate: Date;
+  @Column({ type: 'date' })
+  workDate: string; 
 
   @Column({ type: 'varchar', length: 10 })
   startTime: string;

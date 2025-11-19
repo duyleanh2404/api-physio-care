@@ -78,6 +78,7 @@ export class ClinicService {
 
     const email = `${dto.name
       .replace(/đ/g, 'd')
+      .replace(/Đ/g, 'D')
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/\s+/g, '')
@@ -124,44 +125,46 @@ export class ClinicService {
     if (search) {
       const keyword = `%${search.toLowerCase()}%`;
       qb.andWhere(
-        new Brackets((qb) => {
-          qb.where('LOWER(TRIM(clinic.name)) LIKE :keyword').orWhere(
-            'LOWER(TRIM(clinic.address)) LIKE :keyword',
-          );
+        new Brackets((qbInner) => {
+          qbInner
+            .where('LOWER(TRIM(clinic.name)) LIKE :keyword')
+            .orWhere('LOWER(TRIM(clinic.address)) LIKE :keyword');
         }),
         { keyword },
       );
     }
 
     if (dateFrom && dateTo) {
-      qb.andWhere('clinic.createdAt BETWEEN :dateFrom AND :dateTo', {
+      qb.andWhere('clinic."createdAt"::date BETWEEN :dateFrom AND :dateTo', {
         dateFrom,
         dateTo,
       });
     } else if (dateFrom) {
-      qb.andWhere('clinic.createdAt >= :dateFrom', { dateFrom });
+      qb.andWhere('clinic."createdAt"::date >= :dateFrom', { dateFrom });
     } else if (dateTo) {
-      qb.andWhere('clinic.createdAt <= :dateTo', { dateTo });
+      qb.andWhere('clinic."createdAt"::date <= :dateTo', { dateTo });
     }
 
-    if (provinceId) {
-      qb.andWhere('clinic.provinceId = :provinceId', { provinceId });
-    }
-    if (districtId) {
-      qb.andWhere('clinic.districtId = :districtId', { districtId });
-    }
-    if (wardId) {
-      qb.andWhere('clinic.wardId = :wardId', { wardId });
-    }
+    if (provinceId) qb.andWhere('clinic.provinceId = :provinceId', { provinceId });
+    if (districtId) qb.andWhere('clinic.districtId = :districtId', { districtId });
+    if (wardId) qb.andWhere('clinic.wardId = :wardId', { wardId });
 
     const total = await qb.clone().getCount();
 
     qb.orderBy(`clinic.${sortBy}`, sortOrder)
       .skip((page - 1) * limit)
       .take(limit)
-      .leftJoinAndSelect('clinic.doctors', 'doctor');
+      .leftJoinAndSelect('clinic.doctors', 'doctor')
+      .leftJoin('clinic.user', 'user') 
+      .addSelect([
+        'user.id',
+        'user.email',
+        'user.fullName',
+        'user.avatarUrl',
+      ]);
 
     const data = await qb.getMany();
+
     const totalPages = Math.ceil(total / limit);
 
     return {

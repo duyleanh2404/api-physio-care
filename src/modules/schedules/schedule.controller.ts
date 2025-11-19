@@ -14,13 +14,13 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
 import {
   ApiCreateSchedule,
-  ApiUpdateSchedule,
   ApiDeleteSchedule,
   ApiFindMySchedules,
   ApiFindOneSchedule,
   ApiFindAllSchedules,
   ApiGetSchedulesInRange,
   ApiFindSchedulesByClinic,
+  ApiGetSchedulesByDoctorAndDate,
 } from 'src/docs/swagger/schedule.swagger';
 import { ScheduleService } from './schedule.service';
 import { Roles } from 'src/core/auth/decorators/roles.decorator';
@@ -29,9 +29,9 @@ import { RolesGuard } from 'src/core/auth/guards/roles.guard';
 import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 
 import { CreateScheduleDto } from './dto/create-schedule.dto';
-import { UpdateScheduleDto } from './dto/update-schedule.dto';
 import { GetSchedulesQueryDto } from './dto/get-schedules-query.dto';
 import { GetSchedulesRangeDto } from './dto/get-schedules-range.dto';
+import { GetScheduleByDoctorDateDto } from './dto/get-schedules-by-doctor-date.dto';
 
 @ApiTags('Schedules')
 @Controller('schedules')
@@ -54,6 +54,15 @@ export class ScheduleController {
   @ApiFindAllSchedules()
   async findAll(@Query() query: GetSchedulesQueryDto) {
     return this.scheduleService.findAll(query);
+  }
+
+  @Get('by-date')
+  @ApiBearerAuth()
+  @Roles('admin', 'clinic')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiGetSchedulesByDoctorAndDate()
+  async getByDoctorAndDate(@Query() query: GetScheduleByDoctorDateDto) {
+    return this.scheduleService.findByDoctorAndDate(query);
   }
 
   @Get('me')
@@ -89,19 +98,6 @@ export class ScheduleController {
   @ApiFindOneSchedule()
   async findOne(@Param('id') id: string) {
     return this.scheduleService.findOne(id);
-  }
-
-  @Put(':id')
-  @ApiBearerAuth()
-  @Roles('admin', 'doctor', 'clinic')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @ApiUpdateSchedule()
-  async update(
-    @Param('id') id: string,
-    @Body() dto: UpdateScheduleDto,
-    @Request() req,
-  ) {
-    return this.scheduleService.update(id, dto, req.user.sub, req.user.role);
   }
 
   @Delete(':id')

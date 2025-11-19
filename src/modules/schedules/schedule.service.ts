@@ -14,9 +14,9 @@ import { Clinic } from '../clinics/clinic.entity';
 import { Doctor } from '../doctors/doctor.entity';
 
 import { CreateScheduleDto } from './dto/create-schedule.dto';
-import { UpdateScheduleDto } from './dto/update-schedule.dto';
 import { GetSchedulesQueryDto } from './dto/get-schedules-query.dto';
 import { GetSchedulesRangeDto } from './dto/get-schedules-range.dto';
+import { GetScheduleByDoctorDateDto } from './dto/get-schedules-by-doctor-date.dto';
 
 @Injectable()
 export class ScheduleService {
@@ -57,7 +57,7 @@ export class ScheduleService {
         'doctor.updatedAt',
       ])
       .leftJoin('doctor.user', 'user')
-      .addSelect(['user.id', 'user.fullName'])
+      .addSelect(['user.id', 'user.fullName', 'user.email'])
       .leftJoin('doctor.clinic', 'clinic')
       .addSelect([
         'clinic.id',
@@ -110,17 +110,55 @@ export class ScheduleService {
     return { page, limit, total, totalPages, data };
   }
 
+  async findByDoctorAndDate(query: GetScheduleByDoctorDateDto) {
+    const { doctorId, workDate, page = 1, limit = 10 } = query;
+
+    const doctor = await this.doctorRepo.findOne({ where: { id: doctorId } });
+    if (!doctor) throw new NotFoundException('Doctor not found');
+
+    const date = new Date(workDate);
+    const nextDate = new Date(date);
+    nextDate.setDate(date.getDate() + 1);
+
+    const qb = this.scheduleRepo
+      .createQueryBuilder('schedule')
+      .where('schedule.doctorId = :doctorId', { doctorId })
+      .andWhere('schedule.workDate >= :start', { start: date })
+      .andWhere('schedule.workDate < :end', { end: nextDate })
+      .orderBy('schedule.startTime', 'ASC');
+
+    const total = await qb.getCount();
+
+    const data = await qb
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      page,
+      limit,
+      total,
+      totalPages,
+      data,
+    };
+  }
+
   async findMySchedules(userId: string, query: GetSchedulesQueryDto) {
-    if (!userId) throw new BadRequestException('Missing userId in token');
+    if (!userId) {
+      throw new BadRequestException('Missing userId in token');
+    }
 
     const doctor = await this.doctorRepo.findOne({
       where: { user: { id: userId } },
     });
 
-    if (!doctor)
+    if (!doctor) {
       throw new NotFoundException(
         'Doctor profile not found for this user account',
       );
+    }
 
     const {
       search,
@@ -138,7 +176,9 @@ export class ScheduleService {
       .where('schedule.doctorId = :doctorId', { doctorId: doctor.id });
 
     if (status) {
-      const statuses = status.includes(',') ? status.split(',') : [status];
+      const statuses = status.includes(',')
+        ? status.split(',')
+        : [status];
       qb.andWhere('schedule.status IN (:...statuses)', { statuses });
     }
 
@@ -159,7 +199,7 @@ export class ScheduleService {
       });
     }
 
-    qb.orderBy(`schedule.${sortBy}`, sortOrder.toUpperCase() as 'ASC' | 'DESC')
+    qb.orderBy(`schedule.${sortBy}`, sortOrder as 'ASC' | 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 
@@ -168,22 +208,16 @@ export class ScheduleService {
 
     const mappedData = data.map((schedule) => ({
       ...schedule,
-      workDate: schedule.workDate
-        ? new Date(
-            Date.UTC(
-              schedule.workDate.getFullYear(),
-              schedule.workDate.getMonth(),
-              schedule.workDate.getDate(),
-              schedule.workDate.getHours(),
-              schedule.workDate.getMinutes(),
-              schedule.workDate.getSeconds(),
-              schedule.workDate.getMilliseconds(),
-            ),
-          ).toISOString()
-        : null,
+      workDate: schedule.workDate,
     }));
 
-    return { page, limit, total, totalPages, data: mappedData };
+    return {
+      page,
+      limit,
+      total,
+      totalPages,
+      data: mappedData,
+    };
   }
 
   async findSchedulesByClinic(userId: string, query: GetSchedulesQueryDto) {
@@ -205,10 +239,12 @@ export class ScheduleService {
       where: { clinic: { id: clinic.id } },
       select: ['id'],
     });
+
     const doctorIds = doctors.map((d) => d.id);
 
-    if (!doctorIds.length)
+    if (!doctorIds.length) {
       throw new NotFoundException('No doctors found for this clinic');
+    }
 
     const qb = this.scheduleRepo
       .createQueryBuilder('schedule')
@@ -225,7 +261,11 @@ export class ScheduleService {
         'user.slug',
       ])
       .innerJoin('doctor.specialty', 'specialty')
-      .addSelect(['specialty.id', 'specialty.name', 'specialty.imageUrl'])
+      .addSelect([
+        'specialty.id',
+        'specialty.name',
+        'specialty.imageUrl'
+      ])
       .where('schedule.doctorId IN (:...doctorIds)', { doctorIds });
 
     if (status) {
@@ -256,7 +296,13 @@ export class ScheduleService {
     const [data, total] = await qb.getManyAndCount();
     const totalPages = Math.ceil(total / limit);
 
-    return { page, limit, total, totalPages, data };
+    return {
+      page,
+      limit,
+      total,
+      totalPages,
+      data,
+    };
   }
 
   async findByDateRange(dto: GetSchedulesRangeDto) {
@@ -267,6 +313,7 @@ export class ScheduleService {
         where: { id: doctorId },
         relations: ['clinic'],
       });
+
       if (!doctor) throw new NotFoundException('Doctor not found');
 
       if (clinicId && doctor.clinic.id !== clinicId) {
@@ -277,13 +324,12 @@ export class ScheduleService {
     const qb = this.scheduleRepo
       .createQueryBuilder('schedule')
       .innerJoin('schedule.doctor', 'doctor')
-      .where(
-        "TRUNC(schedule.workDate) BETWEEN TO_DATE(:dateFrom, 'YYYY-MM-DD') AND TO_DATE(:dateTo, 'YYYY-MM-DD')",
-        { dateFrom, dateTo },
-      );
+      .where('schedule.workDate BETWEEN :dateFrom AND :dateTo', {
+        dateFrom,
+        dateTo,
+      });
 
     if (doctorId) qb.andWhere('doctor.id = :doctorId', { doctorId });
-
     if (clinicId) qb.andWhere('doctor.clinicId = :clinicId', { clinicId });
 
     const schedules = await qb
@@ -291,24 +337,25 @@ export class ScheduleService {
       .addOrderBy('schedule.startTime', 'ASC')
       .getMany();
 
-    const groupedRaw = schedules.reduce(
-      (acc, s) => {
-        const date = new Date(s.workDate);
-        const local = new Date(date.getTime() + 7 * 60 * 60 * 1000);
-        const key = `${local.getFullYear()}-${String(local.getMonth() + 1).padStart(2, '0')}-${String(local.getDate()).padStart(2, '0')}`;
-        if (!acc[key]) acc[key] = [];
-        acc[key].push(s);
-        return acc;
-      },
-      {} as Record<string, typeof schedules>,
-    );
+    const groupedRaw: Record<string, typeof schedules> = {};
+
+    schedules.forEach((s) => {
+      const key = s.workDate;
+      if (!groupedRaw[key]) groupedRaw[key] = [];
+      groupedRaw[key].push(s);
+    });
 
     const start = new Date(dateFrom);
     const end = new Date(dateTo);
+
     const schedulesByDate: Record<string, typeof schedules> = {};
 
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+        2,
+        '0',
+      )}-${String(d.getDate()).padStart(2, '0')}`;
+
       schedulesByDate[key] = groupedRaw[key] || [];
     }
 
@@ -332,18 +379,37 @@ export class ScheduleService {
     return schedule;
   }
 
+  parseWorkDate(dateStr: string): Date {
+    if (!dateStr || typeof dateStr !== 'string') {
+      throw new BadRequestException('workDate must be a string YYYY-MM-DD');
+    }
+
+    const [year, month, day] = dateStr.split('-').map(Number);
+
+    if (!year || !month || !day) {
+      throw new BadRequestException('Invalid workDate format (expected YYYY-MM-DD)');
+    }
+
+    return new Date(Date.UTC(year, month - 1, day));
+  }
+
   async create(dto: CreateScheduleDto) {
     const doctor = await this.doctorRepo.findOne({
       where: { id: dto.doctorId },
       relations: ['user'],
     });
-    if (!doctor) throw new NotFoundException('Doctor not found');
+
+    if (!doctor) {
+      throw new NotFoundException('Doctor not found');
+    }
+
+    const workDate = dto.workDate;
 
     for (const slot of dto.timeSlots) {
       const conflict = await this.scheduleRepo
         .createQueryBuilder('schedule')
         .where('schedule.doctorId = :doctorId', { doctorId: dto.doctorId })
-        .andWhere('schedule.workDate = :workDate', { workDate: dto.workDate })
+        .andWhere('schedule.workDate = :workDate', { workDate })
         .andWhere(
           '(schedule.startTime < :endTime AND schedule.endTime > :startTime)',
           {
@@ -353,17 +419,18 @@ export class ScheduleService {
         )
         .getOne();
 
-      if (conflict)
+      if (conflict) {
         throw new ConflictException(
           `Schedule time ${slot.startTime}-${slot.endTime} overlaps with another shift`,
         );
+      }
     }
 
     const schedules = dto.timeSlots.map((slot) =>
       this.scheduleRepo.create({
         doctor,
+        workDate,
         notes: dto.notes,
-        workDate: dto.workDate,
         endTime: slot.endTime,
         startTime: slot.startTime,
         status: dto.status || ScheduleStatus.available,
@@ -371,53 +438,6 @@ export class ScheduleService {
     );
 
     return this.scheduleRepo.save(schedules);
-  }
-
-  async update(
-    id: string,
-    dto: UpdateScheduleDto,
-    userId: string,
-    role: 'admin' | 'doctor' | 'clinic',
-  ) {
-    const { doctorId, workDate, startTime, endTime, status, notes } = dto;
-
-    if (!doctorId || !workDate || !startTime || !endTime) {
-      throw new BadRequestException('Missing required fields');
-    }
-
-    const workDateObj = new Date(workDate);
-
-    const doctor = await this.doctorRepo.findOne({
-      where: { id: doctorId },
-      relations: ['clinic', 'user'],
-    });
-    if (!doctor) throw new NotFoundException('Doctor not found');
-
-    const schedule = await this.scheduleRepo.findOne({
-      where: {
-        id,
-        doctor: { id: doctorId },
-        workDate: workDateObj,
-      },
-      relations: ['doctor', 'doctor.clinic', 'doctor.user'],
-    });
-    if (!schedule) throw new NotFoundException('Schedule not found');
-
-    if (role === 'doctor' && doctor.user.id !== userId) {
-      throw new BadRequestException('You can only edit your own schedule');
-    }
-    if (role === 'clinic' && doctor.clinic.userId !== userId) {
-      throw new BadRequestException(
-        'You can only edit schedules of doctors in your clinic',
-      );
-    }
-
-    schedule.startTime = startTime;
-    schedule.endTime = endTime;
-    schedule.status = status || schedule.status;
-    schedule.notes = notes ?? schedule.notes;
-
-    return this.scheduleRepo.save(schedule);
   }
 
   async remove(

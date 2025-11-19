@@ -190,6 +190,12 @@ export class RecordService {
         'patients.slug',
       ])
       .leftJoinAndSelect('record.doctor', 'doctor')
+      .leftJoin('doctor.specialty', 'specialty')
+      .addSelect([
+        'specialty.id',
+        'specialty.name',
+        'specialty.imageUrl',
+      ])
       .leftJoin('doctor.user', 'doctorUser')
       .addSelect([
         'doctorUser.id',
