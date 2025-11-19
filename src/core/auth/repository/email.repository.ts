@@ -26,7 +26,11 @@ export class EmailRepository {
   }
 
   private compileTemplate(templateName: string, context: any): string {
-    const basePath = path.resolve(__dirname, 'templates');
+    const isProd = __dirname.includes('dist');
+
+    const basePath = isProd
+      ? path.resolve(process.cwd(), 'dist/core/auth/mail/templates')
+      : path.resolve(process.cwd(), 'src/core/auth/mail/templates');
 
     const templatePath = path.join(basePath, `${templateName}.hbs`);
 
@@ -35,9 +39,7 @@ export class EmailRepository {
     }
 
     const templateSource = fs.readFileSync(templatePath, 'utf8');
-    const template = Handlebars.compile(templateSource);
-
-    return template(context);
+    return Handlebars.compile(templateSource)(context);
   }
 
   async sendOtp(email: string, otp: string, subject: string) {
