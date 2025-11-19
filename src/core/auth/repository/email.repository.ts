@@ -26,11 +26,7 @@ export class EmailRepository {
   }
 
   private compileTemplate(templateName: string, context: any): string {
-    const isProd = __dirname.includes('dist');
-
-    const basePath = isProd
-      ? path.resolve(__dirname, 'templates')
-      : path.resolve(process.cwd(), 'src/core/auth/mail/templates');
+    const basePath = path.resolve(__dirname, 'templates');
 
     const templatePath = path.join(basePath, `${templateName}.hbs`);
 
