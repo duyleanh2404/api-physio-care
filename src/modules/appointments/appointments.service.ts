@@ -89,11 +89,13 @@ export class AppointmentService {
         'clinic.name',
         'clinic.slug',
         'clinic.avatar',
+        'clinic.banner',
         'clinic.address',
 
         'user.id',
         'user.fullName',
         'user.email',
+        'user.avatarUrl',
 
         'schedule.id',
         'schedule.workDate',
@@ -254,6 +256,7 @@ export class AppointmentService {
       where: { clinic: { id: clinic.id } },
       select: ['id'],
     });
+
     const doctorIds = doctors.map((d) => d.id);
     if (!doctorIds.length)
       return { page: 1, limit: 10, total: 0, totalPages: 0, data: [] };
@@ -263,6 +266,7 @@ export class AppointmentService {
       search,
       startDate,
       endDate,
+      doctorId,
       page = 1,
       limit = 10,
       sortBy = 'createdAt',
@@ -309,6 +313,7 @@ export class AppointmentService {
         'user.id',
         'user.fullName',
         'user.email',
+        'user.avatarUrl',
 
         'schedule.id',
         'schedule.workDate',
@@ -316,7 +321,10 @@ export class AppointmentService {
         'schedule.endTime',
       ]);
 
-    // Filter theo status
+    if (doctorId) {
+      qb.andWhere('appointment.doctorId = :doctorId', { doctorId });
+    }
+
     if (status) {
       const statusArray = Array.isArray(status) ? status : [status];
       qb.andWhere('appointment.status IN (:...status)', {
@@ -324,7 +332,6 @@ export class AppointmentService {
       });
     }
 
-    // Filter theo khoảng thời gian
     if (startDate && endDate) {
       qb.andWhere('appointment.createdAt BETWEEN :startDate AND :endDate', {
         startDate,
@@ -336,18 +343,16 @@ export class AppointmentService {
       qb.andWhere('appointment.createdAt <= :endDate', { endDate });
     }
 
-    // Filter theo search (appointment code, tên bệnh nhân, tên bác sĩ)
     if (search) {
       const keyword = `%${search.toLowerCase()}%`;
       qb.andWhere(
         `LOWER(appointment.code) LIKE :keyword
-       OR LOWER(user.fullName) LIKE :keyword
-       OR LOWER(doctorUser.fullName) LIKE :keyword`,
+        OR LOWER(user.fullName) LIKE :keyword
+        OR LOWER(doctorUser.fullName) LIKE :keyword`,
         { keyword },
       );
     }
 
-    // Order + pagination
     qb.orderBy(
       `appointment.${sortBy}`,
       sortOrder.toUpperCase() as 'ASC' | 'DESC',
@@ -376,6 +381,7 @@ export class AppointmentService {
         'appointment.code',
         'appointment.status',
         'appointment.phone',
+        'appointment.address',
         'appointment.notes',
         'appointment.createdAt',
 
@@ -390,6 +396,7 @@ export class AppointmentService {
         'clinic.name',
         'clinic.address',
         'clinic.avatar',
+        'clinic.banner',
 
         'specialty.id',
         'specialty.name',

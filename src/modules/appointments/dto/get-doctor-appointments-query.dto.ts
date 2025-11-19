@@ -18,6 +18,13 @@ export class GetDoctorAppointmentsQueryDto {
   userId?: string;
 
   @ApiPropertyOptional({
+    description: 'Filter by doctor ID',
+  })
+  @IsOptional()
+  @IsUUID()
+  doctorId?: string;
+
+  @ApiPropertyOptional({
     description:
       'Filter by appointment status (single or comma-separated for multiple)',
     enum: AppointmentStatus,

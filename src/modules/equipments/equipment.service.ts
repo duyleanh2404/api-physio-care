@@ -29,32 +29,34 @@ export class EquipmentService {
   ) {}
 
   async create(
-    userId: string,
-    dto: CreateEquipmentDto,
-    file?: Express.Multer.File,
+  userId: string,
+  dto: CreateEquipmentDto,
+  file?: Express.Multer.File,
   ) {
-    const clinic = await this.clinicRepo.findOne({
-      where: { user: { id: userId } },
-    });
+    let clinicId = dto.clinicId;
 
-    if (!clinic) {
-      throw new ForbiddenException('Clinic not found or access denied');
+    if (!clinicId) {
+      const clinic = await this.clinicRepo.findOne({
+        where: { user: { id: userId } },
+      });
+
+      if (!clinic) {
+        throw new ForbiddenException('Clinic not found or access denied');
+      }
+
+      clinicId = clinic.id;
     }
 
     let imageUrl: string | undefined;
     if (file) {
-      const uploaded = await this.cloudinaryService.uploadImage(
-        file,
-        'equipments',
-      );
+      const uploaded = await this.cloudinaryService.uploadImage(file, 'equipments');
       imageUrl = uploaded.secure_url;
     }
 
     const equipment = this.equipmentRepo.create({
       ...dto,
-      clinic: { id: clinic.id },
+      clinic: { id: clinicId },
       image: imageUrl,
-      status: dto.status || 'active',
     });
 
     return this.equipmentRepo.save(equipment);

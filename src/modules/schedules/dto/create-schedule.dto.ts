@@ -1,9 +1,9 @@
 import {
   IsUUID,
   IsArray,
+  Matches,
   IsString,
   IsOptional,
-  IsDate,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -28,13 +28,15 @@ export class CreateScheduleDto {
   doctorId: string;
 
   @ApiProperty({
-    description: 'The working date',
+    description: 'The working date (YYYY-MM-DD)',
     type: String,
-    format: 'date-time',
+    example: '2025-11-18',
   })
-  @Type(() => Date)
-  @IsDate()
-  workDate: Date;
+  @IsString()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: 'workDate must be in format YYYY-MM-DD',
+  })
+  workDate: string;
 
   @ApiProperty({
     type: [TimeSlotDto],
