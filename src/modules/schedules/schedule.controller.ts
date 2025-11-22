@@ -61,8 +61,11 @@ export class ScheduleController {
   @Roles('admin', 'clinic')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiGetSchedulesByDoctorAndDate()
-  async getByDoctorAndDate(@Query() query: GetScheduleByDoctorDateDto) {
-    return this.scheduleService.findByDoctorAndDate(query);
+  async getByDoctorAndDate(
+    @Query() query: GetScheduleByDoctorDateDto,
+    @Request() req
+  ) {
+    return this.scheduleService.findByDoctorAndDate(query, req.user);
   }
 
   @Get('me')

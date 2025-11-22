@@ -56,16 +56,17 @@ export class UserController {
   }
 
   @Put(':id')
-  @Roles('admin')
   @ApiUpdateUser()
+  @Roles('admin', 'clinic', 'doctor')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('avatar'))
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateUserDto,
-    @UploadedFile() avatar?: Express.Multer.File,
+    @UploadedFile() avatar: Express.Multer.File,
+    @Request() req,
   ) {
-    return this.userService.update(id, dto, avatar);
+    return this.userService.update(id, dto, avatar, req.user);
   }
 
   @Put('ban/:id')

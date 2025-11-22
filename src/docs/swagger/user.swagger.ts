@@ -24,7 +24,7 @@ export const ApiFindMeUser = () =>
 export const ApiFindAllUsers = () =>
   applyDecorators(
     ApiOperation({
-      summary: 'Get all users (Admin only)',
+      summary: 'Get all users',
     }),
     ApiQuery({ name: 'status', required: false, type: String }),
     ApiQuery({ name: 'role', required: false, type: String }),
@@ -45,7 +45,7 @@ export const ApiFindAllUsers = () =>
 export const ApiFindOneUserBySlug = () =>
   applyDecorators(
     ApiOperation({
-      summary: 'Get user details by slug (Admin only)',
+      summary: 'Get user details by slug',
     }),
     ApiParam({
       name: 'slug',
@@ -71,7 +71,7 @@ export const ApiFindOneUserBySlug = () =>
 export const ApiFindOneUser = () =>
   applyDecorators(
     ApiOperation({
-      summary: 'Get user details by ID (Admin only)',
+      summary: 'Get user details by ID',
     }),
     ApiParam({ name: 'id', description: 'User ID' }),
     ApiResponse({
@@ -93,7 +93,7 @@ export const ApiFindOneUser = () =>
 
 export const ApiCreateUser = () =>
   applyDecorators(
-    ApiOperation({ summary: 'Create a new user (Admin only)' }),
+    ApiOperation({ summary: 'Create a new user' }),
     ApiResponse({
       status: 201,
       description: 'User created successfully',
@@ -114,7 +114,7 @@ export const ApiCreateUser = () =>
 export const ApiUpdateUser = () =>
   applyDecorators(
     ApiOperation({
-      summary: 'Update user information (Admin only)',
+      summary: 'Update user information',
     }),
     ApiParam({
       name: 'id',
@@ -139,7 +139,7 @@ export const ApiUpdateUser = () =>
 
 export const ApiBanUser = () =>
   applyDecorators(
-    ApiOperation({ summary: 'Ban a user account (Admin only)' }),
+    ApiOperation({ summary: 'Ban a user account' }),
     ApiParam({
       name: 'id',
       description: 'ID of the user to be banned',
@@ -168,7 +168,7 @@ export const ApiBanUser = () =>
 
 export const ApiUnbanUser = () =>
   applyDecorators(
-    ApiOperation({ summary: 'Unban a user account (Admin only)' }),
+    ApiOperation({ summary: 'Unban a user account' }),
     ApiParam({
       name: 'id',
       description: 'ID of the user to be unbanned',
@@ -197,7 +197,7 @@ export const ApiUnbanUser = () =>
 
 export const ApiDeleteUser = () =>
   applyDecorators(
-    ApiOperation({ summary: 'Delete user (Admin only)' }),
+    ApiOperation({ summary: 'Delete user' }),
     ApiParam({ name: 'id', description: 'User ID' }),
     ApiResponse({
       status: 200,

@@ -15,7 +15,6 @@ import { UserStatus } from 'src/enums/user.enums';
 
 export class UpdateUserDto {
   @ApiPropertyOptional({
-    example: 'Nguyen Van A',
     description: 'Full name of the user',
   })
   @IsOptional()
@@ -23,7 +22,6 @@ export class UpdateUserDto {
   fullName?: string;
 
   @ApiPropertyOptional({
-    example: 'StrongP@ssword1!',
     description:
       'Password must be at least 8 characters, contain uppercase, lowercase, number, and special character',
     minLength: 8,
@@ -52,7 +50,6 @@ export class UpdateUserDto {
   avatar?: any;
 
   @ApiPropertyOptional({
-    example: UserStatus.ACTIVE,
     description: 'Status of the user',
     enum: UserStatus,
   })
@@ -71,24 +68,18 @@ export class UpdateUserDto {
   @IsOptional()
   otpExpiresAt?: Date | null;
 
-  @ApiPropertyOptional({
-    example: 0,
-    description: 'Number of consecutive failed login attempts',
-  })
   @IsOptional()
   @IsInt({ message: 'failedLoginAttempts must be an integer' })
   @Min(0, { message: 'failedLoginAttempts cannot be negative' })
   failedLoginAttempts?: number;
 
   @ApiPropertyOptional({
-    example: false,
     description: 'Indicates whether the account is locked',
   })
   @IsOptional()
   locked?: boolean;
 
   @ApiPropertyOptional({
-    example: new Date().toISOString(),
     description: 'Timestamp of the last password change',
   })
   @IsOptional()

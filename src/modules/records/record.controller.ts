@@ -47,8 +47,8 @@ export class RecordController {
   constructor(private readonly recordService: RecordService) {}
 
   @Post()
-  @Roles('admin', 'doctor')
   @ApiCreateRecord()
+  @Roles('admin', 'doctor')
   @UseInterceptors(
     FileInterceptor('attachment', {
       storage: memoryStorage(),
@@ -80,8 +80,8 @@ export class RecordController {
   }
 
   @Get(':id')
-  @Roles('admin', 'doctor')
   @ApiFindOneRecord()
+  @Roles('admin')
   async findOne(@Param('id') id: string) {
     return this.recordService.findOne(id);
   }
@@ -89,20 +89,38 @@ export class RecordController {
   @Get('download/encrypted/:id')
   @Roles('admin', 'doctor')
   @ApiDownloadEncryptedRecord()
-  async downloadEncrypted(@Param('id') id: string, @Response() res) {
-    return this.recordService.downloadEncryptedFile(id, res);
+  async downloadEncrypted(
+    @Param('id') id: string,
+    @Request() req,
+    @Response() res,
+  ) {
+    return this.recordService.downloadEncryptedFile(
+      id,
+      req.user.sub,
+      req.user.role,
+      res,
+    );
   }
 
   @Get('download/:id')
   @Roles('admin', 'doctor')
   @ApiDownloadRecord()
-  async downloadFile(@Param('id') id: string, @Response() res) {
-    return this.recordService.downloadFile(id, res);
+  async downloadFile(
+    @Param('id') id: string,
+    @Request() req,
+    @Response() res,
+  ) {
+    return this.recordService.downloadFile(
+      id,
+      req.user.sub,
+      req.user.role,
+      res,
+    );
   }
 
   @Put(':id')
-  @Roles('admin', 'doctor')
   @ApiUpdateRecord()
+  @Roles('admin', 'doctor')
   @UseInterceptors(
     FileInterceptor('attachment', {
       storage: memoryStorage(),
@@ -112,26 +130,39 @@ export class RecordController {
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateRecordDto,
+    @Request() req,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    return this.recordService.update(id, dto, file);
+    return this.recordService.update(
+      id,
+      req.user.sub,
+      req.user.role,
+      dto,
+      file,
+    );
   }
 
   @Delete(':id')
   @Roles('admin', 'doctor')
   @ApiDeleteRecord()
-  async remove(@Param('id') id: string) {
-    return this.recordService.remove(id);
+  async remove(@Param('id') id: string, @Request() req) {
+    return this.recordService.remove(id, req.user.sub, req.user.role);
   }
 
   @Post('verify/:id')
-  @Roles('admin', 'doctor')
   @ApiVerifyRecord()
+  @Roles('admin', 'doctor')
   @UseInterceptors(FileInterceptor('attachment', { storage: memoryStorage() }))
   async verifyFile(
     @Param('id') id: string,
+    @Request() req,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.recordService.verifyFileIntegrity(id, file);
+    return this.recordService.verifyFileIntegrity(
+      id,
+      req.user.sub,
+      req.user.role,
+      file,
+    );
   }
 }

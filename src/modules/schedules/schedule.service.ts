@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
 import { Repository, Brackets } from 'typeorm';
@@ -17,6 +18,7 @@ import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { GetSchedulesQueryDto } from './dto/get-schedules-query.dto';
 import { GetSchedulesRangeDto } from './dto/get-schedules-range.dto';
 import { GetScheduleByDoctorDateDto } from './dto/get-schedules-by-doctor-date.dto';
+import { UserRole } from 'src/enums/user.enums';
 
 @Injectable()
 export class ScheduleService {
@@ -110,21 +112,36 @@ export class ScheduleService {
     return { page, limit, total, totalPages, data };
   }
 
-  async findByDoctorAndDate(query: GetScheduleByDoctorDateDto) {
+  async findByDoctorAndDate(query: GetScheduleByDoctorDateDto, user: any) {
     const { doctorId, workDate, page = 1, limit = 10 } = query;
 
-    const doctor = await this.doctorRepo.findOne({ where: { id: doctorId } });
-    if (!doctor) throw new NotFoundException('Doctor not found');
+    const doctor = await this.doctorRepo
+      .createQueryBuilder('doctor')
+      .where('doctor.id = :doctorId', { doctorId })
+      .leftJoinAndSelect('doctor.clinic', 'clinic')
+      .getOne();
 
-    const date = new Date(workDate);
-    const nextDate = new Date(date);
-    nextDate.setDate(date.getDate() + 1);
+    if (!doctor) {
+      throw new NotFoundException('Doctor not found');
+    }
+
+    if (user.role === UserRole.CLINIC) {
+      if (!doctor.clinic || doctor.clinic.id !== user.clinicId) {
+        throw new ForbiddenException(
+          'You are not allowed to access schedules of this doctor',
+        );
+      }
+    }
+
+    const [y, m, d] = workDate.split('-').map(Number);
+    const start = new Date(y, m - 1, d);
+    const end = new Date(y, m - 1, d + 1);
 
     const qb = this.scheduleRepo
       .createQueryBuilder('schedule')
       .where('schedule.doctorId = :doctorId', { doctorId })
-      .andWhere('schedule.workDate >= :start', { start: date })
-      .andWhere('schedule.workDate < :end', { end: nextDate })
+      .andWhere('schedule.workDate >= :start', { start })
+      .andWhere('schedule.workDate < :end', { end })
       .orderBy('schedule.startTime', 'ASC');
 
     const total = await qb.getCount();
@@ -134,13 +151,11 @@ export class ScheduleService {
       .take(limit)
       .getMany();
 
-    const totalPages = Math.ceil(total / limit);
-
     return {
       page,
       limit,
       total,
-      totalPages,
+      totalPages: Math.ceil(total / limit),
       data,
     };
   }
@@ -452,10 +467,10 @@ export class ScheduleService {
 
     if (!schedule) throw new NotFoundException('Schedule not found');
 
-    if (role === 'doctor' && schedule.doctor.user.id !== userId) {
+    if (role === UserRole.DOCTOR && schedule.doctor.user.id !== userId) {
       throw new BadRequestException('You can only delete your own schedule');
     }
-    if (role === 'clinic' && schedule.doctor.clinic.userId !== userId) {
+    if (role === UserRole.CLINIC && schedule.doctor.clinic.userId !== userId) {
       throw new BadRequestException(
         'You can only delete schedules of doctors in your clinic',
       );

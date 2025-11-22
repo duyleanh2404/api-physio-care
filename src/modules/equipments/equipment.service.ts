@@ -15,6 +15,7 @@ import { GetEquipmentsQueryDto } from './dto/get-equipments-query.dto';
 import { GetMyEquipmentsQueryDto } from './dto/get-my-equipments-query.dto';
 
 import { CloudinaryService } from 'src/core/cloudinary/cloudinary.service';
+import { UserRole } from 'src/enums/user.enums';
 
 @Injectable()
 export class EquipmentService {
@@ -29,12 +30,11 @@ export class EquipmentService {
   ) {}
 
   async create(
-  userId: string,
-  dto: CreateEquipmentDto,
-  file?: Express.Multer.File,
+    userId: string,
+    dto: CreateEquipmentDto,
+    file?: Express.Multer.File,
   ) {
     let clinicId = dto.clinicId;
-
     if (!clinicId) {
       const clinic = await this.clinicRepo.findOne({
         where: { user: { id: userId } },
@@ -143,24 +143,53 @@ export class EquipmentService {
     return equipment;
   }
 
-  async update(id: string, userId: string, dto: UpdateEquipmentDto) {
+  async update(
+    id: string,
+    role: string,
+    userId: string,
+    dto: UpdateEquipmentDto,
+    file?: Express.Multer.File,
+  ) {
     const equipment = await this.equipmentRepo.findOne({
       where: { id },
       relations: ['clinic', 'clinic.user'],
     });
-    if (!equipment) throw new NotFoundException('Equipment not found');
 
-    if (equipment.clinic.user.id !== userId) {
-      throw new ForbiddenException('You cannot update this equipment');
+    if (!equipment) {
+      throw new NotFoundException('Equipment not found');
     }
 
-    Object.assign(equipment, dto);
-    return this.equipmentRepo.save(equipment);
+    if (role === UserRole.CLINIC) {
+      const ownerId = equipment.clinic?.user?.id;
+      if (ownerId !== userId) {
+        throw new ForbiddenException('You cannot update this equipment');
+      }
+    }
+
+    const updateData: any = {};
+    for (const key of Object.keys(dto)) {
+      if (dto[key] !== undefined) {
+        updateData[key] = dto[key];
+      }
+    }
+
+    if (file) {
+      const uploaded = await this.cloudinaryService.uploadImage(file, 'equipments');
+      updateData.image = uploaded.secure_url;
+    }
+
+    Object.assign(equipment, updateData);
+
+    const saved = await this.equipmentRepo.save(equipment);
+    const { clinic, ...cleaned } = saved;
+
+    return cleaned;
   }
 
   async updateStatus(
     id: string,
     userId: string,
+    role: string,
     status: 'active' | 'inactive',
   ) {
     const equipment = await this.equipmentRepo.findOne({
@@ -168,28 +197,36 @@ export class EquipmentService {
       relations: ['clinic', 'clinic.user'],
     });
 
-    if (!equipment) throw new NotFoundException('Equipment not found');
+    if (!equipment) {
+      throw new NotFoundException('Equipment not found');
+    }
 
-    if (equipment.clinic.user.id !== userId) {
-      throw new ForbiddenException('You cannot update this equipment');
+    if (role === UserRole.CLINIC) {
+      if (equipment.clinic.user.id !== userId) {
+        throw new ForbiddenException('You cannot update this equipment');
+      }
     }
 
     equipment.status = status;
     return this.equipmentRepo.save(equipment);
   }
 
-  async remove(id: string, userId: string) {
+  async remove(id: string, userId: string, role: string) {
     const equipment = await this.equipmentRepo.findOne({
       where: { id },
       relations: ['clinic', 'clinic.user'],
     });
+
     if (!equipment) throw new NotFoundException('Equipment not found');
 
-    if (equipment.clinic.user.id !== userId) {
-      throw new ForbiddenException('You cannot delete this equipment');
+    if (role === UserRole.CLINIC) {
+      if (equipment.clinic.user.id !== userId) {
+        throw new ForbiddenException('You cannot delete this equipment');
+      }
     }
 
     await this.equipmentRepo.remove(equipment);
+
     return { message: 'Equipment deleted successfully' };
   }
 }

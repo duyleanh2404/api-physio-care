@@ -9,12 +9,13 @@ import { Schedule } from '../schedules/schedule.entity';
 
 import { AppointmentService } from './appointments.service';
 import { AppointmentController } from './appointments.controller';
+import { RateLimiterService } from 'src/core/auth/modules/rate-limiter/rate-limiter.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Appointment, Doctor, User, Schedule, Clinic]),
   ],
-  providers: [AppointmentService],
+  providers: [AppointmentService,RateLimiterService],
   controllers: [AppointmentController],
   exports: [AppointmentService],
 })

@@ -8,7 +8,6 @@ import otpConfig from './core/auth/config/otp.config';
 import googleConfig from './core/auth/config/google.config';
 import cloudinaryConfig from './core/cloudinary/cloudinary.config';
 
-import { QrModule } from './core/qr/qr.module';
 import { AuthModule } from './core/auth/auth.module';
 import { UserModule } from './modules/users/user.module';
 import { RecordModule } from './modules/records/record.module';
@@ -23,7 +22,6 @@ import { RateLimiterModule } from './core/auth/modules/rate-limiter/rate-limiter
 
 @Module({
   imports: [
-    QrModule,
     UserModule,
     AuthModule,
     DoctorModule,

@@ -45,8 +45,8 @@ export class DoctorController {
 
   @Post()
   @ApiBearerAuth()
-  @Roles('admin', 'clinic')
   @ApiCreateDoctor()
+  @Roles('admin', 'clinic')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @UseInterceptors(FileInterceptor('avatar'))
   async create(
@@ -63,20 +63,20 @@ export class DoctorController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('doctor')
   @Get('my-patients')
   @ApiFindMyPatients()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async findMyPatients(@Query() query: GetMyPatientsQueryDto, @Request() req) {
     const userId = req.user?.sub;
     return this.doctorService.findMyPatients(userId, query);
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('clinic')
   @Get('my-doctors')
   @ApiFindAllDoctors()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async findDoctorsByMyClinic(
     @Query() query: GetDoctorsByClinicQueryDto,
     @Request() req,
@@ -91,19 +91,11 @@ export class DoctorController {
     return this.doctorService.findBySlug(slug);
   }
 
-  @Get('clinic/:clinicSlug/:slug')
-  @ApiFindOneDoctorByClinicSlug()
-  async findByClinicAndSlug(
-    @Param('clinicSlug') clinicSlug: string,
-    @Param('slug') slug: string,
-  ) {
-    return this.doctorService.findByClinicAndSlug(clinicSlug, slug);
-  }
-
   @Get('me')
+  @Roles('doctor')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiFindMeDoctor()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async findMe(@Request() req) {
     const user = req.user as { sub: string };
     return this.doctorService.findMe(user.sub);
@@ -117,8 +109,8 @@ export class DoctorController {
 
   @Put(':id')
   @ApiBearerAuth()
-  @Roles('admin', 'clinic')
   @ApiUpdateDoctor()
+  @Roles('admin', 'clinic')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @UseInterceptors(FileInterceptor('avatar'))
   async update(
@@ -134,8 +126,8 @@ export class DoctorController {
 
   @Delete(':id')
   @ApiBearerAuth()
-  @Roles('admin', 'clinic')
   @ApiDeleteDoctor()
+  @Roles('admin', 'clinic')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async remove(@Param('id') id: string, @Request() req) {
     const userId = req.user.sub;
