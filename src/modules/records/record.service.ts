@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { Repository } from 'typeorm';
@@ -23,6 +24,7 @@ import { CreateRecordDto } from './dto/create-record.dto';
 import { UpdateRecordDto } from './dto/update-record.dto';
 import { GetRecordsQueryDto } from './dto/get-records-query.dto';
 import { GetMyPatientsRecordsQueryDto } from './dto/get-my-patients-records.dto';
+import { UserRole } from 'src/enums/user.enums';
 
 @Injectable()
 export class RecordService {
@@ -105,10 +107,21 @@ export class RecordService {
 
   async update(
     id: string,
+    userId: string,
+    role: string,
     dto: UpdateRecordDto,
     file?: Express.Multer.File,
   ): Promise<Record> {
     const record = await this.findOne(id);
+    if (!record) {
+      throw new NotFoundException('Record not found');
+    }
+
+    if (role === UserRole.DOCTOR) {
+      if (record.doctorId !== userId) {
+        throw new ForbiddenException('You cannot update this record');
+      }
+    }
 
     Object.entries(dto).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
@@ -117,9 +130,7 @@ export class RecordService {
     });
 
     if (file) {
-      const encrypted: EncryptedFile = this.encryptionService.encrypt(
-        file.buffer,
-      );
+      const encrypted: EncryptedFile = this.encryptionService.encrypt(file.buffer);
 
       const decrypted = this.encryptionService.decrypt(encrypted);
       if (!decrypted.equals(file.buffer)) {
@@ -127,11 +138,11 @@ export class RecordService {
           '❌ Encryption verification failed — decrypted data does NOT match original (update)',
         );
         throw new Error('Encryption failed verification');
-      } else {
-        this.logger.log(
-          `✅ Encryption successful for updated file "${file.originalname}"`,
-        );
       }
+
+      this.logger.log(
+        `✅ Encryption successful for updated file "${file.originalname}"`,
+      );
 
       record.attachmentIv = encrypted.iv;
       record.attachmentTag = encrypted.tag;
@@ -462,8 +473,58 @@ export class RecordService {
     return record;
   }
 
-  async downloadFile(id: string, res: Response): Promise<void> {
+  async downloadEncryptedFile(
+    id: string,
+    userId: string,
+    role: string,
+    res: Response,
+  ): Promise<void> {
     const record = await this.getFullRecordWithFile(id);
+    if (!record) {
+      throw new NotFoundException('Record not found');
+    }
+
+    if (role === UserRole.DOCTOR) {
+      if (record.doctorId !== userId) {
+        throw new ForbiddenException('You cannot access this record');
+      }
+    }
+
+    if (!record.attachmentData) {
+      throw new NotFoundException('This record does not have an encrypted file');
+    }
+
+    res.set({
+      'Content-Type': 'application/octet-stream',
+      'Content-Disposition': `attachment; filename="${encodeURIComponent(
+        record.attachmentName + '.enc',
+      )}"`,
+    });
+
+    res.send(record.attachmentData);
+
+    this.logger.log(
+      `📦 Encrypted file "${record.attachmentName}" sent successfully`,
+    );
+  }
+
+  async downloadFile(
+    id: string,
+    userId: string,
+    role: string,
+    res: Response,
+  ): Promise<void> {
+    const record = await this.getFullRecordWithFile(id);
+
+    if (!record) {
+      throw new NotFoundException('Record not found');
+    }
+
+    if (role === UserRole.DOCTOR) {
+      if (record.doctorId !== userId) {
+        throw new ForbiddenException('You cannot access this record');
+      }
+    }
 
     if (
       !record.attachmentData ||
@@ -487,11 +548,11 @@ export class RecordService {
         `❌ Invalid signature for file "${record.attachmentName}"`,
       );
       throw new BadRequestException('File signature is invalid or tampered');
-    } else {
-      this.logger.log(
-        `✅ Digital signature verified successfully for file "${record.attachmentName}"`,
-      );
     }
+
+    this.logger.log(
+      `✅ Digital signature verified successfully for file "${record.attachmentName}"`,
+    );
 
     const decrypted = this.encryptionService.decrypt({
       ciphertext: record.attachmentData,
@@ -513,30 +574,10 @@ export class RecordService {
     res.send(decrypted);
   }
 
-  async downloadEncryptedFile(id: string, res: Response): Promise<void> {
-    const record = await this.getFullRecordWithFile(id);
-
-    if (!record.attachmentData) {
-      throw new NotFoundException(
-        'This record does not have an encrypted file',
-      );
-    }
-
-    res.set({
-      'Content-Type': 'application/octet-stream',
-      'Content-Disposition': `attachment; filename="${encodeURIComponent(
-        record.attachmentName + '.enc',
-      )}"`,
-    });
-
-    res.send(record.attachmentData);
-    this.logger.log(
-      `📦 Encrypted file "${record.attachmentName}" sent successfully`,
-    );
-  }
-
   async verifyFileIntegrity(
     id: string,
+    userId: string,
+    role: string,
     file: Express.Multer.File,
   ): Promise<{
     recordId: string;
@@ -546,6 +587,12 @@ export class RecordService {
   }> {
     const record = await this.getFullRecordWithFile(id);
     if (!record) throw new NotFoundException('Record not found');
+
+    if (role === 'doctor') {
+      if (record.doctorId !== userId) {
+        throw new ForbiddenException('You cannot verify this record');
+      }
+    }
 
     if (
       !record.attachmentData ||
@@ -591,8 +638,18 @@ export class RecordService {
     };
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string, userId: string, role: string): Promise<void> {
     const record = await this.findOne(id);
+    if (!record) {
+      throw new NotFoundException('Record not found');
+    }
+
+    if (role === 'doctor') {
+      if (record.doctorId !== userId) {
+        throw new ForbiddenException('You cannot delete this record');
+      }
+    }
+
     await this.recordRepo.remove(record);
   }
 }

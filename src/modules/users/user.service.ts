@@ -1,10 +1,10 @@
 import * as argon2 from 'argon2';
 
 import {
-  Inject,
   Injectable,
   NotFoundException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Brackets, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -15,7 +15,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { GetUsersQueryDto } from './dto/get-users-query.dto';
 
 import { User } from './user.entity';
-import { UserStatus } from 'src/enums/user.enums';
+import { UserRole, UserStatus } from 'src/enums/user.enums';
 import { CloudinaryService } from 'src/core/cloudinary/cloudinary.service';
 
 @Injectable()
@@ -146,6 +146,7 @@ export class UserService {
         'avatarUrl',
         'createdAt',
         'updatedAt',
+        'lastPasswordChangeAt',
       ],
     });
 
@@ -204,12 +205,26 @@ export class UserService {
     return rest;
   }
 
-  async update(id: string, dto: UpdateUserDto, avatar?: Express.Multer.File) {
+  async update(
+    id: string,
+    dto: UpdateUserDto,
+    avatar?: Express.Multer.File,
+    currentUser?: any,
+  ) {
+    if (currentUser && currentUser.role !== UserRole.ADMIN) {
+      if (currentUser.sub !== id) {
+        throw new ForbiddenException(
+          "You are not authorized to update another user's information",
+        );
+      }
+    }
+
     const user = await this.userRepo.findOne({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
 
     if (dto.password) {
       dto.password = await argon2.hash(dto.password);
+      dto.lastPasswordChangeAt = new Date();
     }
 
     if (avatar) {
@@ -217,17 +232,13 @@ export class UserService {
         avatar,
         'avatar',
       );
-
       dto.avatarUrl = uploaded.secure_url;
     }
 
     const updatedFields = Object.fromEntries(
       Object.entries(dto).filter(([key, value]) => {
         if (value === undefined || value === '') return false;
-        if (
-          value === null &&
-          !['verificationOtp', 'otpExpiresAt'].includes(key)
-        )
+        if (value === null && !['verificationOtp', 'otpExpiresAt'].includes(key))
           return false;
         return true;
       }),

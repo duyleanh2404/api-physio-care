@@ -21,9 +21,13 @@ import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { GetAppointmentsQueryDto } from './dto/get-appointments-query.dto';
 import { GetDoctorAppointmentsQueryDto } from './dto/get-doctor-appointments-query.dto';
 
+import { RateLimiterService } from 'src/core/auth/modules/rate-limiter/rate-limiter.service';
+
 @Injectable()
 export class AppointmentService {
   constructor(
+    private readonly rateLimiter: RateLimiterService,
+
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
 
@@ -422,8 +426,11 @@ export class AppointmentService {
   }
 
   async create(dto: CreateAppointmentDto) {
+    await this.rateLimiter.checkAppointment(dto.userId);
+
     const doctor = await this.doctorRepo.findOne({
       where: { id: dto.doctorId },
+      relations: ['clinic'],
     });
     if (!doctor) throw new NotFoundException('Doctor not found');
 
@@ -458,8 +465,9 @@ export class AppointmentService {
       schedule,
       phone: dto.phone,
       notes: dto.notes,
-      address: dto.address,
       wardId: dto.wardId,
+      address: dto.address,
+      clinic: doctor.clinic,
       districtId: dto.districtId,
       provinceId: dto.provinceId,
       status: AppointmentStatus.PENDING,

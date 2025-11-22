@@ -38,11 +38,11 @@ export class SpecialtyController {
   constructor(private readonly specialtyService: SpecialtyService) {}
 
   @Post()
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
+  @ApiBearerAuth()
   @ApiCreateSpecialty()
   @ApiConsumes('multipart/form-data')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @UseInterceptors(FileInterceptor('image'))
   async create(
     @Body() dto: CreateSpecialtyDto,

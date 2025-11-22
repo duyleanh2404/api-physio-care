@@ -8,7 +8,8 @@ export type RateLimitAction =
   | 'register'
   | 'forgotPassword'
   | 'resetPassword'
-  | 'otp';
+  | 'otp'
+  | 'appointment';
 
 @Injectable()
 export class RateLimiterService {
@@ -36,6 +37,7 @@ export class RateLimiterService {
 
   private async getConfig(action: RateLimitAction) {
     const redisData = await this.redis.hget(this.configKey, action);
+
     const defaultConfig: Record<
       RateLimitAction,
       { limit: number; window: number }
@@ -45,6 +47,8 @@ export class RateLimiterService {
       forgotPassword: { limit: 5, window: 300 },
       resetPassword: { limit: 5, window: 300 },
       otp: { limit: 5, window: 600 },
+
+      appointment: { limit: 1, window: 300 },
     };
 
     if (!redisData) return defaultConfig[action];
@@ -95,8 +99,13 @@ export class RateLimiterService {
     return this.check('otp', email);
   }
 
+  public async checkAppointment(userId: string) {
+    return this.check('appointment', userId);
+  }
+
   public async getCurrentConfig() {
     const redisData = await this.redis.hgetall(this.configKey);
+
     const defaultConfig: Record<
       RateLimitAction,
       { limit: number; window: number }
@@ -106,6 +115,7 @@ export class RateLimiterService {
       forgotPassword: { limit: 5, window: 300 },
       resetPassword: { limit: 5, window: 300 },
       otp: { limit: 5, window: 600 },
+      appointment: { limit: 3, window: 60 },
     };
 
     const result: Record<RateLimitAction, { limit: number; window: number }> = {

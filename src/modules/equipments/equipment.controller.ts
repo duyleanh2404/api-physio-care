@@ -43,41 +43,41 @@ export class EquipmentsController {
 
   @Post()
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('clinic', 'admin')
   @ApiCreateEquipment()
+  @Roles('clinic', 'admin')
   @ApiConsumes('multipart/form-data')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @UseInterceptors(FileInterceptor('image'))
   async create(
     @Request() req,
-    @UploadedFile() file: Express.Multer.File,
     @Body() dto: CreateEquipmentDto,
+    @UploadedFile() file: Express.Multer.File,
   ) {
     return this.equipmentService.create(req.user.sub, dto, file);
   }
 
   @Get()
+  @Roles('admin')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin', 'clinic')
   @ApiFindAllEquipments()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   findAll(@Query() query: GetEquipmentsQueryDto) {
     return this.equipmentService.findAll(query);
   }
 
   @Get('me')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('clinic')
   @ApiFindMyEquipments()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   findMyEquipments(@Request() req, @Query() query: GetMyEquipmentsQueryDto) {
     return this.equipmentService.findMyEquipments(req.user.sub, query);
   }
 
   @Get(':id')
+  @Roles('admin')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  @Roles('clinic', 'admin')
   @ApiFindOneEquipment()
   findOne(@Param('id') id: string) {
     return this.equipmentService.findOne(id);
@@ -85,36 +85,49 @@ export class EquipmentsController {
 
   @Put(':id')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('clinic', 'admin')
   @ApiUpdateEquipment()
+  @Roles('clinic', 'admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseInterceptors(FileInterceptor('image'))
   update(
-    @Param('id') id: string,
     @Request() req,
+    @Param('id') id: string,
     @Body() dto: UpdateEquipmentDto,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
-    return this.equipmentService.update(id, req.user.sub, dto);
+    return this.equipmentService.update(
+      id,
+      req.user.role,
+      req.user.sub,
+      dto,
+      file,
+    );
   }
 
   @Put(':id/status')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('clinic', 'admin')
   @ApiUpdateEquipmentStatus()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async updateStatus(
     @Param('id') id: string,
     @Request() req,
     @Body() dto: UpdateEquipmentStatusDto,
   ) {
-    return this.equipmentService.updateStatus(id, req.user.sub, dto.status);
+    return this.equipmentService.updateStatus(
+      id,
+      req.user.sub,
+      req.user.role,
+      dto.status,
+    );
   }
 
   @Delete(':id')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('clinic', 'admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiDeleteEquipment()
   remove(@Param('id') id: string, @Request() req) {
-    return this.equipmentService.remove(id, req.user.sub);
+    return this.equipmentService.remove(id, req.user.sub, req.user.role);
   }
 }
