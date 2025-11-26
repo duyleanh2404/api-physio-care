@@ -5,6 +5,7 @@ import { User } from '../users/user.entity';
 import { Doctor } from '../doctors/doctor.entity';
 import { Clinic } from '../clinics/clinic.entity';
 import { Appointment } from './appointments.entity';
+import { Package } from '../packages/packages.entity';
 import { Schedule } from '../schedules/schedule.entity';
 
 import { AppointmentService } from './appointments.service';
@@ -13,9 +14,16 @@ import { RateLimiterService } from 'src/core/auth/modules/rate-limiter/rate-limi
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Appointment, Doctor, User, Schedule, Clinic]),
+    TypeOrmModule.forFeature([
+      User,
+      Clinic,
+      Doctor,
+      Package,
+      Schedule,
+      Appointment,
+    ]),
   ],
-  providers: [AppointmentService,RateLimiterService],
+  providers: [AppointmentService, RateLimiterService],
   controllers: [AppointmentController],
   exports: [AppointmentService],
 })

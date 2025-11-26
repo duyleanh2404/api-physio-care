@@ -1,10 +1,13 @@
 import {
   Entity,
   Column,
+  OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
+import { Package } from '../packages/packages.entity';
 
 @Entity('specialties')
 export class Specialty {
@@ -16,6 +19,9 @@ export class Specialty {
 
   @Column({ type: 'varchar', length: 255, unique: true })
   slug: string;
+
+  @OneToMany(() => Package, (pkg) => pkg.specialty)
+  packages: Package[];
 
   @Column({ type: 'text', nullable: true })
   description?: string;

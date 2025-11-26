@@ -11,6 +11,7 @@ import {
 
 import { User } from '../users/user.entity';
 import { Doctor } from '../doctors/doctor.entity';
+import { Package } from '../packages/packages.entity';
 import { Equipment } from '../equipments/equipment.entity';
 
 @Entity('clinics')
@@ -57,6 +58,9 @@ export class Clinic {
 
   @Column()
   userId: string;
+
+  @OneToMany(() => Package, (pkg) => pkg.clinic)
+  packages: Package[];
 
   @OneToMany(() => Doctor, (doctor) => doctor.clinic)
   doctors: Doctor[];

@@ -13,6 +13,7 @@ import { UserModule } from './modules/users/user.module';
 import { RecordModule } from './modules/records/record.module';
 import { DoctorModule } from './modules/doctors/doctor.module';
 import { ClinicModule } from './modules/clinics/clinic.module';
+import { PackagesModule } from './modules/packages/packages.module';
 import { ScheduleModule } from './modules/schedules/schedule.module';
 import { CloudinaryModule } from './core/cloudinary/cloudinary.module';
 import { EquipmentModule } from './modules/equipments/equipment.module';
@@ -28,6 +29,7 @@ import { RateLimiterModule } from './core/auth/modules/rate-limiter/rate-limiter
     RecordModule,
     ClinicModule,
     ScheduleModule,
+    PackagesModule,
     EquipmentModule,
     SpecialtyModule,
     CloudinaryModule,
