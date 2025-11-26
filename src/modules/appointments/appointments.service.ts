@@ -14,6 +14,7 @@ import { User } from '../users/user.entity';
 import { Doctor } from '../doctors/doctor.entity';
 import { Clinic } from '../clinics/clinic.entity';
 import { Appointment } from './appointments.entity';
+import { Package } from '../packages/packages.entity';
 import { Schedule } from '../schedules/schedule.entity';
 
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
@@ -36,6 +37,9 @@ export class AppointmentService {
 
     @InjectRepository(Clinic)
     private readonly clinicRepo: Repository<Clinic>,
+
+    @InjectRepository(Package)
+    private readonly packageRepo: Repository<Package>,
 
     @InjectRepository(Schedule)
     private readonly scheduleRepo: Repository<Schedule>,
@@ -63,10 +67,15 @@ export class AppointmentService {
       .createQueryBuilder('appointment')
       .leftJoin('appointment.doctor', 'doctor')
       .leftJoin('doctor.user', 'doctorUser')
-      .leftJoin('doctor.clinic', 'clinic')
-      .leftJoin('doctor.specialty', 'specialty')
+      .leftJoin('doctor.clinic', 'doctorClinic')
+      .leftJoin('doctor.specialty', 'doctorSpecialty')
       .leftJoin('appointment.user', 'user')
       .leftJoin('appointment.schedule', 'schedule')
+
+      .leftJoin('appointment.package', 'package')
+      .leftJoin('package.specialty', 'packageSpecialty')
+      .leftJoin('package.clinic', 'packageClinic')
+
       .select([
         'appointment.id',
         'appointment.code',
@@ -85,16 +94,16 @@ export class AppointmentService {
         'doctorUser.email',
         'doctorUser.avatarUrl',
 
-        'specialty.id',
-        'specialty.name',
-        'specialty.imageUrl',
+        'doctorSpecialty.id',
+        'doctorSpecialty.name',
+        'doctorSpecialty.imageUrl',
 
-        'clinic.id',
-        'clinic.name',
-        'clinic.slug',
-        'clinic.avatar',
-        'clinic.banner',
-        'clinic.address',
+        'doctorClinic.id',
+        'doctorClinic.name',
+        'doctorClinic.slug',
+        'doctorClinic.avatar',
+        'doctorClinic.banner',
+        'doctorClinic.address',
 
         'user.id',
         'user.fullName',
@@ -105,6 +114,24 @@ export class AppointmentService {
         'schedule.workDate',
         'schedule.startTime',
         'schedule.endTime',
+
+        'package.id',
+        'package.name',
+        'package.price',
+        'package.services',
+        'package.description',
+        'package.discountPercent',
+
+        'packageSpecialty.id',
+        'packageSpecialty.name',
+        'packageSpecialty.imageUrl',
+
+        'packageClinic.id',
+        'packageClinic.name',
+        'packageClinic.slug',
+        'packageClinic.avatar',
+        'packageClinic.banner',
+        'packageClinic.address',
       ]);
 
     if (doctorId) {
@@ -144,6 +171,7 @@ export class AppointmentService {
       `appointment.${sortBy}`,
       sortOrder.toUpperCase() as 'ASC' | 'DESC',
     );
+
     qb.skip((page - 1) * limit).take(limit);
 
     const [data, total] = await qb.getManyAndCount();
@@ -428,28 +456,56 @@ export class AppointmentService {
   async create(dto: CreateAppointmentDto) {
     await this.rateLimiter.checkAppointment(dto.userId);
 
-    const doctor = await this.doctorRepo.findOne({
-      where: { id: dto.doctorId },
-      relations: ['clinic'],
-    });
-    if (!doctor) throw new NotFoundException('Doctor not found');
+    const isPackageMode = !!dto.packageId;
+    const isDoctorMode = !!dto.doctorId && !!dto.scheduleId;
+
+    if (!isPackageMode && !isDoctorMode) {
+      throw new BadRequestException(
+        'Either doctorId & scheduleId OR packageId must be provided',
+      );
+    }
 
     const user = await this.userRepo.findOne({
       where: { id: dto.userId },
     });
     if (!user) throw new NotFoundException('User not found');
 
-    const schedule = await this.scheduleRepo.findOne({
-      where: { id: dto.scheduleId },
-    });
-    if (!schedule) throw new NotFoundException('Schedule not found');
+    let doctor: Doctor | null = null;
+    let schedule: Schedule | null = null;
+    let pkg: Package | null = null;
+    let clinic: Clinic | null = null;
 
-    if (schedule.status === ScheduleStatus.booked) {
-      throw new BadRequestException('This schedule has already been booked');
+    if (isDoctorMode) {
+      doctor = await this.doctorRepo.findOne({
+        where: { id: dto.doctorId },
+        relations: ['clinic'],
+      });
+      if (!doctor) throw new NotFoundException('Doctor not found');
+
+      schedule = await this.scheduleRepo.findOne({
+        where: { id: dto.scheduleId },
+      });
+      if (!schedule) throw new NotFoundException('Schedule not found');
+
+      if (schedule.status === ScheduleStatus.booked) {
+        throw new BadRequestException('This schedule has already been booked');
+      }
+
+      schedule.status = ScheduleStatus.booked;
+      await this.scheduleRepo.save(schedule);
+
+      clinic = doctor.clinic;
     }
 
-    schedule.status = ScheduleStatus.booked;
-    await this.scheduleRepo.save(schedule);
+    if (isPackageMode) {
+      pkg = await this.packageRepo.findOne({
+        where: { id: dto.packageId },
+        relations: ['clinic'],
+      });
+      if (!pkg) throw new NotFoundException('Package not found');
+
+      clinic = pkg.clinic;
+    }
 
     const date = new Date();
     const y = date.getFullYear();
@@ -461,15 +517,16 @@ export class AppointmentService {
     const appointment = this.appointmentRepo.create({
       user,
       code,
-      doctor,
-      schedule,
+      doctor: doctor ?? undefined,
+      schedule: schedule ?? undefined,
+      package: pkg ?? undefined,
+      clinic: clinic ?? undefined,
       phone: dto.phone,
       notes: dto.notes,
       wardId: dto.wardId,
-      address: dto.address,
-      clinic: doctor.clinic,
       districtId: dto.districtId,
       provinceId: dto.provinceId,
+      address: dto.address,
       status: AppointmentStatus.PENDING,
     });
 

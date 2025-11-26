@@ -11,6 +11,7 @@ import {
 import { User } from '../users/user.entity';
 import { Doctor } from '../doctors/doctor.entity';
 import { Clinic } from '../clinics/clinic.entity';
+import { Package } from '../packages/packages.entity';
 import { Schedule } from '../schedules/schedule.entity';
 
 import { AppointmentStatus } from 'src/enums/appointments-status.enum';
@@ -39,6 +40,17 @@ export class Appointment {
   @JoinColumn({ name: 'clinicId' })
   clinic: Clinic;
 
+  @ManyToOne(() => Package, {
+    eager: true,
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'packageId' })
+  package?: Package;
+
+  @Column({ type: 'uuid', nullable: true })
+  packageId?: string;
+
   @Column({ type: 'varchar', length: 20, default: AppointmentStatus.PENDING })
   status: AppointmentStatus;
 
@@ -66,4 +78,3 @@ export class Appointment {
   @UpdateDateColumn({ type: 'timestamp with time zone' })
   updatedAt: Date;
 }
-

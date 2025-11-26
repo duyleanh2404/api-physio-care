@@ -5,80 +5,88 @@ import {
   IsString,
   IsNotEmpty,
   IsOptional,
+  ValidateIf,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateAppointmentDto {
   @ApiProperty({
-    description: 'Doctor ID for the appointment',
+    description: 'Doctor ID for the appointment (required if no packageId)',
+    required: false,
   })
+  @ValidateIf((o) => !o.packageId)
   @IsUUID('4', { message: 'doctorId must be a valid UUID v4' })
-  @IsNotEmpty({ message: 'doctorId is required' })
-  doctorId: string;
+  @IsNotEmpty({
+    message: 'doctorId is required when packageId is not provided',
+  })
+  doctorId?: string;
 
   @ApiProperty({
-    description: 'User ID who books the appointment',
+    description: 'Schedule ID for the appointment (required if no packageId)',
+    required: false,
   })
+  @ValidateIf((o) => !o.packageId)
+  @IsUUID('4', { message: 'scheduleId must be a valid UUID v4' })
+  @IsNotEmpty({
+    message: 'scheduleId is required when packageId is not provided',
+  })
+  scheduleId?: string;
+
+  @ApiProperty({
+    description: 'Package ID for appointment (required if no doctorId)',
+    required: false,
+  })
+  @ValidateIf((o) => !o.doctorId && !o.scheduleId)
+  @IsUUID('4', { message: 'packageId must be a valid UUID v4' })
+  @IsNotEmpty({
+    message:
+      'packageId is required when doctorId and scheduleId are not provided',
+  })
+  packageId?: string;
+
+  @ApiProperty({ description: 'User ID who books the appointment' })
   @IsUUID('4', { message: 'userId must be a valid UUID v4' })
   @IsNotEmpty({ message: 'userId is required' })
   userId: string;
 
   @ApiProperty({
-    description: 'Schedule ID for the appointment',
+    description: 'Phone number (Vietnam format: 0xxxxxxxxx)',
   })
-  @IsUUID('4', { message: 'scheduleId must be a valid UUID v4' })
-  @IsNotEmpty({ message: 'scheduleId is required' })
-  scheduleId: string;
-
-  @ApiProperty({
-    description: 'Phone number of the user (Vietnam format: 0xxxxxxxxx)',
-  })
-  @IsString({ message: 'phone must be a string' })
+  @IsString()
   @Matches(/^(0|\+84)(\d{9})$/, {
     message: 'phone must be a valid Vietnamese phone number',
   })
-  @Length(10, 12, { message: 'phone must be between 10 and 12 digits' })
-  @IsNotEmpty({ message: 'phone is required' })
+  @Length(10, 12)
+  @IsNotEmpty()
   phone: string;
 
-  @ApiProperty({
-    description: 'Optional notes for the appointment',
-    required: false,
-  })
+  @ApiProperty({ required: false })
   @IsOptional()
-  @IsString({ message: 'notes must be a string' })
-  @Length(0, 1000, { message: 'notes cannot exceed 1000 characters' })
+  @IsString()
+  @Length(0, 1000)
   notes?: string;
 
-  @ApiProperty({
-    description: 'Province code of the user',
-  })
-  @IsString({ message: 'provinceId must be a string' })
-  @Matches(/^\d+$/, { message: 'provinceId must contain only digits' })
-  @IsNotEmpty({ message: 'provinceId is required' })
+  @ApiProperty()
+  @IsString()
+  @Matches(/^\d+$/)
+  @IsNotEmpty()
   provinceId: string;
 
-  @ApiProperty({
-    description: 'District code of the user',
-  })
-  @IsString({ message: 'districtId must be a string' })
-  @Matches(/^\d+$/, { message: 'districtId must contain only digits' })
-  @IsNotEmpty({ message: 'districtId is required' })
+  @ApiProperty()
+  @IsString()
+  @Matches(/^\d+$/)
+  @IsNotEmpty()
   districtId: string;
 
-  @ApiProperty({
-    description: 'Ward code of the user',
-  })
-  @IsString({ message: 'wardId must be a string' })
-  @Matches(/^\d+$/, { message: 'wardId must contain only digits' })
-  @IsNotEmpty({ message: 'wardId is required' })
+  @ApiProperty()
+  @IsString()
+  @Matches(/^\d+$/)
+  @IsNotEmpty()
   wardId: string;
 
-  @ApiProperty({
-    description: 'Detailed address (house number, street, etc.)',
-  })
-  @IsString({ message: 'address must be a string' })
-  @Length(5, 255, { message: 'address must be between 5 and 255 characters' })
-  @IsNotEmpty({ message: 'address is required' })
+  @ApiProperty()
+  @IsString()
+  @Length(5, 255)
+  @IsNotEmpty()
   address: string;
 }
