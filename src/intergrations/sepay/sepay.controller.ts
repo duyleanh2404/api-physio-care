@@ -21,15 +21,15 @@ export class SepayController {
   ) {
     const API_KEY = process.env.SEPAY_API_KEY;
 
-    if (auth !== `Apikey ${API_KEY}`) {
+    const expectedAuth = `Apikey ${API_KEY}`;
+
+    if (auth !== expectedAuth) {
       return res
         .status(HttpStatus.UNAUTHORIZED)
-        .json({ message: 'Unauthorized' });
+        .json({ message: 'Unauthorized', received: auth });
     }
 
-    const data = req.body;
-
-    await this.sepayService.processPaymentWebhook(data);
+    await this.sepayService.processPaymentWebhook(req.body);
 
     return res.status(HttpStatus.OK).json({ message: 'OK' });
   }
