@@ -13,6 +13,7 @@ import { UserModule } from './modules/users/user.module';
 import { RecordModule } from './modules/records/record.module';
 import { DoctorModule } from './modules/doctors/doctor.module';
 import { ClinicModule } from './modules/clinics/clinic.module';
+import { SepayModule } from './intergrations/sepay/sepay.module';
 import { PackagesModule } from './modules/packages/packages.module';
 import { ScheduleModule } from './modules/schedules/schedule.module';
 import { CloudinaryModule } from './core/cloudinary/cloudinary.module';
@@ -25,6 +26,7 @@ import { RateLimiterModule } from './core/auth/modules/rate-limiter/rate-limiter
   imports: [
     UserModule,
     AuthModule,
+    SepayModule,
     DoctorModule,
     RecordModule,
     ClinicModule,

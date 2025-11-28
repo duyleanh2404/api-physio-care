@@ -45,6 +45,29 @@ export const ApiFindDoctorAppointments = () =>
     }),
   );
 
+export const ApiFindAppointmentByCode = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get appointment details by code',
+      description:
+        'Retrieve appointment details using its unique appointment code.',
+    }),
+    ApiParam({
+      name: 'code',
+      description: 'Appointment code (e.g., APP-20250101-XYZ)',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'Appointment retrieved successfully',
+      type: AppointmentResponseDto,
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Appointment not found',
+      schema: { example: { message: 'Appointment not found' } },
+    }),
+  );
+
 export const ApiFindOneAppointment = () =>
   applyDecorators(
     ApiOperation({

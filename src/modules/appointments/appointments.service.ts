@@ -180,12 +180,167 @@ export class AppointmentService {
     return { page, limit, total, totalPages, data };
   }
 
+  async findByCode(code: string) {
+    const qb = this.appointmentRepo
+      .createQueryBuilder('appointment')
+      .leftJoin('appointment.doctor', 'doctor')
+      .leftJoin('doctor.user', 'doctorUser')
+      .leftJoin('doctor.clinic', 'doctorClinic')
+      .leftJoin('doctor.specialty', 'doctorSpecialty')
+      .leftJoin('appointment.user', 'user')
+      .leftJoin('appointment.schedule', 'schedule')
+
+      .leftJoin('appointment.package', 'package')
+      .leftJoin('package.specialty', 'packageSpecialty')
+      .leftJoin('package.clinic', 'packageClinic')
+
+      .select([
+        'appointment.id',
+        'appointment.code',
+        'appointment.status',
+        'appointment.notes',
+        'appointment.phone',
+        'appointment.address',
+        'appointment.createdAt',
+        'appointment.updatedAt',
+
+        'doctor.id',
+        'doctor.slug',
+
+        'doctorUser.id',
+        'doctorUser.fullName',
+        'doctorUser.email',
+        'doctorUser.avatarUrl',
+
+        'doctorSpecialty.id',
+        'doctorSpecialty.name',
+        'doctorSpecialty.imageUrl',
+
+        'doctorClinic.id',
+        'doctorClinic.name',
+        'doctorClinic.slug',
+        'doctorClinic.avatar',
+        'doctorClinic.banner',
+        'doctorClinic.address',
+
+        'user.id',
+        'user.fullName',
+        'user.email',
+        'user.avatarUrl',
+
+        'schedule.id',
+        'schedule.workDate',
+        'schedule.startTime',
+        'schedule.endTime',
+
+        'package.id',
+        'package.name',
+        'package.price',
+        'package.services',
+        'package.description',
+        'package.discountPercent',
+
+        'packageSpecialty.id',
+        'packageSpecialty.name',
+        'packageSpecialty.imageUrl',
+
+        'packageClinic.id',
+        'packageClinic.name',
+        'packageClinic.slug',
+        'packageClinic.avatar',
+        'packageClinic.banner',
+        'packageClinic.address',
+      ])
+      .where('appointment.code = :code', { code });
+
+    const appointment = await qb.getOne();
+
+    if (!appointment) {
+      throw new NotFoundException('Appointment not found');
+    }
+
+    return appointment;
+  }
+
   async findOne(id: string) {
-    const appointment = await this.appointmentRepo.findOne({
-      where: { id },
-      relations: ['doctor', 'user'],
-    });
-    if (!appointment) throw new NotFoundException('Appointment not found');
+    const qb = this.appointmentRepo
+      .createQueryBuilder('appointment')
+      .leftJoin('appointment.doctor', 'doctor')
+      .leftJoin('doctor.user', 'doctorUser')
+      .leftJoin('doctor.clinic', 'doctorClinic')
+      .leftJoin('doctor.specialty', 'doctorSpecialty')
+      .leftJoin('appointment.user', 'user')
+      .leftJoin('appointment.schedule', 'schedule')
+
+      .leftJoin('appointment.package', 'package')
+      .leftJoin('package.specialty', 'packageSpecialty')
+      .leftJoin('package.clinic', 'packageClinic')
+
+      .select([
+        'appointment.id',
+        'appointment.code',
+        'appointment.status',
+        'appointment.notes',
+        'appointment.phone',
+        'appointment.address',
+        'appointment.createdAt',
+        'appointment.updatedAt',
+
+        'doctor.id',
+        'doctor.slug',
+
+        'doctorUser.id',
+        'doctorUser.fullName',
+        'doctorUser.email',
+        'doctorUser.avatarUrl',
+
+        'doctorSpecialty.id',
+        'doctorSpecialty.name',
+        'doctorSpecialty.imageUrl',
+
+        'doctorClinic.id',
+        'doctorClinic.name',
+        'doctorClinic.slug',
+        'doctorClinic.avatar',
+        'doctorClinic.banner',
+        'doctorClinic.address',
+
+        'user.id',
+        'user.fullName',
+        'user.email',
+        'user.avatarUrl',
+
+        'schedule.id',
+        'schedule.workDate',
+        'schedule.startTime',
+        'schedule.endTime',
+
+        'package.id',
+        'package.name',
+        'package.price',
+        'package.services',
+        'package.description',
+        'package.discountPercent',
+
+        'packageSpecialty.id',
+        'packageSpecialty.name',
+        'packageSpecialty.imageUrl',
+
+        'packageClinic.id',
+        'packageClinic.name',
+        'packageClinic.slug',
+        'packageClinic.avatar',
+        'packageClinic.banner',
+        'packageClinic.address',
+      ])
+      .where('appointment.id = :id', { id });
+
+    const appointment = await qb.getOne();
+
+    if (!appointment) {
+      throw new NotFoundException('Appointment not found');
+    }
+
     return appointment;
   }
 

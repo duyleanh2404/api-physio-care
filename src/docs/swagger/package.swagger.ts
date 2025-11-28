@@ -64,6 +64,29 @@ export const ApiFindMyPackages = () =>
     }),
   );
 
+export const ApiFindPackageByCode = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get package details by code',
+      description:
+        'Retrieve the details of a medical package using its unique code.',
+    }),
+    ApiParam({
+      name: 'code',
+      description: 'Package code (e.g., PKG-20250101-ABCD)',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'Package retrieved successfully',
+      type: PackageResponseDto,
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Package not found',
+      schema: { example: { message: 'Package not found' } },
+    }),
+  );
+
 export const ApiFindOnePackage = () =>
   applyDecorators(
     ApiOperation({

@@ -19,6 +19,7 @@ import {
   ApiFindMyPackages,
   ApiFindOnePackage,
   ApiFindAllPackages,
+  ApiFindPackageByCode,
 } from 'src/docs/swagger/package.swagger';
 import { PackagesService } from './packages.service';
 import { Roles } from 'src/core/auth/decorators/roles.decorator';
@@ -58,6 +59,13 @@ export class PackagesController {
   @ApiFindMyPackages()
   findMyPackages(@Request() req, @Query() query: GetMyPackagesQueryDto) {
     return this.packagesService.findMyPackages(req.user.sub, query);
+  }
+
+  @Get('code/:code')
+  @UseGuards(JwtAuthGuard)
+  @ApiFindPackageByCode()
+  findByCode(@Param('code') code: string) {
+    return this.packagesService.findByCode(code);
   }
 
   @Get(':id')

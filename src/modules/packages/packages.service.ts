@@ -152,6 +152,31 @@ export class PackagesService {
     };
   }
 
+  async findByCode(code: string) {
+    const pkg = await this.packageRepo
+      .createQueryBuilder('pkg')
+      .leftJoin('pkg.clinic', 'clinic')
+      .leftJoin('pkg.specialty', 'specialty')
+      .select([
+        'pkg',
+        'clinic.id',
+        'clinic.name',
+        'clinic.slug',
+        'clinic.avatar',
+        'clinic.banner',
+        'clinic.address',
+        'specialty',
+      ])
+      .where('pkg.code = :code', { code })
+      .getOne();
+
+    if (!pkg) {
+      throw new NotFoundException('Package not found');
+    }
+
+    return pkg;
+  }
+
   async findMyPackages(userId: string, query: GetMyPackagesQueryDto) {
     const clinic = await this.clinicRepo.findOne({ where: { userId } });
     if (!clinic) throw new ForbiddenException('Clinic not found');
