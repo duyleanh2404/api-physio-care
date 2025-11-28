@@ -16,14 +16,17 @@ export class SepayService {
   ) {}
 
   async processPaymentWebhook(data: any) {
-    const amount = data.amount;
+    const amount = data.transferAmount;
     const description = data.description?.trim() ?? '';
-    const transactionId = data.tid;
+    const transactionId = data.id;
 
-    const match = description.match(/APP-\d{8}-[A-Z0-9]+/);
+    const match = description.match(/APP\d{8}[A-Z0-9]+/i);
     const code = match ? match[0] : null;
 
-    if (!code) return;
+    if (!code) {
+      console.warn('❌ Không tìm thấy mã appointment trong description');
+      return;
+    }
 
     const appointment = await this.appointmentRepo.findOne({
       where: { code },
