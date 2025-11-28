@@ -20,15 +20,12 @@ export class SepayService {
     const description = data.description?.trim() ?? '';
     const transactionId = data.referenceCode;
 
-    const rawMatch = description
-      .replace(/-/g, '')
-      .match(/APP(\d{8})([A-Z0-9]{6})/);
-
+    const rawMatch = description.match(/APP-?\d{8}-?[A-Za-z0-9]{6}/i);
     if (!rawMatch) return;
 
-    const datePart = rawMatch[1];
-    const suffix = rawMatch[2];
-
+    const cleaned = rawMatch[0].replace(/-/g, '');
+    const datePart = cleaned.substring(3, 11);
+    const suffix = cleaned.substring(11);
     const code = `APP-${datePart}-${suffix}`;
 
     console.log('Extracted code:', code);
