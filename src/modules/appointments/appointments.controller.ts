@@ -19,6 +19,7 @@ import {
   ApiFindOneAppointment,
   ApiFindMyAppointments,
   ApiFindAllAppointments,
+  ApiFindAppointmentByCode,
   ApiFindDoctorAppointments,
   ApiFindAppointmentByScheduleId,
 } from 'src/docs/swagger/appointment.swagger';
@@ -88,6 +89,13 @@ export class AppointmentController {
   ) {
     const userId = req.user.sub;
     return this.appointmentService.findDoctorAppointments(userId, query);
+  }
+
+  @Get('code/:code')
+  @UseGuards(JwtAuthGuard)
+  @ApiFindAppointmentByCode()
+  findByCode(@Param('code') code: string) {
+    return this.appointmentService.findByCode(code);
   }
 
   @Get(':id')

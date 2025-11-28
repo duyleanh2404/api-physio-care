@@ -72,6 +72,12 @@ export class Appointment {
   @Column({ type: 'varchar', length: 500 })
   address: string;
 
+  @Column({ type: 'integer', nullable: true })
+  paymentAmount?: number;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  transactionId?: string;
+
   @CreateDateColumn({ type: 'timestamp with time zone' })
   createdAt: Date;
 
