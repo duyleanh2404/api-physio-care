@@ -16,8 +16,6 @@ export class SepayService {
   ) {}
 
   async processPaymentWebhook(data: any) {
-    console.log('📩 Webhook SePay:', data);
-
     const amount = data.amount;
     const description = data.description?.trim() ?? '';
     const transactionId = data.tid;
@@ -25,10 +23,7 @@ export class SepayService {
     const match = description.match(/APP-\d{8}-[A-Z0-9]+/);
     const code = match ? match[0] : null;
 
-    if (!code) {
-      console.warn('❌ Không tìm thấy mã trong description:', description);
-      return;
-    }
+    if (!code) return;
 
     const appointment = await this.appointmentRepo.findOne({
       where: { code },
@@ -43,7 +38,6 @@ export class SepayService {
     }
 
     if (appointment.transactionId === transactionId) {
-      console.log('ℹ️ Bỏ qua webhook duplicate');
       return;
     }
 
@@ -52,8 +46,6 @@ export class SepayService {
     appointment.status = AppointmentStatus.CONFIRMED;
 
     await this.appointmentRepo.save(appointment);
-
-    console.log(`✅ Xác nhận thanh toán appointment ${appointment.id}`);
 
     this.sepayGateway.sendPaymentSuccess(code, {
       code,
