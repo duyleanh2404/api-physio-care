@@ -15,6 +15,7 @@ import jwtConfig from './config/jwt.config';
   cors: {
     origin: '*',
   },
+  namespace: 'auth',
 })
 @Injectable()
 export class AuthGateway implements OnGatewayConnection, OnGatewayDisconnect {
