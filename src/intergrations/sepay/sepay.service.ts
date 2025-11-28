@@ -20,7 +20,10 @@ export class SepayService {
     const description = data.description?.trim() ?? '';
     const transactionId = data.referenceCode;
 
-    const rawMatch = description.match(/APP(\d{8})([A-Z0-9]+)/);
+    const rawMatch = description
+      .replace(/-/g, '')
+      .match(/APP(\d{8})([A-Z0-9]{6})/);
+
     if (!rawMatch) return;
 
     const datePart = rawMatch[1];
