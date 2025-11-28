@@ -8,7 +8,11 @@ import {
 import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway({
-  cors: { origin: '*' },
+  cors: {
+    origin: ['https://physiocare.io.vn', 'http://localhost:3000'],
+    credentials: true,
+  },
+  path: '/socket.io',
 })
 export class SepayGateway {
   @WebSocketServer()
