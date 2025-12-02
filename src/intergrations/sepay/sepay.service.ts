@@ -30,11 +30,6 @@ export class SepayService {
 
     console.log('Extracted code:', code);
 
-    await this.appointmentRepo.query(`
-      SET app.current_user_role = '${role}';
-      SET app.current_user_id = '${userId}';
-    `);
-
     const appointment = await this.appointmentRepo.findOne({ where: { code } });
 
     if (!appointment) {
