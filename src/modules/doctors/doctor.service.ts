@@ -137,7 +137,11 @@ export class DoctorService {
     };
   }
 
-  async findMyPatients(userId: string, query: GetMyPatientsQueryDto) {
+  async findMyPatients(
+    userId: string,
+    role: 'doctor' | 'clinic',
+    query: GetMyPatientsQueryDto,
+  ) {
     const {
       search,
       dateFrom,
@@ -148,18 +152,44 @@ export class DoctorService {
       sortOrder = 'DESC',
     } = query;
 
-    const doctor = await this.doctorRepo.findOne({
-      where: { user: { id: userId } },
-    });
+    let doctorIds: string[] = [];
 
-    if (!doctor) {
-      throw new NotFoundException('Doctor not found for this user');
+    if (role === UserRole.DOCTOR) {
+      const doctor = await this.doctorRepo.findOne({
+        where: { user: { id: userId } },
+      });
+
+      if (!doctor)
+        throw new NotFoundException('Doctor not found for this user');
+
+      doctorIds = [doctor.id];
+    }
+
+    if (role === UserRole.CLINIC) {
+      const clinic = await this.clinicRepo.findOne({
+        where: { user: { id: userId } },
+        relations: ['doctors'],
+      });
+
+      if (!clinic)
+        throw new NotFoundException('Clinic not found for this user');
+
+      doctorIds = clinic.doctors.map((d) => d.id);
+
+      if (doctorIds.length === 0)
+        return {
+          page: 1,
+          limit: 10,
+          total: 0,
+          totalPages: 0,
+          data: [],
+        };
     }
 
     const qb = this.appointmentRepo
       .createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.user', 'user')
-      .where('appointment.doctorId = :doctorId', { doctorId: doctor.id });
+      .where('appointment.doctorId IN (:...doctorIds)', { doctorIds });
 
     if (search) {
       const keyword = `%${search.toLowerCase()}%`;
@@ -173,25 +203,11 @@ export class DoctorService {
       );
     }
 
-    if (dateFrom && dateTo) {
-      qb.andWhere('appointment.createdAt BETWEEN :dateFrom AND :dateTo', {
-        dateFrom: new Date(dateFrom).toISOString(),
-        dateTo: new Date(dateTo).toISOString(),
-      });
-    } else if (dateFrom) {
-      qb.andWhere('appointment.createdAt >= :dateFrom', {
-        dateFrom: new Date(dateFrom).toISOString(),
-      });
-    } else if (dateTo) {
-      qb.andWhere('appointment.createdAt <= :dateTo', {
-        dateTo: new Date(dateTo).toISOString(),
-      });
-    }
+    if (dateFrom)
+      qb.andWhere('appointment.createdAt >= :dateFrom', { dateFrom });
+    if (dateTo) qb.andWhere('appointment.createdAt <= :dateTo', { dateTo });
 
-    qb.orderBy(
-      `appointment.${sortBy}`,
-      sortOrder.toUpperCase() as 'ASC' | 'DESC',
-    );
+    qb.orderBy(`appointment.${sortBy}`, sortOrder);
 
     const appointments = await qb.getMany();
 
@@ -213,14 +229,13 @@ export class DoctorService {
     const totalPages = Math.ceil(total / limit);
     const start = (page - 1) * limit;
     const end = start + limit;
-    const data = uniqueUsers.slice(start, end);
 
     return {
       page: Number(page),
       limit: Number(limit),
       total,
       totalPages,
-      data,
+      data: uniqueUsers.slice(start, end),
     };
   }
 
@@ -402,7 +417,7 @@ export class DoctorService {
     });
     if (!doctor) throw new NotFoundException('Doctor not found');
 
-    if (role === 'clinic' && doctor.clinic.userId !== userId) {
+    if (role === UserRole.CLINIC && doctor.clinic.userId !== userId) {
       throw new ForbiddenException(
         'You cannot update a doctor not in your clinic',
       );
@@ -435,7 +450,7 @@ export class DoctorService {
     });
     if (!doctor) throw new NotFoundException('Doctor not found');
 
-    if (role === 'clinic' && doctor.clinic.userId !== userId) {
+    if (role === UserRole.CLINIC && doctor.clinic.userId !== userId) {
       throw new ForbiddenException(
         'You cannot delete a doctor not in your clinic',
       );

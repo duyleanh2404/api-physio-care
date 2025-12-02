@@ -80,6 +80,17 @@ export class Record {
   @Column({ type: 'text', nullable: true })
   attachmentSignature?: string;
 
+  @ManyToOne(() => User, {
+    eager: true,
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'signedById' })
+  signedBy?: User;
+
+  @Column({ nullable: true })
+  signedById?: string;
+
   @CreateDateColumn({ type: 'timestamp with time zone' })
   createdAt: Date;
 

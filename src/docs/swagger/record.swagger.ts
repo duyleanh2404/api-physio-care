@@ -61,6 +61,30 @@ export const ApiFindAllRecords = () =>
     }),
   );
 
+export const ApiFindClinicRecords = () =>
+  applyDecorators(
+    ApiOperation({
+      summary: 'Get all medical records of all doctors within the clinic',
+      description:
+        'Returns all patient records that belong to any doctor under the authenticated clinic account.',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'Paginated list of clinic-wide medical records',
+      type: PaginatedResponseDto(RecordResponseDto),
+    }),
+    ApiResponse({
+      status: 401,
+      description: 'Unauthorized - Missing or invalid JWT token',
+      schema: { example: { message: 'Unauthorized' } },
+    }),
+    ApiResponse({
+      status: 403,
+      description: 'Forbidden - Only clinic accounts can access this endpoint',
+      schema: { example: { message: 'Forbidden resource' } },
+    }),
+  );
+
 export const ApiFindMyPatientsRecords = () =>
   applyDecorators(
     ApiOperation({
