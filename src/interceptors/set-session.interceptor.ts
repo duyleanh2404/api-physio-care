@@ -5,7 +5,6 @@ import {
   ExecutionContext,
 } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-
 import { JwtPayload } from 'src/core/auth/interfaces/jwt-payload.interface';
 
 @Injectable()
@@ -17,8 +16,11 @@ export class SetPostgresSessionInterceptor implements NestInterceptor {
     const user: JwtPayload = request.user;
 
     if (user) {
+      const currentUserId =
+        (user as any).doctorId ?? (user as any).clinicId ?? user.sub;
+
       await this.dataSource.query(
-        `SET app.current_user_role = '${user.role}'; SET app.current_user_id = '${user.sub}';`,
+        `SET app.current_user_role = '${user.role}'; SET app.current_user_id = '${currentUserId}';`,
       );
     }
 

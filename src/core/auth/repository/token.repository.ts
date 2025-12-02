@@ -11,9 +11,13 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService, ConfigType } from '@nestjs/config';
 
+import { UserToken } from '../entity/user-tokens.entity';
+import { Doctor } from 'src/modules/doctors/doctor.entity';
+import { Clinic } from 'src/modules/clinics/clinic.entity';
+
 import jwtConfig from '../config/jwt.config';
 import { AuthGateway } from '../auth.gateway';
-import { UserToken } from '../entity/user-tokens.entity';
+import { UserRole } from 'src/enums/user.enums';
 import { UserService } from 'src/modules/users/user.service';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 
@@ -24,6 +28,12 @@ export class TokenRepository {
   constructor(
     @InjectRepository(UserToken)
     private readonly userTokenRepo: Repository<UserToken>,
+
+    @InjectRepository(Doctor)
+    private readonly doctorRepo: Repository<Doctor>,
+
+    @InjectRepository(Clinic)
+    private readonly clinicRepo: Repository<Clinic>,
 
     private readonly authGateway: AuthGateway,
 
@@ -43,12 +53,24 @@ export class TokenRepository {
       { revoked: true, revokedAt: new Date() },
     );
 
-    const payload: JwtPayload = {
+    const payload: any = {
       jti,
       sub: user.id,
       role: user.role,
       email: user.email,
     };
+
+    if (user.role === UserRole.DOCTOR) {
+      const doctor = await this.doctorRepo.findOne({
+        where: { user: { id: user.id } },
+      });
+      if (doctor) payload.doctorId = doctor.id;
+    } else if (user.role === UserRole.CLINIC) {
+      const clinic = await this.clinicRepo.findOne({
+        where: { userId: user.id },
+      });
+      if (clinic) payload.clinicId = clinic.id;
+    }
 
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.jwtConfig.accessTokenSecret,
