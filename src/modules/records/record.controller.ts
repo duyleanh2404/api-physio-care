@@ -25,6 +25,7 @@ import {
   ApiFindOneRecord,
   ApiFindAllRecords,
   ApiDownloadRecord,
+  ApiFindClinicRecords,
   ApiFindMyPatientsRecords,
   ApiDownloadEncryptedRecord,
 } from 'src/docs/swagger/record.swagger';
@@ -56,9 +57,11 @@ export class RecordController {
   )
   async create(
     @Body() dto: CreateRecordDto,
-    @UploadedFile() file?: Express.Multer.File,
+    @UploadedFile() file: Express.Multer.File,
+    @Request() req,
   ) {
-    return this.recordService.create(dto, file);
+    const signedById = req.user?.sub;
+    return this.recordService.create(dto, file, signedById);
   }
 
   @Get()
@@ -77,6 +80,17 @@ export class RecordController {
   ) {
     const userId = req.user.sub;
     return this.recordService.findRecordsMyPatients(userId, query);
+  }
+
+  @Get('by-clinic')
+  @Roles('clinic')
+  @ApiFindClinicRecords()
+  async findRecordsClinic(
+    @Request() req,
+    @Query() query: GetMyPatientsRecordsQueryDto,
+  ) {
+    const userId = req.user.sub;
+    return this.recordService.findRecordsClinic(userId, query);
   }
 
   @Get(':id')
@@ -105,11 +119,7 @@ export class RecordController {
   @Get('download/:id')
   @Roles('admin', 'doctor')
   @ApiDownloadRecord()
-  async downloadFile(
-    @Param('id') id: string,
-    @Request() req,
-    @Response() res,
-  ) {
+  async downloadFile(@Param('id') id: string, @Request() req, @Response() res) {
     return this.recordService.downloadFile(
       id,
       req.user.sub,

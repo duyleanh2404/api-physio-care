@@ -63,13 +63,15 @@ export class DoctorController {
   }
 
   @ApiBearerAuth()
-  @Roles('doctor')
   @Get('my-patients')
   @ApiFindMyPatients()
+  @Roles('doctor', 'clinic')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async findMyPatients(@Query() query: GetMyPatientsQueryDto, @Request() req) {
     const userId = req.user?.sub;
-    return this.doctorService.findMyPatients(userId, query);
+    const role = req.user?.role;
+
+    return this.doctorService.findMyPatients(userId, role, query);
   }
 
   @ApiBearerAuth()

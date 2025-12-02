@@ -10,9 +10,12 @@ import { Repository } from 'typeorm';
 import { randomBytes } from 'crypto';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import { UserRole } from 'src/enums/user.enums';
+
 import { Record } from './record.entity';
 import { User } from '../users/user.entity';
 import { Doctor } from '../doctors/doctor.entity';
+import { Clinic } from '../clinics/clinic.entity';
 
 import {
   EncryptedFile,
@@ -24,7 +27,6 @@ import { CreateRecordDto } from './dto/create-record.dto';
 import { UpdateRecordDto } from './dto/update-record.dto';
 import { GetRecordsQueryDto } from './dto/get-records-query.dto';
 import { GetMyPatientsRecordsQueryDto } from './dto/get-my-patients-records.dto';
-import { UserRole } from 'src/enums/user.enums';
 
 @Injectable()
 export class RecordService {
@@ -40,6 +42,9 @@ export class RecordService {
     @InjectRepository(Doctor)
     private readonly doctorRepo: Repository<Doctor>,
 
+    @InjectRepository(Clinic)
+    private readonly clinicRepo: Repository<Clinic>,
+
     private readonly signatureService: SignatureService,
     private readonly encryptionService: EncryptionService,
   ) {}
@@ -47,6 +52,7 @@ export class RecordService {
   async create(
     dto: CreateRecordDto,
     file?: Express.Multer.File,
+    signedById?: string,
   ): Promise<Record> {
     const generateRecordCode = () =>
       `REC-${randomBytes(3).toString('hex').toUpperCase()}`;
@@ -69,6 +75,7 @@ export class RecordService {
       ...dto,
       doctor,
       patients,
+      signedById,
       recordCode: generateRecordCode(),
     });
 
@@ -130,7 +137,9 @@ export class RecordService {
     });
 
     if (file) {
-      const encrypted: EncryptedFile = this.encryptionService.encrypt(file.buffer);
+      const encrypted: EncryptedFile = this.encryptionService.encrypt(
+        file.buffer,
+      );
 
       const decrypted = this.encryptionService.decrypt(encrypted);
       if (!decrypted.equals(file.buffer)) {
@@ -202,11 +211,7 @@ export class RecordService {
       ])
       .leftJoinAndSelect('record.doctor', 'doctor')
       .leftJoin('doctor.specialty', 'specialty')
-      .addSelect([
-        'specialty.id',
-        'specialty.name',
-        'specialty.imageUrl',
-      ])
+      .addSelect(['specialty.id', 'specialty.name', 'specialty.imageUrl'])
       .leftJoin('doctor.user', 'doctorUser')
       .addSelect([
         'doctorUser.id',
@@ -218,6 +223,18 @@ export class RecordService {
         'doctorUser.provider',
         'doctorUser.createdAt',
         'doctorUser.updatedAt',
+      ])
+      .leftJoin('record.signedBy', 'signedByUser')
+      .addSelect([
+        'signedByUser.id',
+        'signedByUser.email',
+        'signedByUser.fullName',
+        'signedByUser.avatarUrl',
+        'signedByUser.role',
+        'signedByUser.status',
+        'signedByUser.provider',
+        'signedByUser.createdAt',
+        'signedByUser.updatedAt',
       ]);
 
     if (search) {
@@ -267,14 +284,8 @@ export class RecordService {
     const totalPages = Math.ceil(total / limit);
 
     const recordsWithoutFiles = records.map((r) => {
-      const {
-        attachmentIv,
-        attachmentTag,
-        attachmentData,
-        attachmentSignature,
-        patients,
-        ...rest
-      } = r;
+      const { attachmentIv, attachmentTag, attachmentData, patients, ...rest } =
+        r;
 
       const { password, verificationOtp, otpExpiresAt, ...safePatient } =
         patients as User;
@@ -353,6 +364,17 @@ export class RecordService {
         'doctorUser.provider',
         'doctorUser.slug',
       ])
+      .leftJoin('record.signedBy', 'signedBy')
+      .addSelect([
+        'signedBy.id',
+        'signedBy.email',
+        'signedBy.fullName',
+        'signedBy.avatarUrl',
+        'signedBy.role',
+        'signedBy.status',
+        'signedBy.provider',
+        'signedBy.slug',
+      ])
       .where('record.doctorId = :doctorId', { doctorId });
 
     if (search) {
@@ -397,13 +419,7 @@ export class RecordService {
     const totalPages = Math.ceil(total / limit);
 
     const recordsSanitized = records.map((r) => {
-      const {
-        attachmentIv,
-        attachmentTag,
-        attachmentData,
-        attachmentSignature,
-        ...rest
-      } = r;
+      const { attachmentIv, attachmentTag, attachmentData, ...rest } = r;
 
       return rest;
     });
@@ -414,6 +430,150 @@ export class RecordService {
       total,
       totalPages,
       data: recordsSanitized,
+    };
+  }
+
+  async findRecordsClinic(
+    userId: string,
+    query?: GetMyPatientsRecordsQueryDto,
+  ) {
+    if (!userId) {
+      throw new BadRequestException('Missing userId in token.');
+    }
+
+    const clinic = await this.clinicRepo.findOne({
+      where: { userId },
+      relations: ['doctors'],
+    });
+
+    if (!clinic) {
+      throw new NotFoundException(
+        'No clinic record found for this user account.',
+      );
+    }
+
+    const doctorIds = clinic.doctors.map((d) => d.id);
+
+    if (!doctorIds.length) {
+      return {
+        page: 1,
+        total: 0,
+        totalPages: 0,
+        data: [],
+      };
+    }
+
+    const {
+      search,
+      status,
+      dateTo,
+      dateFrom,
+      page = 1,
+      frequency,
+      intensity,
+      limit = 10,
+      sortOrder = 'DESC',
+      sortBy = 'createdAt',
+    } = query || {};
+
+    const qb = this.recordRepo
+      .createQueryBuilder('record')
+      .leftJoin('record.patients', 'patients')
+      .addSelect([
+        'patients.id',
+        'patients.email',
+        'patients.fullName',
+        'patients.avatarUrl',
+        'patients.role',
+        'patients.status',
+        'patients.provider',
+        'patients.slug',
+      ])
+      .leftJoin('record.doctor', 'doctor')
+      .addSelect([
+        'doctor.id',
+        'doctor.yearsOfExperience',
+        'doctor.licenseNumber',
+        'doctor.specialtyId',
+        'doctor.clinicId',
+      ])
+      .leftJoin('doctor.user', 'doctorUser')
+      .addSelect([
+        'doctorUser.id',
+        'doctorUser.email',
+        'doctorUser.fullName',
+        'doctorUser.avatarUrl',
+        'doctorUser.role',
+        'doctorUser.status',
+        'doctorUser.provider',
+        'doctorUser.slug',
+      ])
+      .leftJoin('record.signedBy', 'signedBy')
+      .addSelect([
+        'signedBy.id',
+        'signedBy.email',
+        'signedBy.fullName',
+        'signedBy.avatarUrl',
+        'signedBy.role',
+        'signedBy.status',
+        'signedBy.provider',
+        'signedBy.slug',
+      ])
+      .where('record.doctorId IN (:...doctorIds)', { doctorIds });
+
+    if (search) {
+      qb.andWhere(
+        `(record.history LIKE :search
+        OR record.goals LIKE :search
+        OR record.progress LIKE :search
+        OR record.recordCode LIKE :search)`,
+        { search: `%${search}%` },
+      );
+    }
+
+    const parseArray = (val: any) =>
+      Array.isArray(val)
+        ? val
+        : typeof val === 'string'
+          ? val
+              .split(',')
+              .map((v) => v.trim())
+              .filter(Boolean)
+          : [];
+
+    const statusList = parseArray(status);
+    if (statusList.length)
+      qb.andWhere('record.status IN (:...statusList)', { statusList });
+
+    const frequencyList = parseArray(frequency);
+    if (frequencyList.length)
+      qb.andWhere('record.frequency IN (:...frequencyList)', { frequencyList });
+
+    const intensityList = parseArray(intensity);
+    if (intensityList.length)
+      qb.andWhere('record.intensity IN (:...intensityList)', { intensityList });
+
+    if (dateFrom) qb.andWhere('record.createdAt >= :dateFrom', { dateFrom });
+    if (dateTo) qb.andWhere('record.createdAt <= :dateTo', { dateTo });
+
+    qb.orderBy(`record.${sortBy}`, sortOrder as 'ASC' | 'DESC');
+
+    qb.skip((page - 1) * limit).take(limit);
+
+    const [records, total] = await qb.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    const sanitized = records.map((r) => {
+      const { attachmentIv, attachmentTag, attachmentData, ...rest } = r;
+      return rest;
+    });
+
+    return {
+      page,
+      limit,
+      total,
+      totalPages,
+      data: sanitized,
     };
   }
 
@@ -491,7 +651,9 @@ export class RecordService {
     }
 
     if (!record.attachmentData) {
-      throw new NotFoundException('This record does not have an encrypted file');
+      throw new NotFoundException(
+        'This record does not have an encrypted file',
+      );
     }
 
     res.set({
