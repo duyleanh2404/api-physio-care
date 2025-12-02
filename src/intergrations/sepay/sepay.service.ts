@@ -15,7 +15,7 @@ export class SepayService {
     private readonly sepayGateway: SepayGateway,
   ) {}
 
-  async processPaymentWebhook(data: any) {
+  async processPaymentWebhook(data: any, userId: string, role: string) {
     const amount = data.transferAmount;
     const description = data.description?.trim() ?? '';
     const transactionId = data.referenceCode;
@@ -29,6 +29,11 @@ export class SepayService {
     const code = `APP-${datePart}-${suffix}`;
 
     console.log('Extracted code:', code);
+
+    await this.appointmentRepo.query(`
+      SET app.current_user_role = '${role}';
+      SET app.current_user_id = '${userId}';
+    `);
 
     const appointment = await this.appointmentRepo.findOne({ where: { code } });
 

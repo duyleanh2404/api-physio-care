@@ -6,6 +6,7 @@ import {
   Controller,
   HttpStatus,
 } from '@nestjs/common';
+import { ApiExcludeEndpoint } from '@nestjs/swagger';
 
 import { SepayService } from './sepay.service';
 
@@ -14,13 +15,13 @@ export class SepayController {
   constructor(private readonly sepayService: SepayService) {}
 
   @Post()
+  @ApiExcludeEndpoint()
   async handleWebhook(
     @Headers('authorization') auth: string,
     @Request() req,
     @Response() res,
   ) {
     const API_KEY = process.env.SEPAY_API_KEY;
-
     const expectedAuth = `Apikey ${API_KEY}`;
 
     if (auth !== expectedAuth) {
@@ -29,7 +30,10 @@ export class SepayController {
         .json({ message: 'Unauthorized', received: auth });
     }
 
-    await this.sepayService.processPaymentWebhook(req.body);
+    const userId = req.user?.sub;
+    const role = req.user?.role;
+
+    await this.sepayService.processPaymentWebhook(req.body, userId, role);
 
     return res.status(HttpStatus.OK).json({ message: 'OK' });
   }
