@@ -259,7 +259,7 @@ export class AuthService {
     if (!isValid) throw new BadRequestException('Invalid or expired OTP');
 
     await this.userService.update(user.id, {
-      password: await argon2.hash(newPassword),
+      password: newPassword,
       lastPasswordChangeAt: new Date(),
       failedLoginAttempts: 0,
       locked: false,
