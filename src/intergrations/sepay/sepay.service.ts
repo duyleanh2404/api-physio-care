@@ -1,5 +1,5 @@
-import { Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
+import { Repository, DataSource } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { SepayGateway } from './sepay.gateway';
@@ -20,9 +20,16 @@ export class SepayService {
     private readonly paymentRepo: Repository<Payment>,
 
     private readonly sepayGateway: SepayGateway,
+
+    private readonly dataSource: DataSource,
   ) {}
 
   async processPaymentWebhook(data: any) {
+    await this.dataSource.query(`
+      SET app.current_user_role = 'admin';
+      SET app.current_user_id = NULL;
+    `);
+
     const amount = data.transferAmount;
     const description = data.description?.trim() ?? '';
     const transactionId = data.referenceCode;
