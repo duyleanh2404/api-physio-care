@@ -33,7 +33,7 @@ export class SepayController {
     const userId = req.user?.sub;
     const role = req.user?.role;
 
-    await this.sepayService.processPaymentWebhook(req.body, userId, role);
+    await this.sepayService.processPaymentWebhook(req.body);
 
     return res.status(HttpStatus.OK).json({ message: 'OK' });
   }

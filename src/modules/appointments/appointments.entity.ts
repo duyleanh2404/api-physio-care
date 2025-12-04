@@ -2,6 +2,7 @@ import {
   Entity,
   Column,
   ManyToOne,
+  OneToOne,
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
@@ -11,6 +12,7 @@ import {
 import { User } from '../users/user.entity';
 import { Doctor } from '../doctors/doctor.entity';
 import { Clinic } from '../clinics/clinic.entity';
+import { Payment } from '../payments/payments.entity';
 import { Package } from '../packages/packages.entity';
 import { Schedule } from '../schedules/schedule.entity';
 
@@ -72,11 +74,15 @@ export class Appointment {
   @Column({ type: 'varchar', length: 500 })
   address: string;
 
-  @Column({ type: 'integer', nullable: true })
-  paymentAmount?: number;
+  @OneToOne(() => Payment, (payment) => payment.appointment, {
+    cascade: true,
+    nullable: true,
+  })
+  @JoinColumn({ name: 'paymentId' })
+  payment?: Payment;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  transactionId?: string;
+  @Column({ type: 'uuid', nullable: true })
+  paymentId?: string;
 
   @CreateDateColumn({ type: 'timestamp with time zone' })
   createdAt: Date;

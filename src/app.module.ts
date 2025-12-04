@@ -15,6 +15,7 @@ import { DoctorModule } from './modules/doctors/doctor.module';
 import { ClinicModule } from './modules/clinics/clinic.module';
 import { SepayModule } from './intergrations/sepay/sepay.module';
 import { PackagesModule } from './modules/packages/packages.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 import { ScheduleModule } from './modules/schedules/schedule.module';
 import { CloudinaryModule } from './core/cloudinary/cloudinary.module';
 import { EquipmentModule } from './modules/equipments/equipment.module';
@@ -30,6 +31,7 @@ import { RateLimiterModule } from './core/auth/modules/rate-limiter/rate-limiter
     DoctorModule,
     RecordModule,
     ClinicModule,
+    PaymentsModule,
     ScheduleModule,
     PackagesModule,
     EquipmentModule,
