@@ -2,12 +2,15 @@ import {
   Entity,
   Column,
   OneToOne,
+  ManyToOne,
   JoinColumn,
   CreateDateColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
 import { PaymentStatus } from 'src/enums/payments-status.enum';
+
+import { User } from '../users/user.entity';
 import { Appointment } from '../appointments/appointments.entity';
 
 @Entity('payments')
@@ -23,6 +26,13 @@ export class Payment {
 
   @Column()
   appointmentId: string;
+
+  @ManyToOne(() => User, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'userId' })
+  user: User;
+
+  @Column({ nullable: true })
+  userId?: string;
 
   @Column('decimal', { precision: 12, scale: 2 })
   amount: number;

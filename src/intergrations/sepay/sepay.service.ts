@@ -45,6 +45,7 @@ export class SepayService {
 
     const appointment = await this.appointmentRepo.findOne({
       where: { code },
+      relations: ['user'],
     });
 
     if (!appointment) {
@@ -68,6 +69,7 @@ export class SepayService {
 
     const payment = this.paymentRepo.create({
       appointmentId: appointment.id,
+      userId: appointment.user?.id,
       amount,
       transactionId,
       status: PaymentStatus.CONFIRMED,
@@ -76,7 +78,9 @@ export class SepayService {
 
     await this.paymentRepo.save(payment);
 
+    appointment.paymentId = payment.id;
     appointment.status = AppointmentStatus.CONFIRMED;
+
     await this.appointmentRepo.save(appointment);
 
     this.sepayGateway.sendPaymentSuccess(code, {
