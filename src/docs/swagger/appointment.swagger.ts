@@ -1,9 +1,10 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
-import { AppointmentResponseDto } from 'src/modules/appointments/dto/appointment-response.dto';
+
 import { PaginatedResponseDto } from 'src/common/dto/paginated-response.dto';
 import { CreateAppointmentDto } from 'src/modules/appointments/dto/create-appointment.dto';
 import { UpdateAppointmentDto } from 'src/modules/appointments/dto/update-appointment.dto';
+import { AppointmentResponseDto } from 'src/modules/appointments/dto/appointment-response.dto';
 
 export const ApiFindAllAppointments = () =>
   applyDecorators(
