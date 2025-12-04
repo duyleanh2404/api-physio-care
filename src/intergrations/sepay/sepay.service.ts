@@ -3,7 +3,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { SepayGateway } from './sepay.gateway';
+
+import { PaymentStatus } from 'src/enums/payments-status.enum';
 import { AppointmentStatus } from 'src/enums/appointments-status.enum';
+
+import { Payment } from 'src/modules/payments/payments.entity';
 import { Appointment } from 'src/modules/appointments/appointments.entity';
 
 @Injectable()
@@ -12,10 +16,13 @@ export class SepayService {
     @InjectRepository(Appointment)
     private readonly appointmentRepo: Repository<Appointment>,
 
+    @InjectRepository(Payment)
+    private readonly paymentRepo: Repository<Payment>,
+
     private readonly sepayGateway: SepayGateway,
   ) {}
 
-  async processPaymentWebhook(data: any, userId: string, role: string) {
+  async processPaymentWebhook(data: any) {
     const amount = data.transferAmount;
     const description = data.description?.trim() ?? '';
     const transactionId = data.referenceCode;
@@ -30,24 +37,40 @@ export class SepayService {
 
     console.log('Extracted code:', code);
 
-    const appointment = await this.appointmentRepo.findOne({ where: { code } });
+    const appointment = await this.appointmentRepo.findOne({
+      where: { code },
+    });
 
     if (!appointment) {
       console.warn('❌ Không tìm thấy appointment:', code);
+
       this.sepayGateway.sendPaymentFailed(code, {
         message: 'Không tìm thấy cuộc hẹn',
       });
+
       return;
     }
 
-    if (appointment.transactionId === transactionId) {
+    const existedPayment = await this.paymentRepo.findOne({
+      where: { transactionId },
+    });
+
+    if (existedPayment) {
+      console.log('⚠️ Transaction đã tồn tại, bỏ qua.');
       return;
     }
 
-    appointment.paymentAmount = amount;
-    appointment.transactionId = transactionId;
+    const payment = this.paymentRepo.create({
+      appointmentId: appointment.id,
+      amount,
+      transactionId,
+      status: PaymentStatus.CONFIRMED,
+      rawDescription: description,
+    });
+
+    await this.paymentRepo.save(payment);
+
     appointment.status = AppointmentStatus.CONFIRMED;
-
     await this.appointmentRepo.save(appointment);
 
     this.sepayGateway.sendPaymentSuccess(code, {
