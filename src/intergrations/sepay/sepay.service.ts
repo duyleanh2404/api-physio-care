@@ -27,7 +27,7 @@ export class SepayService {
   async processPaymentWebhook(data: any) {
     await this.dataSource.query(`
       SET app.current_user_role = 'admin';
-      SET app.current_user_id = NULL;
+      SET app.current_user_id = '';
     `);
 
     const amount = data.transferAmount;
