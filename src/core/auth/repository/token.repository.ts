@@ -62,7 +62,7 @@ export class TokenRepository {
 
     if (user.role === UserRole.DOCTOR) {
       const doctor = await this.doctorRepo.findOne({
-        where: { user: { id: user.id } },
+        where: { userId: user.id },
       });
       if (doctor) payload.doctorId = doctor.id;
     } else if (user.role === UserRole.CLINIC) {
@@ -164,12 +164,24 @@ export class TokenRepository {
       { revoked: true, revokedAt: new Date() },
     );
 
-    const payload: JwtPayload = {
+    const payload: any = {
       sub: user.id,
       role: user.role,
       jti: decoded.jti,
       email: user.email,
     };
+
+    if (user.role === UserRole.DOCTOR) {
+      const doctor = await this.doctorRepo.findOne({
+        where: { userId: user.id },
+      });
+      if (doctor) payload.doctorId = doctor.id;
+    } else if (user.role === UserRole.CLINIC) {
+      const clinic = await this.clinicRepo.findOne({
+        where: { userId: user.id },
+      });
+      if (clinic) payload.clinicId = clinic.id;
+    }
 
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.jwtConfig.accessTokenSecret,

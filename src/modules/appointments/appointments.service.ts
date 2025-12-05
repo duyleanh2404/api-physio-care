@@ -48,7 +48,7 @@ export class AppointmentService {
     private readonly appointmentRepo: Repository<Appointment>,
   ) {}
 
-  async findAll(query: GetAppointmentsQueryDto) {
+  async findAll(query: GetAppointmentsQueryDto & { isPackage?: boolean }) {
     const {
       doctorId,
       userId,
@@ -61,6 +61,7 @@ export class AppointmentService {
       limit = 10,
       sortBy = 'createdAt',
       sortOrder = 'ASC',
+      isPackage,
     } = query;
 
     const qb = this.appointmentRepo
@@ -71,11 +72,9 @@ export class AppointmentService {
       .leftJoin('doctor.specialty', 'doctorSpecialty')
       .leftJoin('appointment.user', 'user')
       .leftJoin('appointment.schedule', 'schedule')
-
       .leftJoin('appointment.package', 'package')
       .leftJoin('package.specialty', 'packageSpecialty')
       .leftJoin('package.clinic', 'packageClinic')
-
       .select([
         'appointment.id',
         'appointment.code',
@@ -134,14 +133,8 @@ export class AppointmentService {
         'packageClinic.address',
       ]);
 
-    if (doctorId) {
-      qb.andWhere('appointment.doctorId = :doctorId', { doctorId });
-    }
-
-    if (userId) {
-      qb.andWhere('appointment.userId = :userId', { userId });
-    }
-
+    if (doctorId) qb.andWhere('appointment.doctorId = :doctorId', { doctorId });
+    if (userId) qb.andWhere('appointment.userId = :userId', { userId });
     if (status) {
       const statusArray = Array.isArray(status) ? status : [status];
       qb.andWhere('appointment.status IN (:...status)', {
@@ -167,12 +160,18 @@ export class AppointmentService {
       );
     }
 
+    if (isPackage === true) {
+      qb.andWhere('appointment.packageId IS NOT NULL');
+    } else if (isPackage === false) {
+      qb.andWhere('appointment.packageId IS NULL');
+    }
+
     qb.orderBy(
       `appointment.${sortBy}`,
       sortOrder.toUpperCase() as 'ASC' | 'DESC',
-    );
-
-    qb.skip((page - 1) * limit).take(limit);
+    )
+      .skip((page - 1) * limit)
+      .take(limit);
 
     const [data, total] = await qb.getManyAndCount();
     const totalPages = Math.ceil(total / limit);
@@ -454,6 +453,7 @@ export class AppointmentService {
       startDate,
       endDate,
       doctorId,
+      isPackage,
       page = 1,
       limit = 10,
       sortBy = 'createdAt',
@@ -468,6 +468,7 @@ export class AppointmentService {
       .leftJoin('doctor.clinic', 'clinic')
       .leftJoin('appointment.user', 'user')
       .leftJoin('appointment.schedule', 'schedule')
+      .leftJoin('appointment.package', 'package')
       .where('appointment.doctorId IN (:...doctorIds)', { doctorIds })
       .andWhere('user.role = :role', { role: 'user' })
       .select([
@@ -506,6 +507,9 @@ export class AppointmentService {
         'schedule.workDate',
         'schedule.startTime',
         'schedule.endTime',
+
+        'package.id',
+        'package.name',
       ]);
 
     if (doctorId) {
@@ -534,10 +538,18 @@ export class AppointmentService {
       const keyword = `%${search.toLowerCase()}%`;
       qb.andWhere(
         `LOWER(appointment.code) LIKE :keyword
-        OR LOWER(user.fullName) LIKE :keyword
-        OR LOWER(doctorUser.fullName) LIKE :keyword`,
+       OR LOWER(user.fullName) LIKE :keyword
+       OR LOWER(doctorUser.fullName) LIKE :keyword`,
         { keyword },
       );
+    }
+
+    if (typeof isPackage === 'boolean') {
+      if (isPackage) {
+        qb.andWhere('appointment.packageId IS NOT NULL');
+      } else {
+        qb.andWhere('appointment.packageId IS NULL');
+      }
     }
 
     qb.orderBy(

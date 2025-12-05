@@ -4,11 +4,13 @@ import {
   IsEnum,
   IsUUID,
   Matches,
+  IsBoolean,
   IsOptional,
   IsDateString,
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+
 import { AppointmentStatus } from 'src/enums/appointments-status.enum';
 
 export class GetDoctorAppointmentsQueryDto {
@@ -17,9 +19,7 @@ export class GetDoctorAppointmentsQueryDto {
   @IsUUID()
   userId?: string;
 
-  @ApiPropertyOptional({
-    description: 'Filter by doctor ID',
-  })
+  @ApiPropertyOptional({ description: 'Filter by doctor ID' })
   @IsOptional()
   @IsUUID()
   doctorId?: string;
@@ -67,6 +67,17 @@ export class GetDoctorAppointmentsQueryDto {
   @ApiPropertyOptional({ description: 'Search keyword' })
   @IsOptional()
   search?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Filter appointments by type: true = package, false = standalone',
+  })
+  @IsOptional()
+  @Transform(({ value }) =>
+    value === 'true' ? true : value === 'false' ? false : undefined,
+  )
+  @IsBoolean()
+  isPackage?: boolean;
 
   @ApiPropertyOptional({
     description: 'Page number for pagination',

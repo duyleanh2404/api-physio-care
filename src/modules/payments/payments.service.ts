@@ -17,10 +17,14 @@ export class PaymentsService {
     user: { role: string; clinicId?: string; doctorId?: string },
   ) {
     const {
-      transactionId,
+      userId,
+      search,
       status,
-      startDate,
-      endDate,
+      dateFrom,
+      dateTo,
+      priceFrom,
+      priceTo,
+      packageId,
       page = 1,
       limit = 10,
       sortBy = 'createdAt',
@@ -29,7 +33,22 @@ export class PaymentsService {
 
     const qb = this.paymentRepo
       .createQueryBuilder('payment')
-      .leftJoinAndSelect('payment.appointment', 'appointment');
+      .leftJoinAndSelect('payment.appointment', 'appointment')
+      .leftJoinAndSelect('appointment.package', 'package')
+      .leftJoinAndSelect('package.clinic', 'clinic')
+      .leftJoinAndSelect('package.specialty', 'specialty')
+      .leftJoinAndSelect('appointment.schedule', 'schedule')
+      .leftJoin('payment.user', 'user')
+      .addSelect([
+        'user.id',
+        'user.email',
+        'user.fullName',
+        'user.avatarUrl',
+        'user.role',
+        'user.status',
+        'user.provider',
+        'user.slug',
+      ]);
 
     if (user.role === 'clinic' && user.clinicId) {
       qb.andWhere('appointment.clinicId = :clinicId', {
@@ -41,24 +60,43 @@ export class PaymentsService {
       });
     }
 
-    if (transactionId) {
-      qb.andWhere('LOWER(payment.transactionId) LIKE :transactionId', {
-        transactionId: `%${transactionId.toLowerCase()}%`,
-      });
+    if (search) {
+      const searchPattern = `%${search.toLowerCase()}%`;
+      qb.andWhere(
+        `(LOWER(payment.transactionId) LIKE :search OR LOWER(user.fullName) LIKE :search OR LOWER(user.email) LIKE :search)`,
+        { search: searchPattern },
+      );
     }
+
     if (status) {
       const statusArray = Array.isArray(status) ? status : [status];
       qb.andWhere('payment.status IN (:...status)', { status: statusArray });
     }
-    if (startDate && endDate) {
-      qb.andWhere('payment.createdAt BETWEEN :startDate AND :endDate', {
-        startDate,
-        endDate,
+
+    if (dateFrom && dateTo) {
+      qb.andWhere('payment.createdAt BETWEEN :dateFrom AND :dateTo', {
+        dateFrom,
+        dateTo,
       });
-    } else if (startDate) {
-      qb.andWhere('payment.createdAt >= :startDate', { startDate });
-    } else if (endDate) {
-      qb.andWhere('payment.createdAt <= :endDate', { endDate });
+    } else if (dateFrom) {
+      qb.andWhere('payment.createdAt >= :dateFrom', { dateFrom });
+    } else if (dateTo) {
+      qb.andWhere('payment.createdAt <= :dateTo', { dateTo });
+    }
+
+    if (priceFrom) {
+      qb.andWhere('payment.amount >= :priceFrom', { priceFrom });
+    }
+    if (priceTo) {
+      qb.andWhere('payment.amount <= :priceTo', { priceTo });
+    }
+
+    if (packageId) {
+      qb.andWhere('appointment.packageId = :packageId', { packageId });
+    }
+
+    if (userId) {
+      qb.andWhere('payment.userId = :userId', { userId });
     }
 
     qb.orderBy(`payment.${sortBy}`, sortOrder.toUpperCase() as 'ASC' | 'DESC')
@@ -66,15 +104,25 @@ export class PaymentsService {
       .take(limit);
 
     const [data, total] = await qb.getManyAndCount();
-    return { page, limit, total, totalPages: Math.ceil(total / limit), data };
+
+    return {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      data,
+    };
   }
 
   async findMyPayments(query: GetPaymentsQueryDto, userId: string) {
     const {
-      transactionId,
+      search,
       status,
-      startDate,
-      endDate,
+      dateFrom,
+      dateTo,
+      priceFrom,
+      priceTo,
+      packageId,
       page = 1,
       limit = 10,
       sortBy = 'createdAt',
@@ -84,12 +132,15 @@ export class PaymentsService {
     const qb = this.paymentRepo
       .createQueryBuilder('payment')
       .leftJoinAndSelect('payment.appointment', 'appointment')
+      .leftJoinAndSelect('appointment.package', 'package')
       .where('payment.userId = :userId', { userId });
 
-    if (transactionId) {
-      qb.andWhere('LOWER(payment.transactionId) LIKE :transactionId', {
-        transactionId: `%${transactionId.toLowerCase()}%`,
-      });
+    if (search) {
+      const like = `%${search.toLowerCase()}%`;
+      qb.andWhere(
+        `(LOWER(payment.transactionId) LIKE :like OR LOWER(package.name) LIKE :like OR LOWER(appointment.name) LIKE :like)`,
+        { like },
+      );
     }
 
     if (status) {
@@ -97,15 +148,26 @@ export class PaymentsService {
       qb.andWhere('payment.status IN (:...status)', { status: statusArray });
     }
 
-    if (startDate && endDate) {
-      qb.andWhere('payment.createdAt BETWEEN :startDate AND :endDate', {
-        startDate,
-        endDate,
+    if (dateFrom && dateTo) {
+      qb.andWhere('payment.createdAt BETWEEN :dateFrom AND :dateTo', {
+        dateFrom,
+        dateTo,
       });
-    } else if (startDate) {
-      qb.andWhere('payment.createdAt >= :startDate', { startDate });
-    } else if (endDate) {
-      qb.andWhere('payment.createdAt <= :endDate', { endDate });
+    } else if (dateFrom) {
+      qb.andWhere('payment.createdAt >= :dateFrom', { dateFrom });
+    } else if (dateTo) {
+      qb.andWhere('payment.createdAt <= :dateTo', { dateTo });
+    }
+
+    if (priceFrom) {
+      qb.andWhere('payment.amount >= :priceFrom', { priceFrom });
+    }
+    if (priceTo) {
+      qb.andWhere('payment.amount <= :priceTo', { priceTo });
+    }
+
+    if (packageId) {
+      qb.andWhere('appointment.packageId = :packageId', { packageId });
     }
 
     qb.orderBy(`payment.${sortBy}`, sortOrder.toUpperCase() as 'ASC' | 'DESC')
