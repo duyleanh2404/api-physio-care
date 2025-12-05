@@ -17,10 +17,12 @@ export class GetMyPaymentsQueryDto {
   @IsString()
   appointmentId?: string;
 
-  @ApiPropertyOptional({ description: 'Filter by transaction ID' })
+  @ApiPropertyOptional({
+    description: 'Search by transaction ID, package name, or user name/email',
+  })
   @IsOptional()
   @IsString()
-  transactionId?: string;
+  search?: string;
 
   @ApiPropertyOptional({
     description:

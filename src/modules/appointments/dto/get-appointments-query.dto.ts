@@ -6,6 +6,7 @@ import {
   Matches,
   IsOptional,
   IsDateString,
+  IsBoolean,
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
@@ -62,6 +63,17 @@ export class GetAppointmentsQueryDto {
     message: 'endTime must be in HH:mm or HH:mm:ss format',
   })
   endTime?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Filter by appointments that belong to a package or standalone',
+  })
+  @IsOptional()
+  @Transform(({ value }) =>
+    value === 'true' ? true : value === 'false' ? false : undefined,
+  )
+  @IsBoolean()
+  isPackage?: boolean;
 
   @ApiPropertyOptional({
     description: 'Page number for pagination',

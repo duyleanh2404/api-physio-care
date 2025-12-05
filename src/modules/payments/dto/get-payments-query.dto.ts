@@ -3,6 +3,7 @@ import {
   IsInt,
   IsEnum,
   IsString,
+  IsNumber,
   IsOptional,
   IsDateString,
 } from 'class-validator';
@@ -22,10 +23,12 @@ export class GetPaymentsQueryDto {
   @IsString()
   appointmentId?: string;
 
-  @ApiPropertyOptional({ description: 'Filter by transaction ID' })
+  @ApiPropertyOptional({
+    description: 'Search by transaction ID, patient name or email',
+  })
   @IsOptional()
   @IsString()
-  transactionId?: string;
+  search?: string;
 
   @ApiPropertyOptional({
     description:
@@ -39,15 +42,32 @@ export class GetPaymentsQueryDto {
   )
   status?: PaymentStatus | PaymentStatus[];
 
-  @ApiPropertyOptional({ description: 'Filter by start date (ISO string)' })
+  @ApiPropertyOptional({ description: 'Filter by date (from, ISO)' })
   @IsOptional()
   @IsDateString()
-  startDate?: string;
+  dateFrom?: string;
 
-  @ApiPropertyOptional({ description: 'Filter by end date (ISO string)' })
+  @ApiPropertyOptional({ description: 'Filter by date (to, ISO)' })
   @IsOptional()
   @IsDateString()
-  endDate?: string;
+  dateTo?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by minimum price' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  priceFrom?: number;
+
+  @ApiPropertyOptional({ description: 'Filter by maximum price' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  priceTo?: number;
+
+  @ApiPropertyOptional({ description: 'Filter by package ID' })
+  @IsOptional()
+  @IsString()
+  packageId?: string;
 
   @ApiPropertyOptional({
     description: 'Page number for pagination',
