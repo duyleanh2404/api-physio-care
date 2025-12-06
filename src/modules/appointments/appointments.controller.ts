@@ -115,9 +115,8 @@ export class AppointmentController {
 
   @Put(':id')
   @ApiBearerAuth()
-  @Roles('user', 'admin', 'doctor')
   @ApiUpdateAppointment()
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard)
   async update(@Param('id') id: string, @Body() dto: UpdateAppointmentDto) {
     return this.appointmentService.update(id, dto);
   }
