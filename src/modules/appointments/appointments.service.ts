@@ -508,6 +508,10 @@ export class AppointmentService {
 
         'package.id',
         'package.name',
+        'package.price',
+        'package.services',
+        'package.description',
+        'package.discountPercent',
       ]);
 
     if (isPackage === true) {
