@@ -444,8 +444,6 @@ export class AppointmentService {
     });
 
     const doctorIds = doctors.map((d) => d.id);
-    if (!doctorIds.length)
-      return { page: 1, limit: 10, total: 0, totalPages: 0, data: [] };
 
     const {
       status,
@@ -469,7 +467,7 @@ export class AppointmentService {
       .leftJoin('appointment.user', 'user')
       .leftJoin('appointment.schedule', 'schedule')
       .leftJoin('appointment.package', 'package')
-      .where('appointment.doctorId IN (:...doctorIds)', { doctorIds })
+      .leftJoin('appointment.clinic', 'appointmentClinic')
       .andWhere('user.role = :role', { role: 'user' })
       .select([
         'appointment.id',
@@ -512,6 +510,18 @@ export class AppointmentService {
         'package.name',
       ]);
 
+    if (isPackage === true) {
+      qb.andWhere('appointment.packageId IS NOT NULL');
+      qb.andWhere('appointment.clinicId = :clinicId', {
+        clinicId: clinic.id,
+      });
+    }
+
+    if (isPackage === false) {
+      qb.andWhere('appointment.packageId IS NULL');
+      qb.andWhere('appointment.doctorId IN (:...doctorIds)', { doctorIds });
+    }
+
     if (doctorId) {
       qb.andWhere('appointment.doctorId = :doctorId', { doctorId });
     }
@@ -542,14 +552,6 @@ export class AppointmentService {
        OR LOWER(doctorUser.fullName) LIKE :keyword`,
         { keyword },
       );
-    }
-
-    if (typeof isPackage === 'boolean') {
-      if (isPackage) {
-        qb.andWhere('appointment.packageId IS NOT NULL');
-      } else {
-        qb.andWhere('appointment.packageId IS NULL');
-      }
     }
 
     qb.orderBy(

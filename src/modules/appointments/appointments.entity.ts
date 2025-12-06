@@ -43,7 +43,6 @@ export class Appointment {
   clinic: Clinic;
 
   @ManyToOne(() => Package, {
-    eager: true,
     nullable: true,
     onDelete: 'SET NULL',
   })
