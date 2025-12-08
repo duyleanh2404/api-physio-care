@@ -468,6 +468,7 @@ export class AppointmentService {
       .leftJoin('appointment.schedule', 'schedule')
       .leftJoin('appointment.package', 'package')
       .leftJoin('appointment.clinic', 'appointmentClinic')
+      .leftJoin('package.clinic', 'packageClinic')
       .andWhere('user.role = :role', { role: 'user' })
       .select([
         'appointment.id',
@@ -512,6 +513,12 @@ export class AppointmentService {
         'package.services',
         'package.description',
         'package.discountPercent',
+
+        'packageClinic.id',
+        'packageClinic.name',
+        'packageClinic.slug',
+        'packageClinic.avatar',
+        'packageClinic.address',
       ]);
 
     if (isPackage === true) {
