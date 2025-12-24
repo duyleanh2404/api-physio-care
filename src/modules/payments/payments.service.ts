@@ -33,11 +33,20 @@ export class PaymentsService {
 
     const qb = this.paymentRepo
       .createQueryBuilder('payment')
+
       .leftJoinAndSelect('payment.appointment', 'appointment')
-      .leftJoinAndSelect('appointment.package', 'package')
-      .leftJoinAndSelect('package.clinic', 'clinic')
-      .leftJoinAndSelect('package.specialty', 'specialty')
       .leftJoinAndSelect('appointment.schedule', 'schedule')
+      .leftJoinAndSelect('appointment.user', 'appointmentUser')
+
+      .leftJoinAndSelect('appointment.doctor', 'doctor')
+      .leftJoinAndSelect('doctor.user', 'doctorUser')
+      .leftJoinAndSelect('doctor.specialty', 'specialty')
+      .leftJoinAndSelect('doctor.clinic', 'appointmentClinic')
+
+      .leftJoinAndSelect('appointment.package', 'package')
+      .leftJoinAndSelect('package.clinic', 'packageClinic')
+      .leftJoinAndSelect('package.specialty', 'packageSpecialty')
+
       .leftJoin('payment.user', 'user')
       .addSelect([
         'user.id',
@@ -63,7 +72,9 @@ export class PaymentsService {
     if (search) {
       const searchPattern = `%${search.toLowerCase()}%`;
       qb.andWhere(
-        `(LOWER(payment.transactionId) LIKE :search OR LOWER(user.fullName) LIKE :search OR LOWER(user.email) LIKE :search)`,
+        `(LOWER(payment.transactionId) LIKE :search
+        OR LOWER(user.fullName) LIKE :search
+        OR LOWER(user.email) LIKE :search)`,
         { search: searchPattern },
       );
     }
@@ -84,12 +95,8 @@ export class PaymentsService {
       qb.andWhere('payment.createdAt <= :dateTo', { dateTo });
     }
 
-    if (priceFrom) {
-      qb.andWhere('payment.amount >= :priceFrom', { priceFrom });
-    }
-    if (priceTo) {
-      qb.andWhere('payment.amount <= :priceTo', { priceTo });
-    }
+    if (priceFrom) qb.andWhere('payment.amount >= :priceFrom', { priceFrom });
+    if (priceTo) qb.andWhere('payment.amount <= :priceTo', { priceTo });
 
     if (packageId) {
       qb.andWhere('appointment.packageId = :packageId', { packageId });
