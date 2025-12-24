@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
@@ -23,6 +25,8 @@ import { SpecialtyModule } from './modules/specialties/specialty.module';
 import { AppointmentModule } from './modules/appointments/appointments.module';
 import { RateLimiterModule } from './core/auth/modules/rate-limiter/rate-limiter.module';
 
+import { SetPostgresSessionInterceptor } from './interceptors/set-session.interceptor';
+
 @Module({
   imports: [
     UserModule,
@@ -39,6 +43,7 @@ import { RateLimiterModule } from './core/auth/modules/rate-limiter/rate-limiter
     CloudinaryModule,
     AppointmentModule,
     RateLimiterModule,
+    JwtModule.register({}),
     ConfigModule.forRoot({
       isGlobal: true,
       load: [googleConfig, jwtConfig, otpConfig, cloudinaryConfig],
@@ -48,6 +53,12 @@ import { RateLimiterModule } from './core/auth/modules/rate-limiter/rate-limiter
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => dbConfig(configService),
     }),
+  ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: SetPostgresSessionInterceptor,
+    },
   ],
 })
 export class AppModule {}

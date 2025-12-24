@@ -48,7 +48,7 @@ export class AppointmentService {
     private readonly appointmentRepo: Repository<Appointment>,
   ) {}
 
-  async findAll(query: GetAppointmentsQueryDto & { isPackage?: boolean }) {
+  async findAll(query: GetAppointmentsQueryDto) {
     const {
       doctorId,
       userId,
@@ -82,6 +82,7 @@ export class AppointmentService {
         'appointment.notes',
         'appointment.phone',
         'appointment.address',
+        'appointment.packageId',
         'appointment.createdAt',
         'appointment.updatedAt',
 
@@ -135,6 +136,7 @@ export class AppointmentService {
 
     if (doctorId) qb.andWhere('appointment.doctorId = :doctorId', { doctorId });
     if (userId) qb.andWhere('appointment.userId = :userId', { userId });
+
     if (status) {
       const statusArray = Array.isArray(status) ? status : [status];
       qb.andWhere('appointment.status IN (:...status)', {
@@ -155,7 +157,7 @@ export class AppointmentService {
 
     if (startTime && endTime) {
       qb.andWhere(
-        "DATE_FORMAT(schedule.startTime, '%H:%i') BETWEEN :startTime AND :endTime",
+        `TO_CHAR(schedule.startTime, 'HH24:MI') BETWEEN :startTime AND :endTime`,
         { startTime, endTime },
       );
     }
