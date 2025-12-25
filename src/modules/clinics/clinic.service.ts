@@ -235,27 +235,13 @@ export class ClinicService {
   }
 
   async findClinicPatients(
-    userId: string,
+    clinicId: string,
     query: GetMyPatientsQueryDto,
     request: any,
   ) {
     const appointmentRepo =
       request.queryRunner.manager.getRepository(Appointment);
     const userRepo = request.queryRunner.manager.getRepository(User);
-
-    const clinic = await this.clinicRepo.findOne({
-      where: { user: { id: userId } },
-    });
-    if (!clinic) throw new NotFoundException('Clinic not found');
-
-    const doctors = await this.doctorRepo.find({
-      where: { clinic: { id: clinic.id } },
-      select: ['id'],
-    });
-    const doctorIds = doctors.map((d) => d.id);
-    if (!doctorIds.length) {
-      return { page: 1, limit: 10, total: 0, totalPages: 0, data: [] };
-    }
 
     const {
       search,
@@ -269,7 +255,7 @@ export class ClinicService {
     const subQuery = appointmentRepo
       .createQueryBuilder('appointment')
       .select('appointment.userId')
-      .where('appointment.doctorId IN (:...doctorIds)', { doctorIds })
+      .where('appointment.clinicId = :clinicId', { clinicId })
       .distinct(true);
 
     const qb = userRepo

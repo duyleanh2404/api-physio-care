@@ -80,8 +80,8 @@ export class ClinicController {
     @Request() request,
     @Query() query: GetMyPatientsQueryDto,
   ) {
-    const userId = request.user.sub;
-    return this.clinicService.findClinicPatients(userId, query, request);
+    const clinicId = request.user.clinicId;
+    return this.clinicService.findClinicPatients(clinicId, query, request);
   }
 
   @Get('slug/:slug')
