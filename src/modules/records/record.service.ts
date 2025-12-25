@@ -72,7 +72,7 @@ export class RecordService {
     if (!doctor)
       throw new NotFoundException(`Doctor with id ${dto.doctorId} not found`);
 
-    const record = request.queryRunner.manager.getRepository(Record).create({
+    const record = this.recordRepo.create({
       ...dto,
       doctor,
       patients,
@@ -110,7 +110,7 @@ export class RecordService {
       }
     }
 
-    return await request.queryRunner.manager.getRepository(Record).save(record);
+    return await this.recordRepo.save(record);
   }
 
   async update(
@@ -818,6 +818,6 @@ export class RecordService {
       }
     }
 
-    await request.queryRunner.manager.getRepository(Record).remove(record);
+    await this.recordRepo.remove(record);
   }
 }

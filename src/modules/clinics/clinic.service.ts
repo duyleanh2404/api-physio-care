@@ -145,8 +145,10 @@ export class ClinicService {
       qb.andWhere('clinic."createdAt"::date <= :dateTo', { dateTo });
     }
 
-    if (provinceId) qb.andWhere('clinic.provinceId = :provinceId', { provinceId });
-    if (districtId) qb.andWhere('clinic.districtId = :districtId', { districtId });
+    if (provinceId)
+      qb.andWhere('clinic.provinceId = :provinceId', { provinceId });
+    if (districtId)
+      qb.andWhere('clinic.districtId = :districtId', { districtId });
     if (wardId) qb.andWhere('clinic.wardId = :wardId', { wardId });
 
     const total = await qb.clone().getCount();
@@ -155,13 +157,8 @@ export class ClinicService {
       .skip((page - 1) * limit)
       .take(limit)
       .leftJoinAndSelect('clinic.doctors', 'doctor')
-      .leftJoin('clinic.user', 'user') 
-      .addSelect([
-        'user.id',
-        'user.email',
-        'user.fullName',
-        'user.avatarUrl',
-      ]);
+      .leftJoin('clinic.user', 'user')
+      .addSelect(['user.id', 'user.email', 'user.fullName', 'user.avatarUrl']);
 
     const data = await qb.getMany();
 
@@ -234,7 +231,15 @@ export class ClinicService {
     };
   }
 
-  async findClinicPatients(userId: string, query: GetMyPatientsQueryDto) {
+  async findClinicPatients(
+    userId: string,
+    query: GetMyPatientsQueryDto,
+    request: any,
+  ) {
+    const appointmentRepo =
+      request.queryRunner.manager.getRepository(Appointment);
+    const userRepo = request.queryRunner.manager.getRepository(User);
+
     const clinic = await this.clinicRepo.findOne({
       where: { user: { id: userId } },
     });
@@ -258,13 +263,13 @@ export class ClinicService {
       sortOrder = 'ASC',
     } = query;
 
-    const subQuery = this.appointmentRepo
+    const subQuery = appointmentRepo
       .createQueryBuilder('appointment')
       .select('appointment.userId')
       .where('appointment.doctorId IN (:...doctorIds)', { doctorIds })
       .distinct(true);
 
-    const qb = this.userRepo
+    const qb = userRepo
       .createQueryBuilder('user')
       .where(`user.id IN (${subQuery.getQuery()})`)
       .setParameters(subQuery.getParameters())

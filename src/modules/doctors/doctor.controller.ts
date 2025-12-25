@@ -71,7 +71,7 @@ export class DoctorController {
     const userId = req.user?.sub;
     const role = req.user?.role;
 
-    return this.doctorService.findMyPatients(userId, role, query);
+    return this.doctorService.findMyPatients(userId, role, query, req);
   }
 
   @ApiBearerAuth()

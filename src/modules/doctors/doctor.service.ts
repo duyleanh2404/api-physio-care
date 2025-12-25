@@ -141,7 +141,11 @@ export class DoctorService {
     userId: string,
     role: 'doctor' | 'clinic',
     query: GetMyPatientsQueryDto,
+    request: any,
   ) {
+    const appointmentRepo =
+      request.queryRunner.manager.getRepository(Appointment);
+
     const {
       search,
       dateFrom,
@@ -186,7 +190,7 @@ export class DoctorService {
         };
     }
 
-    const qb = this.appointmentRepo
+    const qb = appointmentRepo
       .createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.user', 'user')
       .where('appointment.doctorId IN (:...doctorIds)', { doctorIds });

@@ -51,8 +51,9 @@ export class AppointmentController {
   @Get()
   @Roles('admin')
   @ApiFindAllAppointments()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async findAll(@Query() query: GetAppointmentsQueryDto, @Request() request) {
-    return this.appointmentService.findAll(query);
+    return this.appointmentService.findAll(query, request);
   }
 
   @Get('me')
@@ -61,10 +62,10 @@ export class AppointmentController {
   @ApiFindMyAppointments()
   async findMyAppointments(
     @Query() query: GetAppointmentsQueryDto,
-    @Request() req,
+    @Request() request,
   ) {
-    const userId = req.user?.sub;
-    return this.appointmentService.findAll({ ...query, userId });
+    const userId = request.user?.sub;
+    return this.appointmentService.findAll({ ...query, userId }, request);
   }
 
   @Get('my-doctors')
@@ -73,10 +74,14 @@ export class AppointmentController {
   @ApiFindDoctorAppointments()
   async findClinicDoctorsAppointments(
     @Query() query: GetDoctorAppointmentsQueryDto,
-    @Request() req,
+    @Request() request,
   ) {
-    const userId = req.user.sub;
-    return this.appointmentService.findClinicDoctorsAppointments(userId, query);
+    const userId = request.user.sub;
+    return this.appointmentService.findClinicDoctorsAppointments(
+      userId,
+      query,
+      request,
+    );
   }
 
   @Get('my-schedules')
@@ -85,32 +90,39 @@ export class AppointmentController {
   @ApiFindDoctorAppointments()
   async findDoctorAppointments(
     @Query() query: GetDoctorAppointmentsQueryDto,
-    @Request() req,
+    @Request() request,
   ) {
-    const userId = req.user.sub;
-    return this.appointmentService.findDoctorAppointments(userId, query);
+    const userId = request.user.sub;
+    return this.appointmentService.findDoctorAppointments(
+      userId,
+      query,
+      request,
+    );
   }
 
   @Get('code/:code')
   @UseGuards(JwtAuthGuard)
   @ApiFindAppointmentByCode()
-  findByCode(@Param('code') code: string) {
-    return this.appointmentService.findByCode(code);
+  findByCode(@Param('code') code: string, @Request() request) {
+    return this.appointmentService.findByCode(code, request);
   }
 
   @Get(':id')
   @Roles('user', 'admin')
   @ApiFindOneAppointment()
-  async findOne(@Param('id') id: string) {
-    return this.appointmentService.findOne(id);
+  async findOne(@Param('id') id: string, @Request() request) {
+    return this.appointmentService.findOne(id, request);
   }
 
   @Get('schedule/:scheduleId')
   @Roles('admin', 'doctor')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiFindAppointmentByScheduleId()
-  async findByScheduleId(@Param('scheduleId') scheduleId: string) {
-    return this.appointmentService.findByScheduleId(scheduleId);
+  async findByScheduleId(
+    @Param('scheduleId') scheduleId: string,
+    @Request() request,
+  ) {
+    return this.appointmentService.findByScheduleId(scheduleId, request);
   }
 
   @Put(':id')

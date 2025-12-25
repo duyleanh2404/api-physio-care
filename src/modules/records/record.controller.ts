@@ -49,7 +49,7 @@ export class RecordController {
 
   @Post()
   @ApiCreateRecord()
-  @Roles('admin', 'doctor')
+  @Roles('admin', 'doctor', 'clinic')
   @UseInterceptors(
     FileInterceptor('attachment', {
       storage: memoryStorage(),
@@ -153,7 +153,7 @@ export class RecordController {
   }
 
   @Delete(':id')
-  @Roles('admin', 'doctor')
+  @Roles('admin', 'doctor', 'clinic')
   @ApiDeleteRecord()
   async remove(@Param('id') id: string, @Request() req) {
     return this.recordService.remove(id, req.user.sub, req.user.role, req);

@@ -76,11 +76,11 @@ export class ClinicController {
   @ApiFindMyPatients()
   @UseGuards(JwtAuthGuard, RolesGuard)
   async findClinicPatients(
-    @Request() req,
+    @Request() request,
     @Query() query: GetMyPatientsQueryDto,
   ) {
-    const userId = req.user.sub;
-    return this.clinicService.findClinicPatients(userId, query);
+    const userId = request.user.sub;
+    return this.clinicService.findClinicPatients(userId, query, request);
   }
 
   @Get('slug/:slug')

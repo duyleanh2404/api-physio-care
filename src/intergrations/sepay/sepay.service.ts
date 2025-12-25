@@ -24,7 +24,10 @@ export class SepayService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async processPaymentWebhook(data: any) {
+  async processPaymentWebhook(data: any, request: any) {
+    const appointmentRepo =
+      request.queryRunner.manager.getRepository(Appointment);
+
     await this.dataSource.query(`
       SET app.current_user_role = 'admin';
     `);
@@ -43,7 +46,7 @@ export class SepayService {
 
     console.log('Extracted code:', code);
 
-    const appointment = await this.appointmentRepo.findOne({
+    const appointment = await appointmentRepo.findOne({
       where: { code },
       relations: ['user'],
     });
@@ -81,7 +84,7 @@ export class SepayService {
     appointment.paymentId = payment.id;
     appointment.status = AppointmentStatus.CONFIRMED;
 
-    await this.appointmentRepo.save(appointment);
+    await appointmentRepo.save(appointment);
 
     this.sepayGateway.sendPaymentSuccess(code, {
       code,

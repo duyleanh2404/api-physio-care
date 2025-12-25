@@ -39,7 +39,10 @@ export class AppointmentService {
     private readonly appointmentRepo: Repository<Appointment>,
   ) {}
 
-  async findAll(query: GetAppointmentsQueryDto) {
+  async findAll(query: GetAppointmentsQueryDto, request: any) {
+    const appointmentRepo =
+      request.queryRunner.manager.getRepository(Appointment);
+
     const {
       doctorId,
       userId,
@@ -55,7 +58,7 @@ export class AppointmentService {
       isPackage,
     } = query;
 
-    const qb = this.appointmentRepo
+    const qb = appointmentRepo
       .createQueryBuilder('appointment')
       .leftJoin('appointment.doctor', 'doctor')
       .leftJoin('doctor.user', 'doctorUser')
@@ -172,8 +175,11 @@ export class AppointmentService {
     return { page, limit, total, totalPages, data };
   }
 
-  async findByCode(code: string) {
-    const qb = this.appointmentRepo
+  async findByCode(code: string, request: any) {
+    const appointmentRepo =
+      request.queryRunner.manager.getRepository(Appointment);
+
+    const qb = appointmentRepo
       .createQueryBuilder('appointment')
       .leftJoin('appointment.doctor', 'doctor')
       .leftJoin('doctor.user', 'doctorUser')
@@ -254,8 +260,11 @@ export class AppointmentService {
     return appointment;
   }
 
-  async findOne(id: string) {
-    const qb = this.appointmentRepo
+  async findOne(id: string, request: any) {
+    const appointmentRepo =
+      request.queryRunner.manager.getRepository(Appointment);
+
+    const qb = appointmentRepo
       .createQueryBuilder('appointment')
       .leftJoin('appointment.doctor', 'doctor')
       .leftJoin('doctor.user', 'doctorUser')
@@ -339,7 +348,11 @@ export class AppointmentService {
   async findDoctorAppointments(
     userId: string,
     query: GetDoctorAppointmentsQueryDto,
+    request: any,
   ) {
+    const appointmentRepo =
+      request.queryRunner.manager.getRepository(Appointment);
+
     if (!userId) throw new BadRequestException('Missing userId in token');
 
     const doctor = await this.doctorRepo.findOne({
@@ -357,7 +370,7 @@ export class AppointmentService {
       sortOrder = 'ASC',
     } = query;
 
-    const qb = this.appointmentRepo
+    const qb = appointmentRepo
       .createQueryBuilder('appointment')
       .select([
         'appointment.id',
@@ -425,7 +438,11 @@ export class AppointmentService {
   async findClinicDoctorsAppointments(
     userId: string,
     query: GetDoctorAppointmentsQueryDto,
+    request: any,
   ) {
+    const appointmentRepo =
+      request.queryRunner.manager.getRepository(Appointment);
+
     const clinic = await this.clinicRepo.findOne({
       where: { user: { id: userId } },
     });
@@ -451,7 +468,7 @@ export class AppointmentService {
       sortOrder = 'ASC',
     } = query;
 
-    const qb = this.appointmentRepo
+    const qb = appointmentRepo
       .createQueryBuilder('appointment')
       .leftJoin('appointment.doctor', 'doctor')
       .leftJoin('doctor.user', 'doctorUser')
@@ -571,8 +588,11 @@ export class AppointmentService {
     return { page, limit, total, totalPages, data };
   }
 
-  async findByScheduleId(scheduleId: string) {
-    const appointment = await this.appointmentRepo
+  async findByScheduleId(scheduleId: string, request: any) {
+    const appointmentRepo =
+      request.queryRunner.manager.getRepository(Appointment);
+
+    const appointment = await appointmentRepo
       .createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.doctor', 'doctor')
       .leftJoinAndSelect('doctor.user', 'doctorUser')
@@ -710,7 +730,7 @@ export class AppointmentService {
   }
 
   async update(id: string, dto: UpdateAppointmentDto, request: any) {
-    const appointment = await this.findOne(id);
+    const appointment = await this.findOne(id, request);
 
     if (dto.notes !== undefined) appointment.notes = dto.notes;
 
@@ -731,7 +751,7 @@ export class AppointmentService {
   }
 
   async remove(id: string, request: any) {
-    const appointment = await this.findOne(id);
+    const appointment = await this.findOne(id, request);
     await request.queryRunner.manager.remove(appointment);
     return { message: 'Appointment deleted successfully' };
   }
