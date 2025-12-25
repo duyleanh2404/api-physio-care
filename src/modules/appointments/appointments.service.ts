@@ -35,8 +35,8 @@ export class AppointmentService {
     @InjectRepository(Clinic)
     private readonly clinicRepo: Repository<Clinic>,
 
-    @InjectRepository(Appointment)
-    private readonly appointmentRepo: Repository<Appointment>,
+    @InjectRepository(Schedule)
+    private readonly scheduleRepo: Repository<Schedule>,
   ) {}
 
   async findAll(query: GetAppointmentsQueryDto, request: any) {
@@ -730,24 +730,18 @@ export class AppointmentService {
   }
 
   async update(id: string, dto: UpdateAppointmentDto, request: any) {
+    const appointmentRepo =
+      request.queryRunner.manager.getRepository(Appointment);
+
     const appointment = await this.findOne(id, request);
 
     if (dto.notes !== undefined) appointment.notes = dto.notes;
 
     if (dto.status) {
       appointment.status = dto.status;
-
-      if (dto.status === AppointmentStatus.CANCELLED && appointment.schedule) {
-        appointment.schedule.status = ScheduleStatus.available;
-        await request.queryRunner.manager
-          .getRepository(Schedule)
-          .save(appointment.schedule);
-      }
     }
 
-    return request.queryRunner.manager
-      .getRepository(Appointment)
-      .save(appointment);
+    return appointmentRepo.save(appointment);
   }
 
   async remove(id: string, request: any) {

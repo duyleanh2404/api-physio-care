@@ -110,6 +110,7 @@ export class AppointmentController {
   @Get(':id')
   @Roles('user', 'admin')
   @ApiFindOneAppointment()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async findOne(@Param('id') id: string, @Request() request) {
     return this.appointmentService.findOne(id, request);
   }
