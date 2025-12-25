@@ -25,7 +25,7 @@ export class PaymentsController {
   @Roles('admin', 'clinic', 'doctor')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async findAll(@Query() query: GetPaymentsQueryDto, @Request() req) {
-    return this.paymentsService.findAll(query, req.user);
+    return this.paymentsService.findAll(query, req.user, req);
   }
 
   @Get('me')

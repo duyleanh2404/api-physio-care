@@ -15,7 +15,10 @@ export class PaymentsService {
   async findAll(
     query: GetPaymentsQueryDto,
     user: { role: string; clinicId?: string; doctorId?: string },
+    request: any,
   ) {
+    const paymentRepo = request.queryRunner.manager.getRepository(Payment);
+
     const {
       userId,
       search,
@@ -31,7 +34,7 @@ export class PaymentsService {
       sortOrder = 'DESC',
     } = query;
 
-    const qb = this.paymentRepo
+    const qb = paymentRepo
       .createQueryBuilder('payment')
 
       .leftJoinAndSelect('payment.appointment', 'appointment')
