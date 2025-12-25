@@ -30,7 +30,7 @@ export class SepayController {
         .json({ message: 'Unauthorized', received: auth });
     }
 
-    await this.sepayService.processPaymentWebhook(req.body, req);
+    await this.sepayService.processPaymentWebhook(req.body);
 
     return res.status(HttpStatus.OK).json({ message: 'OK' });
   }
