@@ -36,8 +36,8 @@ export class UserService {
       dateFrom,
       page = 1,
       limit = 10,
-      sortBy = 'id',
-      sortOrder = 'ASC',
+      sortBy = 'createdAt',
+      sortOrder = 'DESC',
     } = query;
 
     const qb = this.userRepo.createQueryBuilder('user');
@@ -238,7 +238,10 @@ export class UserService {
     const updatedFields = Object.fromEntries(
       Object.entries(dto).filter(([key, value]) => {
         if (value === undefined || value === '') return false;
-        if (value === null && !['verificationOtp', 'otpExpiresAt'].includes(key))
+        if (
+          value === null &&
+          !['verificationOtp', 'otpExpiresAt'].includes(key)
+        )
           return false;
         return true;
       }),

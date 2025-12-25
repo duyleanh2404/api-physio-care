@@ -44,14 +44,14 @@ export class AppointmentController {
   @Roles('user', 'admin')
   @ApiCreateAppointment()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async create(@Body() dto: CreateAppointmentDto) {
-    return this.appointmentService.create(dto);
+  async create(@Body() dto: CreateAppointmentDto, @Request() request) {
+    return this.appointmentService.create(dto, request);
   }
 
   @Get()
   @Roles('admin')
   @ApiFindAllAppointments()
-  async findAll(@Query() query: GetAppointmentsQueryDto) {
+  async findAll(@Query() query: GetAppointmentsQueryDto, @Request() request) {
     return this.appointmentService.findAll(query);
   }
 
@@ -117,8 +117,12 @@ export class AppointmentController {
   @ApiBearerAuth()
   @ApiUpdateAppointment()
   @UseGuards(JwtAuthGuard)
-  async update(@Param('id') id: string, @Body() dto: UpdateAppointmentDto) {
-    return this.appointmentService.update(id, dto);
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateAppointmentDto,
+    @Request() req,
+  ) {
+    return this.appointmentService.update(id, dto, req);
   }
 
   @Delete(':id')
@@ -126,7 +130,7 @@ export class AppointmentController {
   @Roles('admin', 'doctor')
   @ApiDeleteAppointment()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async remove(@Param('id') id: string) {
-    return this.appointmentService.remove(id);
+  async remove(@Param('id') id: string, @Request() request) {
+    return this.appointmentService.remove(id, request);
   }
 }

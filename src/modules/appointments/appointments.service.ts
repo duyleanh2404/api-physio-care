@@ -29,20 +29,11 @@ export class AppointmentService {
   constructor(
     private readonly rateLimiter: RateLimiterService,
 
-    @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
-
     @InjectRepository(Doctor)
     private readonly doctorRepo: Repository<Doctor>,
 
     @InjectRepository(Clinic)
     private readonly clinicRepo: Repository<Clinic>,
-
-    @InjectRepository(Package)
-    private readonly packageRepo: Repository<Package>,
-
-    @InjectRepository(Schedule)
-    private readonly scheduleRepo: Repository<Schedule>,
 
     @InjectRepository(Appointment)
     private readonly appointmentRepo: Repository<Appointment>,
@@ -635,7 +626,7 @@ export class AppointmentService {
     return appointment;
   }
 
-  async create(dto: CreateAppointmentDto) {
+  async create(dto: CreateAppointmentDto, request: any) {
     await this.rateLimiter.checkAppointment(dto.userId);
 
     const isPackageMode = !!dto.packageId;
@@ -647,9 +638,14 @@ export class AppointmentService {
       );
     }
 
-    const user = await this.userRepo.findOne({
-      where: { id: dto.userId },
-    });
+    const appointmentRepo =
+      request.queryRunner.manager.getRepository(Appointment);
+    const userRepo = request.queryRunner.manager.getRepository(User);
+    const doctorRepo = request.queryRunner.manager.getRepository(Doctor);
+    const scheduleRepo = request.queryRunner.manager.getRepository(Schedule);
+    const packageRepo = request.queryRunner.manager.getRepository(Package);
+
+    const user = await userRepo.findOne({ where: { id: dto.userId } });
     if (!user) throw new NotFoundException('User not found');
 
     let doctor: Doctor | null = null;
@@ -658,15 +654,13 @@ export class AppointmentService {
     let clinic: Clinic | null = null;
 
     if (isDoctorMode) {
-      doctor = await this.doctorRepo.findOne({
+      doctor = await doctorRepo.findOne({
         where: { id: dto.doctorId },
         relations: ['clinic'],
       });
       if (!doctor) throw new NotFoundException('Doctor not found');
 
-      schedule = await this.scheduleRepo.findOne({
-        where: { id: dto.scheduleId },
-      });
+      schedule = await scheduleRepo.findOne({ where: { id: dto.scheduleId } });
       if (!schedule) throw new NotFoundException('Schedule not found');
 
       if (schedule.status === ScheduleStatus.booked) {
@@ -674,13 +668,13 @@ export class AppointmentService {
       }
 
       schedule.status = ScheduleStatus.booked;
-      await this.scheduleRepo.save(schedule);
+      await scheduleRepo.save(schedule);
 
       clinic = doctor.clinic;
     }
 
     if (isPackageMode) {
-      pkg = await this.packageRepo.findOne({
+      pkg = await packageRepo.findOne({
         where: { id: dto.packageId },
         relations: ['clinic'],
       });
@@ -696,7 +690,7 @@ export class AppointmentService {
     const randomPart = randomUUID().slice(0, 6).toUpperCase();
     const code = `APP-${y}${m}${d}-${randomPart}`;
 
-    const appointment = this.appointmentRepo.create({
+    const appointment = appointmentRepo.create({
       user,
       code,
       doctor: doctor ?? undefined,
@@ -712,10 +706,10 @@ export class AppointmentService {
       status: AppointmentStatus.PENDING,
     });
 
-    return this.appointmentRepo.save(appointment);
+    return appointmentRepo.save(appointment);
   }
 
-  async update(id: string, dto: UpdateAppointmentDto) {
+  async update(id: string, dto: UpdateAppointmentDto, request: any) {
     const appointment = await this.findOne(id);
 
     if (dto.notes !== undefined) appointment.notes = dto.notes;
@@ -725,16 +719,20 @@ export class AppointmentService {
 
       if (dto.status === AppointmentStatus.CANCELLED && appointment.schedule) {
         appointment.schedule.status = ScheduleStatus.available;
-        await this.scheduleRepo.save(appointment.schedule);
+        await request.queryRunner.manager
+          .getRepository(Schedule)
+          .save(appointment.schedule);
       }
     }
 
-    return this.appointmentRepo.save(appointment);
+    return request.queryRunner.manager
+      .getRepository(Appointment)
+      .save(appointment);
   }
 
-  async remove(id: string) {
+  async remove(id: string, request: any) {
     const appointment = await this.findOne(id);
-    await this.appointmentRepo.remove(appointment);
+    await request.queryRunner.manager.remove(appointment);
     return { message: 'Appointment deleted successfully' };
   }
 }

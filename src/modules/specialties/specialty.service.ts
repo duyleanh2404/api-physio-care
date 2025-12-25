@@ -49,12 +49,9 @@ export class SpecialtyService {
     }
 
     if (search) {
-      qb.andWhere(
-        '(LOWER(TRIM(specialty.name)) LIKE :search OR LOWER(TRIM(specialty.description)) LIKE :search)',
-        {
-          search: `%${search.toLowerCase()}%`,
-        },
-      );
+      qb.andWhere('LOWER(TRIM(specialty.name)) LIKE :search', {
+        search: `%${search.toLowerCase()}%`,
+      });
     }
 
     const total = await qb.clone().getCount();

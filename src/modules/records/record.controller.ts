@@ -57,11 +57,11 @@ export class RecordController {
   )
   async create(
     @Body() dto: CreateRecordDto,
-    @UploadedFile() file: Express.Multer.File,
     @Request() req,
+    @UploadedFile() file: Express.Multer.File,
   ) {
     const signedById = req.user?.sub;
-    return this.recordService.create(dto, file, signedById);
+    return this.recordService.create(dto, req, file, signedById);
   }
 
   @Get()
@@ -156,7 +156,7 @@ export class RecordController {
   @Roles('admin', 'doctor')
   @ApiDeleteRecord()
   async remove(@Param('id') id: string, @Request() req) {
-    return this.recordService.remove(id, req.user.sub, req.user.role);
+    return this.recordService.remove(id, req.user.sub, req.user.role, req);
   }
 
   @Post('verify/:id')
