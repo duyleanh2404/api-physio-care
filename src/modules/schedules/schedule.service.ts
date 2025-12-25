@@ -191,9 +191,7 @@ export class ScheduleService {
       .where('schedule.doctorId = :doctorId', { doctorId: doctor.id });
 
     if (status) {
-      const statuses = status.includes(',')
-        ? status.split(',')
-        : [status];
+      const statuses = status.includes(',') ? status.split(',') : [status];
       qb.andWhere('schedule.status IN (:...statuses)', { statuses });
     }
 
@@ -276,11 +274,7 @@ export class ScheduleService {
         'user.slug',
       ])
       .innerJoin('doctor.specialty', 'specialty')
-      .addSelect([
-        'specialty.id',
-        'specialty.name',
-        'specialty.imageUrl'
-      ])
+      .addSelect(['specialty.id', 'specialty.name', 'specialty.imageUrl'])
       .where('schedule.doctorId IN (:...doctorIds)', { doctorIds });
 
     if (status) {
@@ -402,13 +396,17 @@ export class ScheduleService {
     const [year, month, day] = dateStr.split('-').map(Number);
 
     if (!year || !month || !day) {
-      throw new BadRequestException('Invalid workDate format (expected YYYY-MM-DD)');
+      throw new BadRequestException(
+        'Invalid workDate format (expected YYYY-MM-DD)',
+      );
     }
 
     return new Date(Date.UTC(year, month - 1, day));
   }
 
-  async create(dto: CreateScheduleDto) {
+  async create(dto: CreateScheduleDto, request: any) {
+    const scheduleRepo = request.queryRunner.manager.getRepository(Schedule);
+
     const doctor = await this.doctorRepo.findOne({
       where: { id: dto.doctorId },
       relations: ['user'],
@@ -421,7 +419,7 @@ export class ScheduleService {
     const workDate = dto.workDate;
 
     for (const slot of dto.timeSlots) {
-      const conflict = await this.scheduleRepo
+      const conflict = await scheduleRepo
         .createQueryBuilder('schedule')
         .where('schedule.doctorId = :doctorId', { doctorId: dto.doctorId })
         .andWhere('schedule.workDate = :workDate', { workDate })
@@ -442,7 +440,7 @@ export class ScheduleService {
     }
 
     const schedules = dto.timeSlots.map((slot) =>
-      this.scheduleRepo.create({
+      scheduleRepo.create({
         doctor,
         workDate,
         notes: dto.notes,
@@ -452,15 +450,18 @@ export class ScheduleService {
       }),
     );
 
-    return this.scheduleRepo.save(schedules);
+    return scheduleRepo.save(schedules);
   }
 
   async remove(
     id: string,
     userId: string,
     role: 'admin' | 'doctor' | 'clinic',
+    request: any,
   ) {
-    const schedule = await this.scheduleRepo.findOne({
+    const scheduleRepo = request.queryRunner.manager.getRepository(Schedule);
+
+    const schedule = await scheduleRepo.findOne({
       where: { id },
       relations: ['doctor', 'doctor.clinic', 'doctor.user'],
     });
@@ -476,7 +477,7 @@ export class ScheduleService {
       );
     }
 
-    await this.scheduleRepo.remove(schedule);
+    await scheduleRepo.remove(schedule);
     return { message: 'Schedule deleted successfully' };
   }
 }

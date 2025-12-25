@@ -36,9 +36,6 @@ export class DoctorService {
     @InjectRepository(Specialty)
     private readonly specialtyRepo: Repository<Specialty>,
 
-    @InjectRepository(Appointment)
-    private readonly appointmentRepo: Repository<Appointment>,
-
     private readonly userService: UserService,
     private readonly cloudinaryService: CloudinaryService,
   ) {}
@@ -338,7 +335,13 @@ export class DoctorService {
     };
   }
 
-  async create(dto: CreateDoctorDto, avatar?: Express.Multer.File) {
+  async create(
+    dto: CreateDoctorDto,
+    request: any,
+    avatar?: Express.Multer.File,
+  ) {
+    const doctorRepo = request.queryRunner.manager.getRepository(Doctor);
+
     const email = `${dto.fullName
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
@@ -387,14 +390,14 @@ export class DoctorService {
 
     const slug = slugifyName(dto.fullName);
 
-    const existingDoctor = await this.doctorRepo.findOne({ where: { slug } });
+    const existingDoctor = await doctorRepo.findOne({ where: { slug } });
     let finalSlug = slug;
     if (existingDoctor) {
       const randomSuffix = Math.floor(Math.random() * 10000);
       finalSlug = `${slug}-${randomSuffix}`;
     }
 
-    const doctor = this.doctorRepo.create({
+    const doctor = doctorRepo.create({
       user,
       clinic,
       specialty,
@@ -405,7 +408,7 @@ export class DoctorService {
       avatar: avatarUrl || user.avatarUrl,
     });
 
-    return this.doctorRepo.save(doctor);
+    return doctorRepo.save(doctor);
   }
 
   async update(
@@ -447,8 +450,10 @@ export class DoctorService {
     return this.doctorRepo.save(doctor);
   }
 
-  async remove(id: string, userId: string, role: string) {
-    const doctor = await this.doctorRepo.findOne({
+  async remove(id: string, userId: string, role: string, request: any) {
+    const doctorRepo = request.queryRunner.manager.getRepository(Doctor);
+
+    const doctor = await doctorRepo.findOne({
       where: { id },
       relations: ['clinic', 'user'],
     });
@@ -460,7 +465,7 @@ export class DoctorService {
       );
     }
 
-    await this.doctorRepo.remove(doctor);
+    await doctorRepo.remove(doctor);
     return { message: 'Doctor deleted successfully' };
   }
 }

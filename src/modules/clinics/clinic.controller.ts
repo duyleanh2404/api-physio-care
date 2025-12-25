@@ -55,13 +55,14 @@ export class ClinicController {
   )
   create(
     @Body() dto: CreateClinicDto,
+    @Request() request,
     @UploadedFiles()
     files: {
       avatar?: Express.Multer.File[];
       banner?: Express.Multer.File[];
     },
   ) {
-    return this.clinicService.create(dto, files);
+    return this.clinicService.create(dto, request, files);
   }
 
   @Get()
@@ -133,7 +134,7 @@ export class ClinicController {
   @ApiBearerAuth()
   @ApiDeleteClinic()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  remove(@Param('id') id: string) {
-    return this.clinicService.remove(id);
+  remove(@Param('id') id: string, @Request() request) {
+    return this.clinicService.remove(id, request);
   }
 }

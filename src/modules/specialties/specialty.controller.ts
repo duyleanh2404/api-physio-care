@@ -10,6 +10,7 @@ import {
   Controller,
   UploadedFile,
   UseInterceptors,
+  Request,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
@@ -46,9 +47,10 @@ export class SpecialtyController {
   @UseInterceptors(FileInterceptor('image'))
   async create(
     @Body() dto: CreateSpecialtyDto,
+    @Request() req,
     @UploadedFile() image?: Express.Multer.File,
   ) {
-    return this.specialtyService.create(dto, image);
+    return this.specialtyService.create(dto, req, image);
   }
 
   @Get()
@@ -89,7 +91,7 @@ export class SpecialtyController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @ApiDeleteSpecialty()
-  async remove(@Param('id') id: string) {
-    return this.specialtyService.remove(id);
+  async remove(@Param('id') id: string, @Request() req) {
+    return this.specialtyService.remove(id, req);
   }
 }

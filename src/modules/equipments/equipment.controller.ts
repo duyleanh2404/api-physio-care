@@ -53,7 +53,7 @@ export class EquipmentsController {
     @Body() dto: CreateEquipmentDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.equipmentService.create(req.user.sub, dto, file);
+    return this.equipmentService.create(req.user.sub, dto, req, file);
   }
 
   @Get()
@@ -128,6 +128,6 @@ export class EquipmentsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiDeleteEquipment()
   remove(@Param('id') id: string, @Request() req) {
-    return this.equipmentService.remove(id, req.user.sub, req.user.role);
+    return this.equipmentService.remove(id, req.user.sub, req.user.role, req);
   }
 }

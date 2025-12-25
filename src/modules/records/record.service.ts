@@ -55,6 +55,8 @@ export class RecordService {
     file?: Express.Multer.File,
     signedById?: string,
   ): Promise<Record> {
+    const recordRepo = request.queryRunner.manager.getRepository(Record);
+
     const generateRecordCode = () =>
       `REC-${randomBytes(3).toString('hex').toUpperCase()}`;
 
@@ -72,7 +74,7 @@ export class RecordService {
     if (!doctor)
       throw new NotFoundException(`Doctor with id ${dto.doctorId} not found`);
 
-    const record = this.recordRepo.create({
+    const record = recordRepo.create({
       ...dto,
       doctor,
       patients,
@@ -110,7 +112,7 @@ export class RecordService {
       }
     }
 
-    return await this.recordRepo.save(record);
+    return await recordRepo.save(record);
   }
 
   async update(
@@ -807,6 +809,8 @@ export class RecordService {
     role: string,
     request: any,
   ): Promise<void> {
+    const recordRepo = request.queryRunner.manager.getRepository(Record);
+
     const record = await this.findOne(id);
     if (!record) {
       throw new NotFoundException('Record not found');
@@ -818,6 +822,6 @@ export class RecordService {
       }
     }
 
-    await this.recordRepo.remove(record);
+    await recordRepo.remove(record);
   }
 }

@@ -43,8 +43,8 @@ export class ScheduleController {
   @Roles('admin', 'doctor', 'clinic')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiCreateSchedule()
-  async create(@Body() dto: CreateScheduleDto) {
-    return this.scheduleService.create(dto);
+  async create(@Body() dto: CreateScheduleDto, @Request() req) {
+    return this.scheduleService.create(dto, req);
   }
 
   @Get()
@@ -63,7 +63,7 @@ export class ScheduleController {
   @ApiGetSchedulesByDoctorAndDate()
   async getByDoctorAndDate(
     @Query() query: GetScheduleByDoctorDateDto,
-    @Request() req
+    @Request() req,
   ) {
     return this.scheduleService.findByDoctorAndDate(query, req.user);
   }
@@ -109,6 +109,6 @@ export class ScheduleController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiDeleteSchedule()
   async remove(@Param('id') id: string, @Request() req) {
-    return this.scheduleService.remove(id, req.user.sub, req.user.role);
+    return this.scheduleService.remove(id, req.user.sub, req.user.role, req);
   }
 }

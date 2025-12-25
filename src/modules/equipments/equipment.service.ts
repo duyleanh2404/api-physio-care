@@ -32,8 +32,11 @@ export class EquipmentService {
   async create(
     userId: string,
     dto: CreateEquipmentDto,
+    request: any,
     file?: Express.Multer.File,
   ) {
+    const equipmentRepo = request.queryRunner.manager.getRepository(Equipment);
+
     let clinicId = dto.clinicId;
     if (!clinicId) {
       const clinic = await this.clinicRepo.findOne({
@@ -49,17 +52,20 @@ export class EquipmentService {
 
     let imageUrl: string | undefined;
     if (file) {
-      const uploaded = await this.cloudinaryService.uploadImage(file, 'equipments');
+      const uploaded = await this.cloudinaryService.uploadImage(
+        file,
+        'equipments',
+      );
       imageUrl = uploaded.secure_url;
     }
 
-    const equipment = this.equipmentRepo.create({
+    const equipment = equipmentRepo.create({
       ...dto,
       clinic: { id: clinicId },
       image: imageUrl,
     });
 
-    return this.equipmentRepo.save(equipment);
+    return equipmentRepo.save(equipment);
   }
 
   async findAll(query: GetEquipmentsQueryDto) {
@@ -174,7 +180,10 @@ export class EquipmentService {
     }
 
     if (file) {
-      const uploaded = await this.cloudinaryService.uploadImage(file, 'equipments');
+      const uploaded = await this.cloudinaryService.uploadImage(
+        file,
+        'equipments',
+      );
       updateData.image = uploaded.secure_url;
     }
 
@@ -211,8 +220,10 @@ export class EquipmentService {
     return this.equipmentRepo.save(equipment);
   }
 
-  async remove(id: string, userId: string, role: string) {
-    const equipment = await this.equipmentRepo.findOne({
+  async remove(id: string, userId: string, role: string, request: any) {
+    const equipmentRepo = request.queryRunner.manager.getRepository(Equipment);
+
+    const equipment = await equipmentRepo.findOne({
       where: { id },
       relations: ['clinic', 'clinic.user'],
     });
@@ -225,7 +236,7 @@ export class EquipmentService {
       }
     }
 
-    await this.equipmentRepo.remove(equipment);
+    await equipmentRepo.remove(equipment);
 
     return { message: 'Equipment deleted successfully' };
   }

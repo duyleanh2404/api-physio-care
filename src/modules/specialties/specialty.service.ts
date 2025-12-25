@@ -90,8 +90,14 @@ export class SpecialtyService {
     return specialty;
   }
 
-  async create(dto: CreateSpecialtyDto, image?: Express.Multer.File) {
-    const existing = await this.specialtyRepo.findOne({
+  async create(
+    dto: CreateSpecialtyDto,
+    request: any,
+    image?: Express.Multer.File,
+  ) {
+    const specialtyRepo = request.queryRunner.manager.getRepository(Specialty);
+
+    const existing = await specialtyRepo.findOne({
       where: { name: dto.name },
     });
     if (existing) throw new ConflictException('Specialty name already exists');
@@ -106,14 +112,14 @@ export class SpecialtyService {
 
     let slug = slugifyName(dto.name);
 
-    const existingSlug = await this.specialtyRepo.findOne({ where: { slug } });
+    const existingSlug = await specialtyRepo.findOne({ where: { slug } });
     if (existingSlug) {
       const randomSuffix = Math.floor(Math.random() * 10000);
       slug = `${slug}-${randomSuffix}`;
     }
 
-    const specialty = this.specialtyRepo.create({ ...dto, slug });
-    return this.specialtyRepo.save(specialty);
+    const specialty = specialtyRepo.create({ ...dto, slug });
+    return specialtyRepo.save(specialty);
   }
 
   async update(
@@ -141,11 +147,13 @@ export class SpecialtyService {
     return this.specialtyRepo.save(specialty);
   }
 
-  async remove(id: string) {
-    const specialty = await this.specialtyRepo.findOne({ where: { id } });
+  async remove(id: string, request: any) {
+    const specialtyRepo = request.queryRunner.manager.getRepository(Specialty);
+
+    const specialty = await specialtyRepo.findOne({ where: { id } });
     if (!specialty) throw new NotFoundException('Specialty not found');
 
-    await this.specialtyRepo.delete(id);
+    await specialtyRepo.delete(id);
     return { message: 'Specialty deleted successfully' };
   }
 }

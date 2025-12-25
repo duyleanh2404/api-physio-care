@@ -51,9 +51,10 @@ export class DoctorController {
   @UseInterceptors(FileInterceptor('avatar'))
   async create(
     @Body() dto: CreateDoctorDto,
+    @Request() req,
     @UploadedFile() avatar: Express.Multer.File,
   ) {
-    return this.doctorService.create(dto, avatar);
+    return this.doctorService.create(dto, req, avatar);
   }
 
   @Get()
@@ -134,6 +135,6 @@ export class DoctorController {
   async remove(@Param('id') id: string, @Request() req) {
     const userId = req.user.sub;
     const role = req.user.role;
-    return this.doctorService.remove(id, userId, role);
+    return this.doctorService.remove(id, userId, role, req);
   }
 }

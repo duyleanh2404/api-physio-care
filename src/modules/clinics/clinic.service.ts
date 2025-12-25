@@ -38,11 +38,14 @@ export class ClinicService {
 
   async create(
     dto: CreateClinicDto,
+    request: any,
     files?: {
       avatar?: Express.Multer.File[];
       banner?: Express.Multer.File[];
     },
   ) {
+    const clinicRepo = request.queryRunner.manager.getRepository(Clinic);
+
     if (files?.avatar?.[0]) {
       const uploadedAvatar = await this.cloudinaryService.uploadImage(
         files.avatar[0],
@@ -60,7 +63,7 @@ export class ClinicService {
     }
 
     let slug = slugifyName(dto.name);
-    const existingClinic = await this.clinicRepo.findOne({ where: { slug } });
+    const existingClinic = await clinicRepo.findOne({ where: { slug } });
     if (existingClinic) {
       const randomSuffix = Math.floor(Math.random() * 10000);
       slug = `${slug}-${randomSuffix}`;
@@ -97,13 +100,13 @@ export class ClinicService {
 
     const user = await this.userService.create(userDto, files?.avatar?.[0]);
 
-    const clinic = this.clinicRepo.create({
+    const clinic = clinicRepo.create({
       ...dto,
       slug,
       userId: user.id,
     });
 
-    return this.clinicRepo.save(clinic);
+    return clinicRepo.save(clinic);
   }
 
   async findAll(query: GetClinicsQueryDto) {
@@ -346,8 +349,9 @@ export class ClinicService {
     return this.clinicRepo.save(clinic);
   }
 
-  async remove(id: string) {
+  async remove(id: string, request: any) {
+    const clinicRepo = request.queryRunner.manager.getRepository(Clinic);
     const clinic = await this.findOne(id);
-    return this.clinicRepo.remove(clinic);
+    return clinicRepo.remove(clinic);
   }
 }
