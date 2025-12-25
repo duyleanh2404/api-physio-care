@@ -58,7 +58,7 @@ export class ScheduleController {
 
   @Get('by-date')
   @ApiBearerAuth()
-  @Roles('admin', 'clinic')
+  @Roles('admin', 'clinic', 'doctor')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiGetSchedulesByDoctorAndDate()
   async getByDoctorAndDate(
