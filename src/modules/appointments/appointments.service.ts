@@ -732,13 +732,23 @@ export class AppointmentService {
   async update(id: string, dto: UpdateAppointmentDto, request: any) {
     const appointmentRepo =
       request.queryRunner.manager.getRepository(Appointment);
+    const scheduleRepo = request.queryRunner.manager.getRepository(Schedule);
 
     const appointment = await this.findOne(id, request);
+
+    if (!appointment) {
+      throw new NotFoundException('Appointment not found');
+    }
 
     if (dto.notes !== undefined) appointment.notes = dto.notes;
 
     if (dto.status) {
       appointment.status = dto.status;
+
+      if (dto.status === AppointmentStatus.CANCELLED && appointment.schedule) {
+        appointment.schedule.status = ScheduleStatus.available;
+        await scheduleRepo.save(appointment.schedule);
+      }
     }
 
     return appointmentRepo.save(appointment);
