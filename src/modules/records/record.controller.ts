@@ -67,8 +67,8 @@ export class RecordController {
   @Get()
   @Roles('admin')
   @ApiFindAllRecords()
-  async findAll(@Query() query: GetRecordsQueryDto) {
-    return this.recordService.findAll(query);
+  async findAll(@Query() query: GetRecordsQueryDto, @Request() req) {
+    return this.recordService.findAll(query, req);
   }
 
   @Get('my-patients')

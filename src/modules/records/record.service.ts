@@ -183,7 +183,9 @@ export class RecordService {
     return this.recordRepo.save(record);
   }
 
-  async findAll(query: GetRecordsQueryDto) {
+  async findAll(query: GetRecordsQueryDto, request: any) {
+    const recordRepo = request.queryRunner.manager.getRepository(Record);
+
     const {
       search,
       status,
@@ -199,7 +201,7 @@ export class RecordService {
       sortBy = 'createdAt',
     } = query;
 
-    const qb = this.recordRepo
+    const qb = recordRepo
       .createQueryBuilder('record')
       .leftJoin('record.patients', 'patients')
       .addSelect([
@@ -290,8 +292,11 @@ export class RecordService {
       const { attachmentIv, attachmentTag, attachmentData, patients, ...rest } =
         r;
 
-      const { password, verificationOtp, otpExpiresAt, ...safePatient } =
-        patients as User;
+      const safePatient = patients
+        ? (({ password, verificationOtp, otpExpiresAt, ...p }) => p)(
+            patients as User,
+          )
+        : null;
 
       return {
         ...rest,
